@@ -1,0 +1,33 @@
+{
+  "name": "greenash",
+  "version": "0.1.0",
+  "description": "Source code for GreenAsh, a site built with Eleventy.",
+  "scripts": {
+    "build": "eleventy",
+    "watch": "eleventy --watch",
+    "serve": "eleventy --serve",
+    "start": "eleventy --serve",
+    "debug": "DEBUG=* eleventy"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jaza/greenash"
+  },
+  "author": {
+    "name": "Jeremy Epstein",
+    "email": "jazepstein@gmail.com",
+    "url": "https://greenash.net.au/"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Jaza/greenash/issues"
+  },
+  "homepage": "https://github.com/Jaza/greenash",
+  "devDependencies": {
+    "@11ty/eleventy": "^1.0.0-beta.8",
+    "@11ty/eleventy-cache-assets": "^2.3.0",
+    "@11ty/eleventy-img": "^1.0.0",
+    "@11ty/eleventy-navigation": "^0.3.2",
+    "luxon": "^1.28.0"
+  }
+}

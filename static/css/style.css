@@ -1,0 +1,170 @@
+/* Thanks to: https://github.com/lucagez/medium.css */
+
+@import url('https://fonts.googleapis.com/css?family=Lato:400,700|Lora|Playfair+Display:700i,900');
+
+html, body {
+  margin: 0;
+  width: 100%;
+}
+
+h1, h2, p, figcaption, a, li, dt, dd {
+  color: rgba(0, 0, 0, 0.84);
+  text-rendering: optimizeLegibility;
+}
+
+h1 {
+  font-family: "Lato", sans-serif;
+  font-size: 2.7em;
+  text-align: left;
+  margin: 0.6em 0 0.28em;
+  font-weight: normal;
+}
+
+h2 {
+  font-family: "Lato", sans-serif;
+  font-size: 1.9em;
+  font-weight: 700;
+  padding: 0;
+  margin: 1.25em 0 0.28em;
+  text-align: left;
+  line-height: 1.2em;
+  letter-spacing: 0;
+}
+
+p, figcaption, li, dt, dd {
+  margin-top: 1em;
+  font-family: "Lora", serif;
+  font-size: 1.3em;
+  letter-spacing: -0.03px;
+  line-height: 1.58em;
+  word-break: break-word;
+}
+
+a {
+  text-decoration: underline;
+}
+
+/* Thanks to: https://css-tricks.com/snippets/css/simple-and-nice-blockquote-styling/ */
+
+blockquote {
+  font-family: "Playfair Display", serif;
+  font-size: 1.7em;
+  font-style: italic;
+  letter-spacing: -0.36px;
+  overflow-wrap: break-word;
+  margin-top: 21px;
+  margin-left: -20px;
+  color: rgba(0, 0, 0, 0.68);
+  padding-left: 23px;
+  position: relative;
+}
+
+blockquote:before {
+  color: rgba(205, 255, 205, 0.68);
+  content: '“';
+  font-size: 4em;
+  line-height: 0.1em;
+  position: absolute;
+  top: 0.2em;
+}
+
+blockquote p {
+  font-size: 1em;
+  line-height: 1.45em;
+}
+
+blockquote p:first-child {
+  text-indent: 2.5em;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+figure {
+  margin: 0;
+}
+
+figcaption {
+  font-style: italic;
+  text-align: center;
+}
+
+pre {
+  max-width: calc(100vw - 48px);
+}
+
+@media (min-width: 728px) {
+  pre {
+    max-width: calc(100vw - 96px);
+  }
+}
+
+@media (min-width: 1080px) {
+  pre {
+    max-width: calc(100vw - 128px);
+  }
+}
+
+code {
+  font-size: 1.6em;
+  line-height: 1.25em;
+  overflow: auto;
+}
+
+::selection {
+  background-color: honeydew;
+}
+
+ol, ul {
+  padding: 0;
+}
+
+li, dd {
+  margin-left: 30px;
+}
+
+dt {
+  font-weight: 700;
+}
+
+/* Thanks to: inspecting medium.com styles manually */
+
+body {
+  display: flex;
+  justify-content: center;
+}
+
+article > h1, article > h2, article > p, article > ul, article > ol, article > dl {
+  max-width: 680px;
+}
+
+article > h1, article > h2, article > p, article > ul, article > ol, article > dl, article > pre, article > figure, article > blockquote {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+main {
+  margin: 0 24px 40px;
+}
+
+@media (min-width: 728px) {
+  main {
+    margin: 0 48px 40px;
+  }
+}
+
+@media (min-width: 1080px) {
+  main {
+    margin: 0 64px 40px;
+  }
+}
+
+@media (min-width: 1320px) {
+  article > pre, article > figure, article > blockquote {
+    max-width: 1192px;
+  }
+}

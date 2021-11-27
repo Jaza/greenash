@@ -1,0 +1,21 @@
+---
+layout: layouts/base.njk
+---
+<article>
+  <h1>{{ renderData.title or title }}</h1>
+
+  {{ content | inlineThumbnails | autop | safe }}
+
+  {% if fileAttachments and 0 %}
+  <h2>File attachments</h2>
+  <ul>
+    {% for fileAttachment in fileAttachments %}
+    <li>
+      {% if params.uploadsBaseURL %}<a href="{{ params.uploadsBaseURL }}files/{{ fileAttachment }}">{% endif %}
+      {{ fileAttachment }}
+      {% if params.uploadsBaseURL %}</a>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</article>

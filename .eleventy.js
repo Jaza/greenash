@@ -1,0 +1,207 @@
+const { DateTime } = require("luxon");
+const eleventyNavigationPlugin = require("@11ty/eleventy-navigation");
+const Image = require("@11ty/eleventy-img");
+const Nunjucks = require("nunjucks");
+
+const params = require("./_data/params");
+
+module.exports = function(eleventyConfig) {
+  const nunjucksEnvironment = new Nunjucks.Environment(
+    new Nunjucks.FileSystemLoader("_includes")
+  );
+
+  // Lets us access template variables dynamically in Nunjucks, via
+  // {{ getContext()["someVar"] }}
+  nunjucksEnvironment.addGlobal('getContext', function() {
+    return this.ctx;
+  });
+
+  eleventyConfig.setLibrary("njk", nunjucksEnvironment);
+
+  // Eleventy Navigation https://www.11ty.dev/docs/plugins/navigation/
+  eleventyConfig.addPlugin(eleventyNavigationPlugin);
+
+  // Merge data instead of overriding
+  // https://www.11ty.dev/docs/data-deep-merge/
+  eleventyConfig.setDataDeepMerge(true);
+
+  eleventyConfig.addFilter("dateYM", dateObj => {
+    return DateTime.fromJSDate(dateObj).toFormat("yyyy/LL");
+  });
+
+  // Thanks to: https://stackoverflow.com/a/6234804
+  const escapeHtml = unsafe => {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
+
+  // Convert line breaks into <p> and <br> in an intelligent fashion.
+  // Originally based on: https://ma.tt/scripts/autop/
+  //
+  // Was ported from the Drupal _filter_autop() function:
+  // https://api.drupal.org/api/function/_filter_autop
+  //
+  // Then lived as a custom Django filter (by yours truly), before being
+  // ported to 11ty
+  eleventyConfig.addFilter("autop", value => {
+    // All block level tags
+    const block = "(?:table|thead|tfoot|caption|colgroup|tbody|tr|td|th|div|dl|dd|dt|ul|ol|li|pre|select|form|blockquote|address|p|h[1-6]|hr)";
+
+    // Split at <pre>, <script>, <style> and </pre>, </script>, </style> tags.
+    // We don't apply any processing to the contents of these tags to avoid messing
+    // up code. We look for matched pairs and allow basic nesting. For example:
+    // "processed <pre> ignored <script> ignored </script> ignored </pre> processed"
+    const chunks = value.split(/(<\/?(?:pre|script|style|object)[^>]*>)/);
+    let ignore = false;
+    let ignoretag = "";
+    let output = "";
+
+    for (const [i, chunk] of chunks.entries()) {
+      let newChunk = chunk;
+      const prevIgnore = ignore;
+
+      if (i % 2) {
+        // Opening or closing tag?
+        const isOpen = newChunk[1] !== "/";
+        const tag = newChunk.substring(2 - (isOpen ? 1 : 0)).split(/[ >]/, 2)[0];
+
+        if (!ignore) {
+          if (isOpen) {
+            ignore = true;
+            ignoretag = tag;
+          }
+        }
+        // Only allow a matching tag to close it.
+        else if (!isOpen && ignoretag === tag) {
+          ignore = false;
+          ignoretag = "";
+        }
+      }
+      else if (!ignore) {
+        newChunk = newChunk.replace(/\n*$/g, "") + "\n\n"; // just to make things a little easier, pad the end
+        newChunk = newChunk.replace(/<br \/>\s*<br \/>/g, "\n\n");
+        newChunk = newChunk.replace(new RegExp("(<" + block + "[^>]*>)", "g"), "\n$1"); // Space things out a little
+        newChunk = newChunk.replace(new RegExp("(<\/" + block + ">)", "g"), "$1\n\n"); // Space things out a little
+        newChunk = newChunk.replace(/\n\n+/g, "\n\n"); // take care of duplicates
+        newChunk = newChunk.replace(/\n?(.+?)(?:\n\s*\n|$)/g, "<p>$1</p>\n"); // make paragraphs, including one at the end
+        newChunk = newChunk.replace(/<p>(<li.+?)<\/p>/g, "$1"); // problem with nested lists
+        newChunk = newChunk.replace(/<p><blockquote([^>]*)>/g, "<blockquote$1><p>");
+        newChunk = newChunk.replace(/<\/blockquote><\/p>/g, "</p></blockquote>");
+        newChunk = newChunk.replace(/<p>\s*<\/p>\n?/g, ""); // under certain strange conditions it could create a P of entirely whitespace
+        newChunk = newChunk.replace(new RegExp("<p>\s*(<\/?" + block + "[^>]*>)", "g"), "$1");
+        newChunk = newChunk.replace(new RegExp("(<\/?" + block + "[^>]*>)\s*</p>", "g"), "$1");
+        newChunk = newChunk.replace(/(?<!<br \/>)\s*\n/g, "<br />\n"); // make line breaks
+        newChunk = newChunk.replace(new RegExp("(<\/?" + block + "[^>]*>)\s*<br \/>", "g"), "$1");
+        newChunk = newChunk.replace(/<br \/>(\s*<\/?(?:p|li|div|th|pre|td|ul|ol)>)/g, "$1");
+        newChunk = newChunk.replace(/&([^#])(?![A-Za-z0-9]{1,8};)/g, "&amp;$1");
+      }
+
+      // Extra (not ported from Drupal) to escape the contents of code blocks.
+      const codeStart = newChunk.search(/^<code>/) !== -1;
+      const codeEnd = newChunk.search(/(.*?)<\/code>$/) !== -1;
+
+      if (prevIgnore && ignore) {
+        if (codeStart) {
+          newChunk = newChunk.replace(/^<code>(.+)/g, "$1");
+        }
+
+        if (codeEnd) {
+          newChunk = newChunk.replace(/(.*?)<\/code>$/g, "$1");
+        }
+
+        newChunk = newChunk.replace(/<\\\/pre>/g, "</pre>");
+        newChunk = escapeHtml(newChunk);
+
+        if (codeStart) {
+          newChunk = "<code>" + newChunk;
+        }
+
+        if (codeEnd) {
+          newChunk += "</code>";
+        }
+      }
+
+      output += newChunk;
+    }
+
+    return output;
+  });
+
+  const thumbnailRegex = /\[thumbnail ([^ \]]+)( ([^\]]+))?\]/g;
+
+  eleventyConfig.addNunjucksAsyncFilter("inlineThumbnails", (value, callback) => {
+    setTimeout(async () => {
+      let newValue = value;
+
+      if (!params.uploadsBaseURL) {
+        callback(null, newValue);
+      }
+
+      const matches = value.matchAll(thumbnailRegex);
+
+      for (const match of matches) {
+        const placeholder = match[0];
+        const filename = match[1];
+        const ext = filename.split('.')[1];
+        const src = `https:${params.uploadsBaseURL}images/${filename}`;
+        const title = match[3];
+
+        const thumbnailOptions = {
+          widths: [680],
+          formats: [ext],
+          outputDir: "./_site/img/",
+        };
+
+        try {
+          const metadata = await Image(src, thumbnailOptions);
+
+          const imageAttributes = {
+            alt: title,
+            loading: "lazy",
+            decoding: "async",
+          };
+
+          const imgHtmlFragment = Image.generateHTML(metadata, imageAttributes);
+          const imgHtml = "<figure>" + imgHtmlFragment + (title ? `<figcaption>${title}</figcaption>` : "") + "</figure>";
+
+          newValue = newValue.replace(placeholder, imgHtml);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      callback(null, newValue);
+    }, 100);
+  });
+
+  // Don't process folders with static assets e.g. images
+  eleventyConfig.addPassthroughCopy({"static/favicon.ico": "favicon.ico"});
+  eleventyConfig.addPassthroughCopy({"static/_redirects": "_redirects"});
+  eleventyConfig.addPassthroughCopy({"static/css": "css"});
+  eleventyConfig.addPassthroughCopy({"static/img": "img"});
+  eleventyConfig.addPassthroughCopy({"static/js": "js"});
+
+  return {
+    templateFormats: ["html"],
+
+    // If your site lives in a different subdirectory, change this.
+    // Leading or trailing slashes are all normalized away, so don’t worry about it.
+    // If you don’t have a subdirectory, use "" or "/" (they do the same thing)
+    // This is only used for URLs (it does not affect your file structure)
+    pathPrefix: "/",
+
+    markdownTemplateEngine: "liquid",
+    htmlTemplateEngine: "njk",
+    dataTemplateEngine: "njk",
+    dir: {
+      input: ".",
+      includes: "_includes",
+      data: "_data",
+      output: "_site"
+    }
+  };
+};

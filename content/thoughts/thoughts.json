@@ -1,0 +1,7 @@
+{
+  "layout": "layouts/thoughts/detail.njk",
+  "permalink": "/thoughts/{{ date | dateYM }}/{{ title | slug }}/",
+  "tags": [
+    "thoughts"
+  ]
+}

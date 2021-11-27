@@ -1,0 +1,284 @@
+---
+title: Basic breadcrumbs and taxonomy
+date: 2005-02-09
+fileAttachments:
+  - taxonomy.module.greenash_breadcrumb.patch
+  - taxonomy_context.module.greenash_breadcrumb.patch
+  - taxonomy.greenash_breadcrumb.module
+  - taxonomy_context.greenash_breadcrumb.module
+---
+<blockquote><em>Part 1 of</em> <strong>"making taxonomy work <em>my</em> way"</strong>.</blockquote>
+
+<p><strong>Update (6th Apr 2005):</strong> <em>parts of this tutorial no longer need to be followed. Please see <a href="/posts/thoughts/basic_breadcrumbs_and_taxonomy#comment-9">this comment</a> before implementing anything shown here.</em></p>
+
+As any visitor to this site will soon realise, I love <a href="/about/recommend/drupal_org_link">Drupal</a>, the free and open source Content Management System (CMS) without which GreenAsh would be utterly defunct. However, even I must admit that Drupal is far from perfect. Many aspects of it - in particular, some of its modules - leave much to be desired. The taxonomy module is one such little culprit.
+
+If you browse through <a href="http://drupal.org/node/6837" title="Taxonomy and breadcrumb">some</a> <a href="http://drupal.org/node/11320" title="Trouble with taxonomy - is this a bug?">of</a> <a href="http://drupal.org/node/8524" title="Browsing taxonomy">the</a> <a href="http://drupal.org/node/4101" title="Taxonomy vocabularies vs. parents for books">forum</a> <a href="http://drupal.org/node/2234" title="Taxonomy help">topics</a> at drupal.org, you'll see that Drupal's taxonomy system is an extremely common cause of frustration and confusion, for beginners and veterans alike. Many people don't really know what the word 'taxonomy' means, or don't see why Drupal uses this word (instead of just calling it 'categories'). Some have difficulty grasping the concept of a many-to-many relationship, which taxonomy embraces with its open and flexible classification options. And quite a few people find it frustrating that taxonomy has so much potential, but that very little of it has actually been implemented. And then there are the bugs.
+
+In this series, I show you how to patch up some of taxonomy's bugs; how to combine it with other Drupal modules to make it more effective; and also how to extend it (by writing custom code) so that it does things that it could never do before, but that it should have been able to do right from the start. In sharing all these new ideas and techniques, I hope to make life easier for those of you that use and depend on taxonomy; to give hope to those of you that have given up altogether on taxonomy; to open up new possibilities for the future of the official taxonomy module (and for the core Drupal platform); and to kindle discussion and criticism on the material that I present.
+
+The primary audience of this series is fellow web developers that are a part of the Drupal community. In order to appreciate the ideas presented here, and to implement the examples given, it is recommended that you have at the very least used and administered a Drupal site before. Knowledge of PHP programming and of MySQL / PostgreSQL (or even other SQL) queries would be good. You do not need to be a hardcore Drupal developer to understand this series - I personally do not consider myself to be one (yet :-)) - but it would be good if you've tinkered with Drupal's code and have at least some familiarity with it, as I do. If you're not part of this audience, then by all means read on, but don't be surprised if very soon (if not already!) you have no idea what I'm talking about.
+
+<h2>I thought part 1 was about breadcrumbs...??</h2>
+
+And it is - you're quite right! So, now that I've got all that introductory stuff out of the way, let's get down to the guts of this post, which is - as the title suggests - <em>basic breadcrumbs and taxonomy</em> (for those of you that don't see any bread, be it white, multi-grain, or wholemeal, check out this <a href="http://www.motive.co.nz/glossary/breadcrumb.php?ref" title="Definition of breadcrumb navigation">definition of a breadcrumb</a>).
+
+Because let's face it, that's what breadcrumbs are: <em>basic</em>. It's one of those fundamental things that you'd expect would work 100% right out of the box: you make a new site, you post content to it, you assign the content a category, and you take it for granted that a breadcrumb will appear, showing you where that post belongs in your site's category tree. At least, I thought it was basic when I started out on this side of town. Jakob Nielson (the web's foremost expert on usability) thinks so too, as <a href="http://www.useit.com/alertbox/20020303.html" title="Deep linking is good linking (Jakob Nielsen's Alertbox)">this article on deep linking</a> shows. But apparently, Drupal thinks differently.
+
+It's the whole many-to-many relationship business that makes things complicated in Drupal. With a CMS that supports only one-to-many relationships (that is, each piece of content has only one parent category - but the parent category can have many children), making breadcrumbs is simple: you just trace a line from a piece of content, to its parent, to it's parent's parent, and so on. But with Drupal's taxonomy, one piece of content might have 20 parents, and each of them might have another 10 each. Try tracing a line through that jungle! The fact that although you <em>can</em> use many-to-many relationships, you don't <em>have to</em>, doesn't make a difference: taxonomy was designed to support complex relationships, and if it is to do that properly, it has to sacrifice breadcrumbs. And that's the way it works in Drupal: the taxonomy system seldom displays breadcrumbs for terms, and never displays them for nodes.
+
+Well, I have some slightly different ideas to Drupal's taxonomy developers, when it comes to breadcrumbs. Firstly, I believe that an entire site should fall under a single 'master' category hierarchy, and that breadcrumbs should be displayed <em>on every single page of the site without fail</em>, reflecting a page's position in this hierarchy. I also believe that this master hierarchy system can co-exist with the power and flexibility that is inherent to Drupal's taxonomy system, but that additional categories should be considered 'secondary' to the master one.
+
+Look at the top of this page. Check out those neat breadcrumbs. That's what this entire site looks like (check for yourself if you don't believe me). By the end of this first part of the series, you will be able to make your site's breadcrumbs as good as that. You'll also have put in place the foundations for yet more cool stuff, that can be done by extending the power of taxonomy.
+
+<h2>Get your environment ready</h2>
+
+In order to develop and document the techniques shown here, I have used a test environment, i.e. a clean copy of Drupal, installed on my local machine (which is Apache / PHP / MySQL enabled). If you want to try this stuff out for yourself, then I suggest you do the same. Here's my advice for setting up an environment in which you can fiddle around:
+
+<ol>
+<li>Grab a <em>clean copy</em> of Drupal (i.e. one that you've just downloaded fresh from <a href="http://drupal.org/">drupal.org</a>, and that you haven't yet hacked to death). I'm not stopping you from using a hacked version, but don't look at me when none of my tricks work on your installation. I've used Drupal 4.5.2 to do everything that you'll see here (latest stable release as at time of writing), so although I encourage you to use the newest version - if a newer stable release is out as at the time of you reading this (it's always good to keep up with the official releases) - naturally I make no guarantee that these tricks will work on anything other than vanilla 4.5.2.</li>
+<li>Install your copy of Drupal. I'm assuming that you know how to do this, so I'll be brief: unzip the files; set up your database (I use MySQL, and make no guarantee that my stuff will work with PostgreSQL); tinker with conf.php; and I think that's about it.</li>
+<li>Configure your newly-installed Drupal site: create the initial account; configure the basic settings (e.g. site name, mission / footer, time zone, <strong>cache <em>off</em></strong>, <strong>clean URLs <em>on</em></strong>); and enable a few core modules (in particular <strong>path module</strong>, forum and menu would be good too, you can choose some others if you want). The taxonomy module should be enabled by default, but just check that it is.</li>
+<li>Download and install <a href="http://drupal.org/project/taxonomy_context">taxonomy_context.module</a> (24 Sep 2004 4.5.x version used in my environment). I consider this module to be essential for anyone who wants to do anything half-decent using taxonomy: most of its features - such as basic breadcrumbing capabilities and term descriptions - are things that really should be part of the core taxonomy module. You will need taxonomy_context for virtually everything that I will be showing you in this series. <strong>Note:</strong> make sure you move the file <code>taxonomy_context.module</code> from your <code>/modules/taxonomy_context</code> folder, to your <code>/modules</code> folder, otherwise certain things will not work.</li>
+<li>Once you've done all that, you have set yourself up with a base system that you can use to implement all my tricks! Your Drupal site should now look something like this:</li>
+</ol>
+
+[thumbnail drupal_testsite.jpg Very basic drupal site (screenshot)]
+
+<h2>Add some taxonomy terms and some content</h2>
+
+I have written some simple instructions (below) for adding the dummy taxonomy that I used in my test environment. Your taxonomy does not have to be exactly the same as mine, although the structure that I use should be followed, as it is important in achieving the right breadcrumb effect:
+
+<ol>
+<li>In the navigation menu for your new site, go to <em>administer -> categories</em>, then click the <em>add vocabulary</em> tab.</li>
+<li>Add a new vocabulary called <em>'Sections'</em>. Make it required for all node types except forum topics, and give it a single or multiple hierarchy. Also give it a light weight (e.g. -8).</li>
+<li>Add a term called <em>'posts'</em> to your new <em>'Sections'</em> vocab.</li>
+<li>Add another term called <em>'news'</em>, as a child of <em>'posts'</em>.</li>
+<li>Add another vocab called <em>'News by priority'</em>. Make it apply only to stories, give it a single or multiple hierarchy, don't make it required, and give it a heavier weight than the <em>'Sections'</em> vocab. <br /><strong>Note:</strong> it was a deliberate choice to give this vocab a name that suggests it is a child of the term <em>'news'</em> in the <em>'Sections'</em> vocab. This was done in preparation for part 2 of this series, <em>setting up a cross-vocabulary hierarchy</em>. If you have no interest in part 2, then you can call this vocab whatever you want (but you still need a second vocab).</li>
+<li>Add a term <em>'browse by priority'</em> to the <em>'news by priority'</em> vocab. <strong>Note:</strong> the use of a name that is almost identical to the vocab's name is deliberate - the reason for this is explained in part 2 of the series.</li>
+<li>Add another term <em>'important'</em> as a child of <em>'browse by priority'</em>.</li>
+<li>Well done - you've just set up a reasonably complex taxonomy structure. Your <em>'categories'</em> page should now look something like this:</li>
+</ol>
+
+[thumbnail testsite_with_categories.jpg Test site with categories (screenshot)]
+
+Now that you have some categories in place, it's time to create a node and assign it some terms. So in the navigation menu, go to <em>create content -> story</em>; enter a title and an alias for your node; make it part of the <em>'news'</em> section, and the <em>'important'</em> priority; enter some body text; and then submit it. Your node should look similar to this:
+
+[thumbnail newstest_initial.jpg Node with categories assigned (screenshot)]
+
+<h2>First bug: nodes have no breadcrumbs</h2>
+
+OK, so now that you've created a node, and you've assigned some categories to it, let's examine the state of those breadcrumbs. If you go to a taxonomy page, such as the page for the term <em>'news'</em>, you'll see that breadcrumbs are being displayed very nicely, and that they reflect our <em>'sections'</em> hierarchy (e.g. <em>home -> posts -> news</em>). But if you go to a node page (of which there is only one, at the moment - unless you've created more), a huge problem is glaring (or failing to glare, in this case) right at you: there are no breadcrumbs!
+
+But don't panic - the solution is right here. First, you must bring up the Drupal directory on your filesystem, and open the file <em>/modules/taxonomy_context.module</em>. Find the following code in taxonomy_context (<strong>Note:</strong> the taxonomy_context module is updated regularly, so this code and other code in the tutorials may not exactly match the code that you have):
+
+<pre class="php"><code><?php
+/**
+ * Implementation of hook_init
+ * Set breadcrumb, and show some infos about terms, subterms
+ */
+function taxonomy_context_init() {
+  $mode = arg(0);
+  $paged = !empty($_GET["from"]);
+
+  if (variable_get("taxonomy_context_use_style", 1)) {
+    drupal_set_html_head('<style type="text/css" media="all">@import "modules/taxonomy_context/taxonomy_context.css";
+</style>');
+  }
+
+  if (($mode == "node") && (arg(1)>0)) {
+    $node = node_load(array("nid" => arg(1)));
+    $node_type = $node->type;
+  }
+  // Commented out in response to issue http://drupal.org/node/11407
+//  if (($mode == "taxonomy") || ($node_type == "story") || ($node_type == "page")) {
+//    drupal_set_breadcrumb( taxonomy_context_get_breadcrumb($context->tid));
+//  }
+}
+?></code></pre>
+
+And replace it with this code:
+
+<pre class="php"><code><?php
+/**
+ * Implementation of hook_init
+ * Set breadcrumb, and show some infos about terms, subterms
+ * Patched to make breadcrumbs on nodes work, by using taxonomy_context_get_context() call
+ * Patch done by x on xxxx-xx-xx
+ */
+function taxonomy_context_init() {
+  $mode = arg(0);
+  $paged = !empty($_GET["from"]);
+
+  // Another little patch to make the CSS link only get inserted once
+  static $taxonomy_context_css_inserted = FALSE;
+  if (variable_get("taxonomy_context_use_style", 1) && !$taxonomy_context_css_inserted) {
+    drupal_set_html_head('<style type="text/css" media="all">@import "modules/taxonomy_context/taxonomy_context.css";
+</style>');
+    $taxonomy_context_css_inserted = TRUE;
+  }
+
+  if (($mode == "node") && (arg(1)>0)) {
+    $node = node_load(array("nid" => arg(1)));
+    $node_type = $node->type;
+  }
+  // Commented out in response to issue [http://]drupal.org/node/11407
+
+  // Un-commented for breadcrumb patch
+  // NOTE: you don't have to have all the node types below - only story and page are essential
+  $context = taxonomy_context_get_context();
+  $context_types = array(
+    "story",
+    "page",
+    "image",
+    "weblink",
+    "webform",
+    "poll"
+  );
+  if ( ($mode == "taxonomy") || (is_numeric(array_search($node_type, $context_types))) ) {
+    drupal_set_breadcrumb( taxonomy_context_get_breadcrumb($context->tid, $mode));
+  }
+}
+?></code></pre>
+
+<strong>Note:</strong> when copying any of the code examples here, you should replace the lines that say <em>"Patch done by x on xxxx-xx-xx"</em> with your name, and the date that you copied the code. This makes it easier to keep track of any deviations that you make from the official Drupal code base, and means that upgrading to a new version of Drupal is only 'very difficult', instead of 'impossible' ;-).
+
+This patch makes breadcrumbs appear for any node type that is included in the <code>$content_types</code> array (which you should edit to suit your needs), based on the site's taxonomy hierarchy. After implementing this patch, you should see something like this when you view a node:
+
+[thumbnail newstest_after_node_brcrm.jpg Basic node with breadcrumbs (screenshot)]
+
+<h2>Second bug: node breadcrumbs based on the wrong vocab</h2>
+
+We've made a good start: previously, nodes had no breadcrumbs at all, and now they do have breadcrumbs (and they're based on taxonomy). But they don't reflect the right vocab! Remember what I said earlier about a single 'master' taxonomy hierarchy for your site, and about other taxonomies being 'secondary'? In our site, the master vocab is <em>'Sections'</em>. However, the breadcrumbs for our node are reflecting <em>'News by priority'</em>, which is a secondary vocab. We need to find a way of telling Drupal on which vocab to base its breadcrumbs for nodes.
+
+Once again, bring up the Drupal directory on your filesystem, and this time open the file <em>/modules/taxonomy.module</em>. Find the following code in taxonomy:
+
+<pre class="php"><code><?php
+/**
+ * Find all terms associated to the given node.
+ */
+function taxonomy_node_get_terms($nid, $key = 'tid') {
+  static $terms;
+
+  if (!isset($terms[$nid])) {
+    $result = db_query('SELECT t.* FROM {term_data} t, {term_node} r WHERE r.tid = t.tid AND r.nid = %d ORDER BY weight, name', $nid);
+    $terms[$nid] = array();
+    while ($term = db_fetch_object($result)) {
+      $terms[$nid][$term->$key] = $term;
+    }
+  }
+  return $terms[$nid];
+}
+?></code></pre>
+
+And replace it with this code:
+
+<pre class="php"><code><?php
+/**
+ * Find all terms associated to the given node.
+ * SQL patch made by x on xxxx-xx-xx, to sort taxonomies by vocab weight rather than by term weight
+ */
+function taxonomy_node_get_terms($nid, $key = 'tid') {
+  static $terms;
+
+  if (!isset($terms[$nid])) {
+    $result = db_query('SELECT t.* FROM {term_data} t, {term_node} r, {vocabulary} v '.
+    'WHERE r.tid = t.tid AND t.vid = v.vid AND r.nid = %d ORDER BY v.weight, v.name', $nid);
+    $terms[$nid] = array();
+    while ($term = db_fetch_object($result)) {
+      $terms[$nid][$term->$key] = $term;
+    }
+  }
+  return $terms[$nid];
+}
+?></code></pre>
+
+Drupal doesn't realise this, but it <em>already knows</em> which vocab is the master vocab. We specified it to be <em>'Sections'</em> when we gave it a lighter weight than <em>'News by priority'</em>. In my system, the rule is that the vocab with the lightest weight (or the lowest name alphabetically) becomes the master one. So all we had to do in this patch, was to tell Drupal how to find the master vocab, based on this rule.
+
+This was done by changing the SQL, so that when Drupal looks for all terms associated to a particular node, it sorts those terms by putting the ones with a vocab of the lightest weight first. Previously, it sorted terms according to the weight of the actual term. The original version makes sense for nodes that have several terms in one vocabulary, and also for terms that have more than one parent; but it doesn't make sense for nodes that have terms in more than one vocabulary, and this is a key feature of Drupal that many sites utilise.
+
+After you implement this patch (assuming that you followed the earlier instruction about making the <em>'sections'</em> vocab of a lighter weight than the <em>'news by priority'</em> vocab), you can rest assured that the breadcrumb trail will <strong>always</strong> be for the <em>'sections'</em> vocab, with any node that is so classified. Your node should now look something like this:
+
+[thumbnail newstest_after_vocab_weight_brcrm.jpg Node with correct breadcrumbs (screenshot)]
+
+Note that this patch also changes the order in which a node's terms are printed out (sorted by vocab weight also).
+
+<h2>Third bug: taxonomy breadcrumbs include the current term</h2>
+
+While the previous bug only affected the breadcrumbs on node pages, this one only affects breadcrumbs on taxonomy term pages. Try viewing a node: you will see that the breadcrumb trail includes the parent terms of that page, but that <em>the current page itself is not included</em>. This is how it should be: you don't want the current page at the end of the breadcrumb, because you can determine the current page by looking at the title! And also, each part of the breadcrumb trail is a link, so if the current page is part of the trail, then every page on your site has a link to itself (very unprofessional).
+
+If you view a taxonomy term, you will see that the term you are looking at is part of the breadcrumb trail for that page. To fix this final bug (for part 1 of this series), bring up your Drupal directory again, open <em>/modules/taxonomy_context.module</em>, and find the following code in taxonomy_context:
+
+<pre class="php"><code><?php
+/**
+ * Return the breadcrumb of taxonomy terms ending with $tid
+ */
+function taxonomy_context_get_breadcrumb($tid) {
+  $breadcrumb[] = l(t("Home"), "");
+
+  if (module_exist("vocabulary_list")) {
+    $vid = taxonomy_context_get_term_vocab($tid);
+    $vocab = taxonomy_get_vocabulary($vid);
+    $breadcrumb[] = l($vocab->name, "taxonomy/page/vocab/$vid");
+  }
+
+  if ($tid) {
+    $parents = taxonomy_get_parents_all($tid);
+    if ($parents) {
+      $parents = array_reverse($parents);
+      foreach ($parents as $p) {
+        $breadcrumb[] = l($p->name, "taxonomy/term/$p->tid");
+      }
+    }
+  }
+  return $breadcrumb;
+}
+?></code></pre>
+
+Now replace it with this code:
+
+<pre class="php"><code><?php
+/**
+ * Return the breadcrumb of taxonomy terms ending with $tid
+ * Patched to display the current term only for nodes, not for terms
+ * Patch done by x on xxxx-xx-xx
+ */
+function taxonomy_context_get_breadcrumb($tid, $mode) {
+  $breadcrumb[] = l(t("Home"), "");
+
+  if (module_exist("vocabulary_list")) {
+    $vid = taxonomy_context_get_term_vocab($tid);
+    $vocab = taxonomy_get_vocabulary($vid);
+    $breadcrumb[] = l($vocab->name, "taxonomy/page/vocab/$vid");
+  }
+
+  if ($tid) {
+    $parents = taxonomy_get_parents_all($tid);
+    if ($parents) {
+      $parents = array_reverse($parents);
+      foreach ($parents as $p) {
+        // The line below implements the breadcrumb patch
+        if ($mode != "taxonomy" || $p->tid != $tid)
+          $breadcrumb[] = l($p->name, "taxonomy/term/$p->tid");
+      }
+    }
+  }
+  return $breadcrumb;
+}
+?></code></pre>
+
+The logic in the <code>if</code> statement that we've added does two things to fix up this bug: if we're not looking at a taxonomy term (and are therefore looking at a node), then always display the current term in the breadcrumb (thus leaving the already perfect breadcrumb system for nodes untouched); and if we're looking at a taxonomy term, and the breadcrumb we're about to print is a link to the current term, then <strong>don't print it</strong>. Note that this patch will only work if you've moved your <code>taxonomy_context.module</code> file, as explained earlier (it's really weird, I know, but if you leave the file in its subfolder, then this patch has <em>no effect whatsoever</em> - and I have <em>no idea why</em>).
+
+After implementing this last patch, your taxonomy pages should now look something like this:
+
+[thumbnail newsvocab_after_current_term_brcrm.jpg Taxonomy page with correct breadcrumb (screenshot)]
+
+<h2>That's all (for now)</h2>
+
+Congratulations! If you've implemented everything in this tutorial, then you've now created a Drupal-powered web site that produces super-cool breadcrumbs based on a taxonomy hierarchy. Next time you're at a party, and are making endeavours with someone of the opposite gender, try that line on them (and <a href="mailto:jazepstein@greenash.net.au">let me know</a> just how badly it went down). If you haven't implemented anything, then I can't help but call you a tad bit lazy: but hey, at least you read it all!
+
+If you've been wondering where you can get a proper patch file with which to try this stuff out, you'll find two of them at the bottom of the page. See the Drupal handbook entry on <a href="http://drupal.org/node/323" title="Diff and Patch">using patch files</a> if you've never used Drupal patches before. The patch code is identical to the code cited in this text: as with the cited code, the diff was performed against a vanilla 4.5.2 source tree. Also at the bottom of the page, you can download the entire code for taxonomy.module and taxonomy_context.module: you can put these files straight in your Drupal <em>/modules</em> folder, and all you have to do then is rename them.
+
+Armed with the knowledge that you now have, you can hopefully utilise the power of taxonomy quite a bit better than you could before. But this is only the beginning.
+
+<a href="/posts/thoughts/cross_vocab_taxonomy_hierarchies">Continue on to part 2</a>, where we get our hands (and our Drupal code base) <em>really</em> dirty by implementing a cross-vocabulary hierarchy system, allowing one taxonomy term to be a child of another term <em>in a different vocabulary</em>, and hence producing (among other things) even sweeter breadcrumbs!
