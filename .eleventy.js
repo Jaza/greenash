@@ -29,6 +29,14 @@ module.exports = function(eleventyConfig) {
     return DateTime.fromJSDate(dateObj).toFormat("yyyy/LL");
   });
 
+  eleventyConfig.addFilter("dateDMY", dateObj => {
+    return DateTime.fromJSDate(dateObj).toFormat("d LLL yyyy");
+  });
+
+  eleventyConfig.addFilter("dateISO", dateObj => {
+    return DateTime.fromJSDate(dateObj).setZone("utc").toString();
+  });
+
   // Thanks to: https://stackoverflow.com/a/6234804
   const escapeHtml = unsafe => {
     return unsafe
@@ -125,8 +133,17 @@ module.exports = function(eleventyConfig) {
         }
       }
 
+      newChunk = newChunk.replace(/<blockquote([^>]*)>/g, '<section class="wideflex-wrapper"><blockquote$1>');
+      newChunk = newChunk.replace(/<\/blockquote>/g, "</blockquote></section>");
+
+      newChunk = newChunk.replace(/<blockquote([^>]*)>/g, '<section class="wideflex-wrapper"><blockquote$1>');
+      newChunk = newChunk.replace(/<\/blockquote>/g, "</blockquote></section>");
+
       output += newChunk;
     }
+
+    output = output.replace(/<pre([^>]*)><code>/g, '<section class="wideflex-wrapper"><pre$1><code>');
+    output = output.replace(/<\/code><\/pre>/g, "</code></pre></section>");
 
     return output;
   });
@@ -134,48 +151,64 @@ module.exports = function(eleventyConfig) {
   const thumbnailRegex = /\[thumbnail ([^ \]]+)( ([^\]]+))?\]/g;
 
   eleventyConfig.addNunjucksAsyncFilter("inlineThumbnails", (value, callback) => {
-    setTimeout(async () => {
-      let newValue = value;
+    if (!params.uploadsBaseURL) {
+      callback(null, value);
+      return;
+    }
 
-      if (!params.uploadsBaseURL) {
-        callback(null, newValue);
+    const matches = value.matchAll(thumbnailRegex);
+    let toReplace = [];
+
+    // Thanks to: https://stackoverflow.com/a/47270640
+    const mapIterator = function* (iterator, mapping) {
+      for (let i of iterator) {
+        yield mapping(i);
       }
+    };
 
-      const matches = value.matchAll(thumbnailRegex);
+    // Originally used setTimeout, but now I've seen the light of promises:
+    // https://github.com/11ty/eleventy/issues/1450
+    Promise.all(mapIterator(matches, async match => {
+      const placeholder = match[0];
+      const filename = match[1];
+      const ext = filename.split('.')[1];
+      const src = `https:${params.uploadsBaseURL}images/${filename}`;
+      const title = match[3];
 
-      for (const match of matches) {
-        const placeholder = match[0];
-        const filename = match[1];
-        const ext = filename.split('.')[1];
-        const src = `https:${params.uploadsBaseURL}images/${filename}`;
-        const title = match[3];
+      const thumbnailOptions = {
+        widths: [680],
+        formats: [ext],
+        outputDir: "./_site/img/",
+      };
 
-        const thumbnailOptions = {
-          widths: [680],
-          formats: [ext],
-          outputDir: "./_site/img/",
+      try {
+        const metadata = await Image(src, thumbnailOptions);
+
+        const imageAttributes = {
+          alt: title,
+          loading: "lazy",
+          decoding: "async",
         };
 
-        try {
-          const metadata = await Image(src, thumbnailOptions);
+        const imgHtmlFragment = Image.generateHTML(metadata, imageAttributes);
+        const imgHtml = "<figure>" + imgHtmlFragment + (title ? `<figcaption>${title}</figcaption>` : "") + "</figure>";
 
-          const imageAttributes = {
-            alt: title,
-            loading: "lazy",
-            decoding: "async",
-          };
+        toReplace.push({
+          placeholder,
+          imgHtml,
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    })).then(() => {
+      let newValue = value;
 
-          const imgHtmlFragment = Image.generateHTML(metadata, imageAttributes);
-          const imgHtml = "<figure>" + imgHtmlFragment + (title ? `<figcaption>${title}</figcaption>` : "") + "</figure>";
-
-          newValue = newValue.replace(placeholder, imgHtml);
-        } catch (error) {
-          console.error(error);
-        }
+      for (let {placeholder, imgHtml} of toReplace) {
+        newValue = newValue.replace(placeholder, imgHtml);
       }
 
       callback(null, newValue);
-    }, 100);
+    });
   });
 
   // Don't process folders with static assets e.g. images

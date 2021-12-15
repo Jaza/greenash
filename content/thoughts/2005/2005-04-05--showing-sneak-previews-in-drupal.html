@@ -1,0 +1,151 @@
+---
+title: Showing sneak previews in Drupal
+date: 2005-04-05
+teaser: |-
+  Drupal comes with a powerful permissions system that lets you control exactly who has access to what on your site. However, one thing that you can't do with Drupal is prohibit users from viewing certain content, but still let them see a preview of it. This quick-hack tutorial shows you how to do just that.
+---
+Drupal comes with a powerful permissions system that lets you control exactly who has access to what on your site. However, one thing that you can't do with Drupal is prohibit users from viewing certain content, but still let them see a preview of it. This quick-hack tutorial shows you how to do just that.
+
+There are several modules (most of them non-core) available for Drupal, that let you restrict access to content through various different mechanisms. The module that I use is <a href="http://drupal.org/project/taxonomy_access">taxonomy access</a>, and this hack is designed to work primarily with content that is protected using this module. However, the principle of the hack is so basic, you could apply it to any of the different node protection and node retrieval mechanisms that Drupal offers, with minimal difficulty (this is me guessing, by the way - maybe it's actually not easy - why don't you find out? :-)).
+
+This hack is a patch for Drupal's core taxonomy module (<strong>4.5.x</strong> version). Basically, what it does is eliminate the mechanisms in the taxonomy system that check access permissions <em>when a node is being previewed</em>. The taxonomy system doesn't handle the full text viewing of a node - that's managed by the node system and by the many modules that extend it - so <strong>there is no way that this patch will allow unauthorised access to the full text of your nodes!</strong> Don't worry about that happening - you would have to start chopping code off the node system before that becomes even a possibility.
+
+<strong>Important note:</strong> this patch only covers node previews in taxonomy terms, not node previews in other places on your site (e.g. on the front page - assuming that your front page is the default <code>/q=node</code> path). If you display protected content on the front page of your site, you'll need to patch the node system in order to get the previews showing up on that front page. Since GreenAsh only displays protected content in taxonomy listings, I've never needed (and hence never bothered) to hack anything else except the taxonomy system in this regard.
+
+<h2>Protect your nodes</h2>
+
+Showing you the patch isn't going to be very useful unless you've got some protected nodes in your system already. So if you haven't already gone and got taxonomy_access, and used it to restrict access to various categories of nodes, then please do so now!
+
+<h2>The patch</h2>
+
+As I said, it's extremely simple. All you have to to is open up your <code>modules/taxonomy.module</code> file, and find the following code:
+
+<pre class="php"><code><?php
+/**
+ * Finds all nodes that match selected taxonomy conditions.
+ *
+ * @param $tids
+ *   An array of term IDs to match.
+ * @param $operator
+ *   How to interpret multiple IDs in the array. Can be "or" or "and".
+ * @param $depth
+ *   How many levels deep to traverse the taxonomy tree. Can be a nonnegative
+ *   integer or "all".
+ * @param $pager
+ *   Whether the nodes are to be used with a pager (the case on most Drupal
+ *   pages) or not (in an XML feed, for example).
+ * @return
+ *   A resource identifier pointing to the query results.
+ */
+function taxonomy_select_nodes($tids = array(), $operator = 'or', $depth = 0, $pager = TRUE) {
+  if (count($tids) > 0) {
+    // For each term ID, generate an array of descendant term IDs to the right depth.
+    $descendant_tids = array();
+    if ($depth === 'all') {
+      $depth = NULL;
+    }
+    foreach ($tids as $index => $tid) {
+      $term = taxonomy_get_term($tid);
+      $tree = taxonomy_get_tree($term->vid, $tid, -1, $depth);
+      $descendant_tids[] = array_merge(array($tid), array_map('_taxonomy_get_tid_from_term', $tree));
+    }
+
+    if ($operator == 'or') {
+      $str_tids = implode(',', call_user_func_array('array_merge', $descendant_tids));
+      $sql = 'SELECT DISTINCT(n.nid), n.sticky, n.created FROM {node} n '. node_access_join_sql() .' INNER JOIN {term_node} tn ON n.nid = tn.nid WHERE tn.tid IN ('. $str_tids .') AND n.status = 1 AND '. node_access_where_sql() .' ORDER BY n.sticky DESC, n.created DESC';
+      $sql_count = 'SELECT COUNT(DISTINCT(n.nid)) FROM {node} n '. node_access_join_sql() .' INNER JOIN {term_node} tn ON n.nid = tn.nid WHERE tn.tid IN ('. $str_tids .') AND n.status = 1 AND '. node_access_where_sql();
+    }
+    else {
+      $joins = '';
+      $wheres = '';
+      foreach ($descendant_tids as $index => $tids) {
+        $joins .= ' INNER JOIN {term_node} tn'. $index .' ON n.nid = tn'. $index .'.nid';
+        $wheres .= ' AND tn'. $index .'.tid IN ('. implode(',', $tids) .')';
+      }
+      $sql = 'SELECT DISTINCT(n.nid), n.sticky, n.created FROM {node} n '. node_access_join_sql() . $joins .' WHERE n.status = 1 AND '. node_access_where_sql() . $wheres .' ORDER BY n.sticky DESC, n.created DESC';
+      $sql_count = 'SELECT COUNT(DISTINCT(n.nid)) FROM {node} n '. node_access_join_sql() . $joins .' WHERE n.status = 1 AND '. node_access_where_sql() . $wheres;
+    }
+
+    if ($pager) {
+      $result = pager_query($sql, variable_get('default_nodes_main', 10) , 0, $sql_count);
+    }
+    else {
+      $result = db_query_range($sql, 0, 15);
+    }
+  }
+
+  return $result;
+}
+?></code></pre>
+
+Now replace it with this code:
+
+<pre class="php"><code><?php
+/**
+ * Finds all nodes that match selected taxonomy conditions.
+ * Hacked to ignore node access conditions, so that nodes are always listed in taxonomy listings,
+ * but cannot actually be opened without the proper permissions - by Jaza on 2005-01-16.
+ *
+ * @param $tids
+ *   An array of term IDs to match.
+ * @param $operator
+ *   How to interpret multiple IDs in the array. Can be "or" or "and".
+ * @param $depth
+ *   How many levels deep to traverse the taxonomy tree. Can be a nonnegative
+ *   integer or "all".
+ * @param $pager
+ *   Whether the nodes are to be used with a pager (the case on most Drupal
+ *   pages) or not (in an XML feed, for example).
+ * @return
+ *   A resource identifier pointing to the query results.
+ */
+function taxonomy_select_nodes($tids = array(), $operator = 'or', $depth = 0, $pager = TRUE) {
+  if (count($tids) > 0) {
+    // For each term ID, generate an array of descendant term IDs to the right depth.
+    $descendant_tids = array();
+    if ($depth === 'all') {
+      $depth = NULL;
+    }
+    foreach ($tids as $index => $tid) {
+      $term = taxonomy_get_term($tid);
+      $tree = taxonomy_get_tree($term->vid, $tid, -1, $depth);
+      $descendant_tids[] = array_merge(array($tid), array_map('_taxonomy_get_tid_from_term', $tree));
+    }
+
+    if ($operator == 'or') {
+      $str_tids = implode(',', call_user_func_array('array_merge', $descendant_tids));
+      $sql = 'SELECT DISTINCT(n.nid), n.sticky, n.created FROM {node} n '. /* node_access_join_sql() .*/ ' INNER JOIN {term_node} tn ON n.nid = tn.nid WHERE tn.tid IN ('. $str_tids .') AND n.status = 1 '. /*AND '. node_access_where_sql() .*/ ' ORDER BY n.sticky DESC, n.created DESC';
+      $sql_count = 'SELECT COUNT(DISTINCT(n.nid)) FROM {node} n '. /*node_access_join_sql() .*/ ' INNER JOIN {term_node} tn ON n.nid = tn.nid WHERE tn.tid IN ('. $str_tids .') AND n.status = 1 '/*. AND '. node_access_where_sql()*/;
+    }
+    else {
+      $joins = '';
+      $wheres = '';
+      foreach ($descendant_tids as $index => $tids) {
+        $joins .= ' INNER JOIN {term_node} tn'. $index .' ON n.nid = tn'. $index .'.nid';
+        $wheres .= ' AND tn'. $index .'.tid IN ('. implode(',', $tids) .')';
+      }
+      $sql = 'SELECT DISTINCT(n.nid), n.sticky, n.created FROM {node} n './*'. node_access_join_sql() .*/ $joins .' WHERE n.status = 1 './*AND '. node_access_where_sql() .*/ $wheres .' ORDER BY n.sticky DESC, n.created DESC';
+      $sql_count = 'SELECT COUNT(DISTINCT(n.nid)) FROM {node} n './*'. node_access_join_sql() .*/ $joins .' WHERE n.status = 1 './*AND '. node_access_where_sql() .*/ $wheres;
+    }
+
+    if ($pager) {
+      $result = pager_query($sql, variable_get('default_nodes_main', 10) , 0, $sql_count);
+    }
+    else {
+      $result = db_query_range($sql, 0, 15);
+    }
+  }
+
+  return $result;
+}
+?></code></pre>
+
+As you can see, all the <code>node_access</code> functions, which are used to prevent the SQL queries from retrieving protected content, have been commented out. So when retrieving node previews, the taxonomy system now effectively ignores all access rights, and always displays a preview no matter who's viewing it. It's only when you try to actually go to the full-text version of the node that you'll get an 'access denied' error.
+
+Drupal does not allow this behaviour at all (unless you hack it), and rightly so, because it is obviously bad design to show users a whole lot of links to pages that they can't actually access. But there are many situations where you want to give your visitors a 'sneak preview' of what a certain piece of content is, and the only way to do it is using something like this. It's a form of advertising: by displaying only a part of the node, you're enticing your visitors to do whatever it is that they have to do (e.g. register, pay money, poison your mother-in-law) in order to access it. So, because I think other Drupal admins would also find this functionality useful, I've published it here.
+
+You can see this patch in action right here on GreenAsh's <a href="/resources/studynotes_essays">study notes and essays</a> page.
+
+Happy hacking!
+
+<strong>Note:</strong> this thought was rapidly published in response to <a href="http://drupal.org/node/20004">this forum question about 'logging in to read more'</a> on <a href="http://drupal.org/">drupal.org</a>.

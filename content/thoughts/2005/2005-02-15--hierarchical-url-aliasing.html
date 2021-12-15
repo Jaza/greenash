@@ -1,0 +1,413 @@
+---
+title: Hierarchical URL aliasing
+date: 2005-02-15
+teaser: |-
+  <em>Part 3 of</em> <strong>"making taxonomy work <em>my</em> way"</strong>.
+
+  Thanks to the path module and its <abbr title="Uniform Resource Locator">URL</abbr> aliasing functionality, Drupal is one of the few <abbr title="Content Management System">CMS</abbr>s that allows your site to have friendly and meaningful URLs for every page. In the grand finale to this series, I show you how to extend this functionality by making Drupal automatically construct hierarchical URL aliases, based on your site's taxonomy structure.
+fileAttachments:
+  - bootstrap.greenash_hier_url.inc
+  - bootstrap.inc.greenash_hier_url.patch
+  - common.greenash_hier_url.inc
+  - common.inc.greenash_hier_url.patch
+---
+<blockquote><p><em>Part 3 of</em> <strong>"making taxonomy work <em>my</em> way"</strong>.</p></blockquote>
+
+Thanks to the path module and its <abbr title="Uniform Resource Locator">URL</abbr> aliasing functionality, Drupal is one of the few <abbr title="Content Management System">CMS</abbr>s that allows your site to have friendly and meaningful URLs for every page. So whereas in other systems, your average URL might look something like this:
+
+<pre class="no-highlight"><code>www.mysite.com/viewpage.php?
+id=476&cat=72&auth=gjdsk38f8vho834yvjso&start=50&range=25</code></pre>
+
+In Drupal, your average URL (potentially - if you bother to alias everything) would look more like this:
+
+<pre class="no-highlight"><code>www.mysite.com/my_favourite_model_aeroplanes</code></pre>
+
+This was actually the pivotal feature that made me choose Drupal, as my favourite platform for web development. After I started using Drupal, I discovered that it hadn't always had such pretty URLs: and even now, the URLs are not so great when its URL rewriting facility is off (e.g. <code>index.php?q=node/81</code>); and still not perfect when URL rewriting is on, but aliases are not defined (e.g. <code>node/81</code>). But at its current stage of development, Drupal allows you to provide reasonably meaningful path aliases for every single page of your site.
+
+In my opinion, the aliasing system is reasonable, but not good enough. In particular, a page's URL should reflect its position in the site's master hierarchy. Just as breadcrumbs tell you where you are, and what pages (or categories) are 'above' you, so too should URLs. In fact, I believe that a site's URLs should match its breadcrumbs exactly. This is actually how most of Drupal's administration pages work already: for example, if you go to the <code>admin/user/configure/permission</code> page of your Drupal site, you will see that the breadcrumbs (in combination with tabs and the page heading) mark your current location as:
+
+<pre class="no-highlight"><code>home -> administer -> users -> configure -> permissions</code></pre>
+
+Unfortunately, the hierarchies and the individual URLs for the administration pages are hard-coded, and there is currently no way to create similar structures (with matching URLs) for the public pages of your site.
+
+<h2>Battle plan</h2>
+
+Our aim, for this final part of the series, is to create a patch that allows Drupal to automatically generate hierarchical URL aliases, based (primarily) on our site's taxonomy structure. We should not have to modify the taxonomy system at all in order to do this: path aliases are handled only by <code>path.module</code>, and by a few mechanisms within the core code of Drupal. We can already assign simple aliases both to nodes, and to taxonomy terms, such as:
+
+<pre class="no-highlight"><code>taxonomy/term/7 : research_papers</code></pre>
+
+So what we want is a system that will find the alias of the current page, and the alises of all its parents, and join them together to form a hierarchical URL, such as:
+
+<pre class="no-highlight"><code>www.mysite.com/articles/research_papers/
+critical_evaluation_of_kylie_minogues_posterior</code></pre>
+
+<em>(if an article with this name - or a similar name - actually exists on the Internet, then please <a href="mailto:jazepstein@greenash.net.au">let me know about it</a> as a matter of the utmost urgency ;-))</em>
+
+As with part 2, in order to implement the patch that I cover in this article, it is essential that you've already read (and hopefully implemented) the patches from part 1 (<a href="/posts/thoughts/basic_breadcrumbs_and_taxonomy" title="part 1 of this series">basic breadcrumbs and taxonomy</a>), and preferable (although not essential) that you've also gone through part 2 (<a href="/posts/thoughts/cross_vocab_taxonomy_hierarchies" title="part 2 of this series">cross-vocabulary taxonomy hierarchies</a>). Once again, I am assuming that you've still got your Drupal test site that we set up in part 1, and that you're ready to keep going from where we finished last time.
+
+The general rule, when writing patches for any piece of software, is to try and modify add-on modules instead of core components wherever possible, and to modify the code of the core system only when there is no other alternative. In the first two parts of the series, we were quite easily able to stay on the good side of this rule. The only places where we have modified code so far is in <code>taxonomy.module</code> and <code>taxonomy_context.module</code>. But aliasing, as I said, is handled both by <code>path.module</code> and by the core system; so this time, we may have no choice but to join the dark side, and modify some core code.
+
+<blockquote><strong>Ancient GreenAsh proverb:</strong> When advice on battling the dark side you need, then seek it you must, from Master Yoda.</blockquote>
+
+Right now we do need some advice; but unfortunately, since I was unable to contact the great Jedi master himself (although I did find a web site where <a href="http://www.limmy.com/speakingclocks/yoda/" title="Speaking Yoda clock">Yoda will tell you the time</a>), we'll have to make do by consulting the next best thing, <a href="http://drupal.org/" title="Drupal web site">drupal.org</a>.
+
+Let's have a look at the <a href="http://drupal.org/handbook" title="Drupal handbook">handbook</a> entry that explains <a href="http://drupal.org/node/10858" title="How Drupal serves a page">Drupal's page serving mechanism</a> (page accessed on 2005-02-14 - contents may have changed since then). The following quote from this page might be able to help us:
+
+<blockquote><p><strong>Drupal handbook:</strong> If the value of q [what Drupal calls the URL] is a path alias, Drupal replaces the value of q with the actual path that the value of q is aliased to. This sleight-of-hand happens before any modules see the value of q. Cool.</p><p>Module initialization now happens via the module_init() function.</p></blockquote>
+
+<em>(The part of the article that this quote comes from, is talking about code in the <code>includes/common.inc</code> file).</em>
+
+<strong>Oh-oh</strong>: that's bad news for us! According to this quote, when a page request is given to Drupal, the core system handles the conversion of aliases to system paths, <em>before any modules are loaded</em>. This means that not only are alias-to-path conversions (and vice versa) handled entirely by the Drupal core; but additionally, the architecture of Drupal makes it impossible for this functionality to be controlled from within a module! Upon inspecting <code>path.module</code>, I was able to verify that yes, indeed, this module only handles the administration of aliases, not the actual use of them. The code that's responsible for this lies within two files - <code>bootstrap.inc</code> and <code>common.inc</code> - that together contain a fair percentage of the fundamental code comprising the Drupal core. So roll your sleeves up, and prepare to get your hands really dirty: this time, we're going to be patching deep down at the core.
+
+<h2>Step 1: give everything an alias</h2>
+
+Implementing a hierarchical URL aliasing system isn't going to be of much use, unless everything in the hierarchy has an alias. So before we start coding, let's go the the <code>administer -> url aliases</code> page of the test site, and add the following aliases (you can change the actual alias names to suit your own tastes, if you want):
+
+<table>
+<thead>
+<tr>
+<th>System path</th>
+<th>Alias</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>taxonomy/term/1</td>
+<td>posts</td>
+</tr>
+<tr>
+<td>taxonomy/term/2</td>
+<td>news</td>
+</tr>
+<tr>
+<td>taxonomy/term/3</td>
+<td>by_priority_news</td>
+</tr>
+<tr>
+<td>taxonomy/term/4</td>
+<td>important_news</td>
+</tr>
+</tbody>
+<tfoot></tfoot>
+</table>
+
+You should already have an alias in place for <code>node/1</code>, but if you don't, add one now. After doing this, the admin page for your aliases should look like this:
+
+[thumbnail aliases_list.jpg List of URL aliases (screenshot)]
+
+<h2>Step 2: the alias output patch</h2>
+
+Drupal's path aliasing system requires two distinct subsystems in order to work properly: the 'outgoing' system, which converts an internal system path into its corresponding alias (if any), before outputting it to the user; and the 'incoming' system, which converts an aliased user-supplied path back into its corresponding internal system path. We are going to begin by patching the 'outgoing' system.
+
+Open up the file <code>includes/bootstrap.inc</code>, and find the following code in it:
+
+<pre class="php"><code><?php
+/**
+ * Given an internal Drupal path, return the alias set by the administrator.
+ */
+function drupal_get_path_alias($path) {
+  if (($map = drupal_get_path_map()) && ($newpath = array_search($path, $map))) {
+    return $newpath;
+  }
+  elseif (function_exists('conf_url_rewrite')) {
+    return conf_url_rewrite($path, 'outgoing');
+  }
+  else {
+    // No alias found. Return the normal path.
+    return $path;
+  }
+}
+?></code></pre>
+
+Now replace it with this code:
+
+<pre class="php"><code><?php
+/**
+ * Given an internal Drupal path, return the alias set by the administrator.
+ * Patched to return an extended alias, based on context.
+ * Patch done by x on xxxx-xx-xx.
+ */
+function drupal_get_path_alias($path) {
+  if (($map = drupal_get_path_map()) && ($newpath = array_search($path, $map))) {
+    return _drupal_get_path_alias_context($newpath, $path, $map);
+  }
+  elseif (function_exists('conf_url_rewrite')) {
+    return conf_url_rewrite($path, 'outgoing');
+  }
+  else {
+    // No alias found. Return the normal path.
+    return $path;
+  }
+}
+
+/**
+ * Given an internal Drupal path, and the alias of that path, return an extended alias based on context.
+ * Written by Jaza on 2004-12-26.
+ * Implemented by x on xxxx-xx-xx.
+ */
+function _drupal_get_path_alias_context($newpath, $path, $map) {
+  //If the alias already has a context defined, do nothing.
+  if (strstr($newpath, "/")) {
+    return $newpath;
+  }
+
+  // Break up the original path.
+  $path_split = explode("/", $path);
+
+  $anyslashes = FALSE;
+  $contextpath = $newpath;
+
+  // Work out the new path differently depending on the first part of the old path.
+  switch (strtolower($path_split[0])) {
+    case "node":
+      // We are only interested in pages of the form node/x (not node/add, node/x/edit, etc)
+      if (isset($path_split[1]) && is_numeric($path_split[1]) && $path_split[1] > 0) {
+        $nid = $path_split[1];
+
+        $result = db_query("SELECT * FROM {node} WHERE nid = %d", $nid);
+        if ($node = db_fetch_object($result)) {
+          //Find out what 'Sections' term (and 'Forums' term, for forum topics) this node is classified as.
+          $result = db_query("SELECT tn.* FROM {term_node} tn INNER JOIN {term_data} t ON tn.tid = t.tid WHERE tn.nid = %d AND t.vid IN (1,2)", $nid);
+          switch ($node->type) {
+            case "page":
+            case "story":
+            case "weblink":
+            case "webform":
+            case "poll":
+              while ($term = db_fetch_object($result)) {
+                // Grab the alias of the parent term, and add it to the front of the full alias.
+                $result = db_query("SELECT * FROM {url_alias} WHERE src = 'taxonomy/term/%d'", $term->tid);
+                if ($alias = db_fetch_object($result)) {
+                  $contextpath = $alias->dst. "/". $contextpath;
+                  if (strstr($alias->dst, "/"))
+                    $anyslashes = TRUE;
+
+                }
+                // Keep grabbing more parent terms and their aliases, until we reach the top of the hierarchy.
+                $result = db_query("SELECT parent as 'tid' FROM {term_hierarchy} WHERE tid = %d", $term->tid);
+              }
+              break;
+
+            case "forum":
+              // Forum topics must be treated differently to other nodes, since:
+              // a) They only have one parent, so no loop needed to traverse the hierarchy;
+              // b) Their parent terms are part of the forum module, and so the path given must be relative to the forum module.
+              if ($term = db_fetch_object($result)) {
+                $result = db_query("SELECT * FROM {url_alias} WHERE src = 'forum/%d'", $term->tid);
+                if ($alias = db_fetch_object($result)) {
+                  $contextpath = "contact/forums/". $alias->dst. "/". $contextpath;
+                  if (strstr($alias->dst, "/"))
+                    $anyslashes = TRUE;
+
+                }
+              }
+              break;
+
+            case "image":
+              // For image nodes, override the default path (image/) with this custom path.
+              $contextpath = "images/". $contextpath;
+              break;
+          }
+        }
+        // If the aliases of any parent terms contained slashes, then an absolute path has been defined, so scrap the whole
+        // context-sensitve path business.
+        if (!$anyslashes) {
+          return $contextpath;
+        }
+        else {
+          return $newpath;
+        }
+      }
+      else {
+        return $newpath;
+      }
+      break;
+
+    case "taxonomy":
+      // We are only interested in pages of the form taxonomy/term/x
+      if (isset($path_split[1]) && is_string($path_split[1]) && $path_split[1] == "term" && isset($path_split[2]) &&
+      is_numeric($path_split[2]) && $path_split[2] > 0) {
+        $tid = $path_split[2];
+        // Change the boolean variable below if you don't want the cross-vocabulary-aware query.
+        $distantparent = TRUE;
+        if ($distantparent) {
+          $sql_taxonomy = 'SELECT t.* FROM {term_data} t, {term_hierarchy} h LEFT JOIN {term_distantparent} d ON h.tid = d.tid '.
+          'WHERE h.tid = %d AND (d.parent = t.tid OR h.parent = t.tid)';
+        }
+        else {
+          $sql_taxonomy = 'SELECT t.* FROM {term_data} t, {term_hierarchy} h '.
+          'WHERE h.tid = %d AND h.parent = t.tid';
+        }
+
+        while (($result = db_query($sql_taxonomy, $tid)) && ($term = db_fetch_object($result))) {
+          // Grab the alias of the current term, and the aliases of all its parents, and put them all together.
+          $result = db_query("SELECT * FROM {url_alias} WHERE src = 'taxonomy/term/%d'", $term->tid);
+          if ($alias = db_fetch_object($result)) {
+            $contextpath = $alias->dst. "/". $contextpath;
+            if (strstr($alias->dst, "/")) {
+              $anyslashes = TRUE;
+            }
+          }
+          $tid = $term->tid;
+        }
+        // Don't use the hierarchical alias if any absolute-path aliases were found.
+        if (!$anyslashes) {
+          return $contextpath;
+        }
+        else {
+          return $newpath;
+        }
+      }
+      else {
+        return $newpath;
+      }
+      break;
+
+    case "forum":
+      // If the term is a forum topic, then display the path relative to the forum module.
+      return "contact/forums/". $contextpath;
+
+      break;
+
+    case "image":
+      // We only want image pages of the form image/tid/x
+      // (i.e. image gallery pages - not regular taxonomy term pages).
+      if (isset($path_split[1]) && is_string($path_split[1]) && $path_split[1] == "tid" && isset($path_split[2]) &&
+      is_numeric($path_split[2]) && $path_split[2] > 0) {
+        $tid = $path_split[2];
+        // Since taxonomy terms for images are not of the form image/tid/x, this query does not need to be cross-vocabulary aware.
+        $sql_taxonomy = 'SELECT t.* FROM {term_data} t, {term_hierarchy} h '.
+        'WHERE h.tid = %d AND h.parent = t.tid';
+
+        while (($result = db_query($sql_taxonomy, $tid)) && ($term = db_fetch_object($result))) {
+          // Grab the alias of this term, and the aliases of its parent terms.
+          $result = db_query("SELECT * FROM {url_alias} WHERE src = 'image/tid/%d'", $term->tid);
+          if ($alias = db_fetch_object($result)) {
+            $contextpath = $alias->dst. "/". $contextpath;
+            if (strstr($alias->dst, "/")) {
+              $anyslashes = TRUE;
+            }
+          }
+          $tid = $term->tid;
+        }
+        // The alias must be relative to the image galleries page.
+        $contextpath = "images/galleries/". $contextpath;
+        if (!$anyslashes) {
+          return $contextpath;
+        }
+        else {
+          return $newpath;
+        }
+      }
+      else {
+        return $newpath;
+      }
+      break;
+
+    default:
+      return $newpath;
+  }
+}
+?></code></pre>
+
+Phew! That sure was a long function. It would probably be better to break it up into smaller functions, but in order to keep all the code changes in one place (rather than messing up <code>bootstrap.inc</code> further), we'll leave it as it is for this tutorial.
+
+As you can see, we've modified <code>drupal_get_path_alias()</code> so that it calls our new function, <code>_drupal_get_path_alias_context()</code>, and relies on that function's output to determine its return value (note the underscore at the start of the new function - this denotes that it is a 'helper' function that is not called externally). The function is too long and complex to analyse in great detail here: the numerous comments that pepper its code will help you to understand how it works.
+
+Notice that the function as I use it is designed to produce hierarchical aliases for a whole lot of different node types (the regular method works for page, story, webform, weblink, and poll; and special methods are used for forum and image). You can add or remove node types from this list, depending on what modules you use on your specific site(s), and also depending on what node types you want this system to apply to. Please observe that <strong>book nodes are not covered by this function</strong>; this is because:
+
+<ol type="a">
+<li>I don't use <code>book.module</code> - I find that a combination of several other modules (mainly <code>taxonomy</code> and <code>taxonomy_context</code>) achieve similar results to a book hierarchy, but in a better way;</li>
+<li>Book hierarchies have nothing to do with taxonomy hierarchies - they are a special type of system where one node is actually the child of another node (rather than being the child of a <em>term</em>) - but my function is designed specifically to parse taxonomy hierarchies;</li>
+<li>Books and taxonomy terms are incompatible - you cannot assign a book node under a taxonomy hierarchy - so making a node part of a book hierarchy means that you're sacrificing all the great things about Drupal's taxonomy system.</li>
+</ol>
+
+So if you've been reading this article because you're looking for a way to make your book hierarchies use matching hierarchical URLs, then I'm very sorry, but you've come to the wrong place. It probably wouldn't be that hard to extend this function so that it includes book hierarchies, but I'm not planning to make that extension any time in the near future. This series is about using taxonomy, not about using the book module. And I am trying to encourage you to use taxonomy, as an <em>alternative</em> (in some cases) to the book module, because I personally believe that taxonomy is a much better system.
+
+After you've implemented this new function of mine, reload the front page of your test site. You'll see that hierarchical aliases are now being outputted for all your taxonomy terms, and for your node. Cool! That looks pretty awesome, don't you think? However (after you've calmed down, put away the champagne, and stopped celebrating), if you try following (i.e. clicking) any of these links, you'll see that they don't actually work yet; you just get a 'page not found' error, like this one:
+
+[thumbnail testnode_not_found.jpg Node page not found (screenshot)]
+
+This is because we've implemented the 'outgoing' system for our hierarchical aliases, but not the 'incoming' system. So Drupal now knows how to generate these aliases, but not how to turn them back into system paths when the user follows them.
+
+<h2>Step 3: the alias input patch</h2>
+
+While the patch for the 'outgoing' system was very long and intricate, in some ways, working out how to patch the 'incoming' system is even more complicated; because although we don't need to write nearly as much code for the 'incoming' system, we need to think very carefully about how we want it to work. Let's go through some thought processes before we actually get to the patch:
+
+<ol>
+<li>The module that handles the management of aliases is <code>path.module</code>. This module has a rule that every alias in the system must be unique. We haven't touched the path module, so this rule is still in place. We're also storing the aliases for each page just as we always did - as individual paths that correspond to their matching Drupal system paths - we're only joining the aliases together when they get outputted.</li>
+<li>If we think about this carefully, it means that in our new hierarchical aliasing system, we can always evaluate the alias just by looking at the part of it that comes <em>after the last slash</em>. That is, our patch for the 'incoming' system will only need to look at the end of the alias: it can quite literally ignore the rest.</li>
+<li>Keeping the system like this has one big advantage and one big disadvantage. The big advantage is that the alias will still resolve, whether the user types in only the last part of it, or the entire hierarchical alias, or even something in between - so there is a greater chance that the user will get to where they want to go. The big disadvantage is that because every alias must still be unique, we cannot have two context-sensitive paths that end in the same way. For example, we cannot have one path <code>posts/news/computer_games</code>, and another path <code>hobbies/geeky/computer_games</code> - as far as Drupal is concerned, they're the same path - and the path module simply will not allow two aliases called 'computer_games' to be added. This disadvantage can be overcome by using slightly more detailed aliases, such as <code>computer_games_news</code> and <code>computer_games_hobbies</code> (you might have noticed such aliases being used here on GreenAsh), so it's not a terribly big problem.</li>
+<li>There is another potential problem with this system - it means that you don't have enough control over the URLs that will resolve within your own site. This is a security issue that could have serious and embarrassing side effects, if you don't do anything about it. For example, say you have a hierarchical URL <code>products/toys/teddy_bear</code>, and a visitor to your site liked this page so much, they wanted to put a link to it on their own web site. They could link to <code>products/toys/teddy_bear</code>, <code>products/teddy_bear</code>, <code>teddy_bear</code>, etc; <strong>or</strong>, they might link to <code>this_site_stinks/teddy_bear</code>, or <code>elvis_is_still_alive_i_swear/ and_jfk_wasnt_shot_either/ and_man_never_landed_on_the_moon_too/ teddy_bear</code>, or some other really inappropriate URL that shouldn't be resolving as a valid page on your web site. In order to prevent this from happening, we will need to check that every alias in the hierarchy is a valid alias on your site: it doesn't necessarily matter whether the combination of aliases forms a valid hierarchy, just that all of the aliases are real and are actually stored in your Drupal system.</li>
+</ol>
+
+OK, now that we've got all those design quandaries sorted out, let's do the patch. Open up the file <code>includes/common.inc</code>, and find the following code in it:
+
+<pre class="php"><code><?php
+/**
+ * Given a path alias, return the internal path it represents.
+ */
+function drupal_get_normal_path($path) {
+  if (($map = drupal_get_path_map()) && isset($map[$path])) {
+    return $map[$path];
+  }
+  elseif (function_exists('conf_url_rewrite')) {
+    return conf_url_rewrite($path, 'incoming');
+  }
+  else {
+    return $path;
+  }
+}
+?></code></pre>
+
+Now replace it with this code:
+
+<pre class="php"><code><?php
+/**
+ * Given a path alias, return the internal path it represents.
+ * Patched to search for the last part of the alias by itself, before searching for the whole alias.
+ * Patch done by x on xxxx-xx-xx.
+ */
+function drupal_get_normal_path($path) {
+  $path_split = explode("/", $path);
+  // $path_end holds ONLY the part of the URL after the last slash.
+  $path_end = end($path_split);
+  $path_valid = TRUE;
+  $map = drupal_get_path_map();
+
+  foreach ($path_split as $path_part) {
+    // If each part of the path is valid, then this is a valid hierarchical URL.
+    if (($map) && (!isset($map[$path_part]))) {
+      $path_valid = FALSE;
+    }
+  }
+
+  if (($map) && (isset($map[$path_end])) && ($path_valid)) {
+    // If $path_end is a proper alias, then resolve the path solely according to $path_end.
+    return $map[$path_end];
+  }
+  elseif (($map) && (isset($map[$path]))) {
+    return $map[$path];
+  }
+  elseif (function_exists('conf_url_rewrite')) {
+    return conf_url_rewrite($path, 'incoming');
+  }
+  else {
+    return $path;
+  }
+}
+?></code></pre>
+
+After you implement this part of the patch, all your hierarchical URLs should resolve, much like this:
+
+[thumbnail testnode_alias_resolves.jpg Test node with working alias (screenshot)]
+
+<h2>That's all, folks</h2>
+
+Congratulations! You have now finished my tutorial on creating automatically generated hierarchical URL aliases, which was the last of my 3-part series on getting the most out of Drupal's taxonomy system. I hope that you've gotten as much out of reading this series, as I got out of writing it. I also hope that I've fulfilled at least some of the aims that I set out to achieve at the beginning, such as lessening the frustration that many people have had with taxonomy, and bringing out some new ideas for the future direction of the taxonomy system.
+
+I also should mention that as far as I'm concerned, the content of this final part of the series (hierarchical URL aliasing) is the best part of the series by far. I only really wrote parts 1 and 2 as a means to an end - the things that I've demonstrated in this final episode are the things that I'm really proud of. As you can see, everything that I've gone through in this series - hierarchical URL aliases in particular - has been successfully implemented on this very site, and is now a critical functional component of the code that powers GreenAsh. And by the way, hierarchical URL aliases work even better when used in conjunction with the new <a href="http://drupal.org/node/15814" title="Great finishing touch to your aliasing system">autopath module</a>, which generates an alias for your nodes if you don't enter one manually.
+
+As with part 2, the code in this part is not perfect, has not been executed all that gracefully, and is completely lacking a frontend administration interface. My <del>reasons</del> excuses for this are the same as those given in part 2; and as with cross-vocabulary hierarchies, I hope to improve the code for hierarchical URL aliases in the future, and hopefully to release it as a contributed Drupal module some day. But rather than keep you guys - the Drupal community - waiting what could be a long time, I figure that I've got working code right here and right now, so I might as well share it with you, because I know that plenty of you will find it useful.
+
+The usual patches and replacement modules can be found at the bottom of the page. I hope that you've found this series to be beneficial to you: feel free to voice whatever opinions or criticisms you may have by posting a comment (link at the bottom of the page). And who knows... there may be more Drupal goodies available on GreenAsh sometime in the near future!

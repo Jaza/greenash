@@ -1,0 +1,67 @@
+---
+title: Aussie Daylight Savings PHP function
+date: 2005-03-27
+teaser: |-
+  Want to know how the GreenAsh clock always tells you, with perfect accuracy, the time in Sydney Australia? Our secret is a little PHP function that modifies the clock according to the rules of NSW Daylight Savings Time. We are now sharing this code with the public for the first time.
+---
+Want to know how the GreenAsh clock always tells you, with perfect accuracy, the time in Sydney Australia? Our secret is a little PHP function that modifies the clock according to the rules of NSW Daylight Savings Time. No, in case you were wondering, we <em>don't</em> stay up until 2am twice each year, ready to change the site's time zone configuration at exactly the right moment! A simple little bit of programming does that for us. And unlike a human, computer code doesn't fall asleep waiting for the clock to tick over.
+
+The function that we use is based on the rules of NSW Daylight Savings Time, as explained at Lawlink's <a href="http://www.lawlink.nsw.gov.au/crd.nsf/pages/time1">Time in NSW</a> page (they also have another excellent page that explains the <a href="http://www.lawlink.nsw.gov.au/crd.nsf/pages/time2">history of Daylight Saving in NSW</a>, for those that are interested). The current set-up for Daylight Saving is as follows:
+
+<ul>
+<li><strong>Starts:</strong> 2am, <em>last Sunday in October</em>.</li>
+<li><strong>Ends:</strong> 3am, <em>last Sunday in March</em>.</li>
+<li><strong>What happens during Daylight Saving:</strong> clocks go forward <em>one hour</em>.</li>
+</ul>
+
+And that's really all there is to it! So without further ado, I present to you the PHP function that GreenAsh uses in order to calculate whether or not it is currently <abbr title="Daylight Savings Time">DST</abbr>.
+
+<pre class="php"><code><?php
+/**
+ * Determine if a date is in Daylight Savings Time (AEST - NSW).
+ * By Jaza, 2005-01-03 (birthday function).
+ *
+ * @param $timestamp
+ * the exact date on which to make the calculation, as a UNIX timestamp (should already be set to GMT+10:00).
+ * @return
+ * boolean value of TRUE for DST dates, and FALSE for non-DST dates.
+ */
+function daylight_saving($timestamp) {
+  $daylight_saving = FALSE;
+  $current_month = gmdate('n', $timestamp);
+  $current_day = gmdate('d', $timestamp);
+  $current_weekday = gmdate('w', $timestamp);
+  // Daylight savings is between October and March
+  if($current_month >= 10 || $current_month <= 3) {
+    $daylight_saving = TRUE;
+    if($current_month == 10 || $current_month == 3) {
+      // It starts on the last Sunday of October, and ends on the last Sunday of March.
+      if($current_day >= 25) {
+        if($current_day - $current_weekday >= 25) {
+          if($current_weekday == 0) {
+            // Starts at 2am in the morning.
+            if(gmdate('G', $timestamp) >= 2) {
+              $daylight_saving = $current_month == 10 ? TRUE : FALSE;
+            } else {
+              $daylight_saving = $current_month == 10 ? FALSE : TRUE;
+            }
+          } else {
+            $daylight_saving = $current_month == 10 ? TRUE : FALSE;
+          }
+        } else {
+          $daylight_saving = $current_month == 10 ? FALSE : TRUE;
+        }
+      } else {
+        $daylight_saving = $current_month == 10 ? FALSE : TRUE;
+      }
+    }
+  }
+  return $daylight_saving;
+}
+?></code></pre>
+
+It's not the world's most easy-to-read or easy-to-maintain function, I know, but it does the job and it does it well. If you're worried about its reliablility, let me assure you that it's been in operation on our site for almost a full calendar year now, so it has been tested to have worked for both the start and the end of Daylight Savings.
+
+So until they change the rules about Daylight Savings again (they're talking about doing this at the moment, I think), or until there's one year where they change the rules just for that year, because of some special circumstance (like in 2000, when they started Daylight Savings early so that it would be in effect for the Sydney Olympics), this function will accurately and reliably tell you whether or not a given date and time falls within the NSW Daylight Savings period.
+
+I wrote this function myself, because I couldn't find any PHP on the net to do it for me. I'm posting the code here to avoid this hassle for other webmasters in the future. Feel free to use it on your own site, to modify it, or to put it to other uses. As long as you acknowledge me as the original author, and as long as you don't sell it or do any other un-<a href="http://www.gnu.org/copyleft/gpl.html">GPL</a>-like things with it, the code is yours to play with!

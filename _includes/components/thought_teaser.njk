@@ -1,0 +1,9 @@
+<article>
+  <h2><a href="{{ thoughtItem.url | url }}">{{ thoughtItem.data.title }}</a></h2>
+
+  <p><time datetime="{{ thoughtItem.date | dateISO }}">{{ thoughtItem.date | dateDMY }}</time></p>
+
+  {% if thoughtItem.data.teaser %}
+  {{ thoughtItem.data.teaser | inlineThumbnails | autop | safe }}
+  {% endif %}
+</article>

@@ -1,0 +1,50 @@
+{%- if pagination.pages.length > 1 %}
+<div id="pager">
+  {%- if pagination.href.previous %}
+    <a href="{{ pagination.href.first }}" class="pager-first" title="Go to first page">« first</a>
+
+    <a href="{{ pagination.href.previous }}" class="{% if pagination.href.previous === pagination.href.first %}pager-first{% else %}pager-previous{% endif %}" title="Go to previous page">‹ previous</a>
+  {%- endif %}
+
+  <span class="pager-list">
+
+  {%- set ellipsed = false %}
+  {%- set shouldEllipse = false %}
+  {%- set pageNumber = 0 %}
+  {%- for pageEntry in pagination.pages %}
+  {%- if page.url == pagination.hrefs[loop.index0] %}
+  {%- set pageNumber = loop.index %}
+  {%- endif %}
+  {%- endfor %}
+  {%- for pageEntry in pagination.pages %}
+  {%- set right = pagination.pages.length - loop.index %}
+  {%- set showNumber = (loop.index <= 3) or (not right) %}
+  {%- set showNumber = showNumber or (pagination.pages.length <= 5) %}{# Issue #7523 #}
+  {%- set showNumber = showNumber or ((pageNumber > (loop.index - 2)) and (pageNumber < (loop.index + 2))) %}
+  {%- if showNumber %}
+    {%- set ellipsed = false %}
+    {%- set shouldEllipse = false %}
+  {%- else %}
+    {%- set shouldEllipse = not ellipsed %}
+    {%- set ellipsed = true %}
+  {%- endif %}
+  {%- if showNumber %}
+    {%- if page.url === pagination.hrefs[loop.index0] %}
+    <strong class="pager-current">{{ loop.index }}</strong>
+    {%- else %}
+    <a href="{{ pagination.hrefs[loop.index0] }}" class="pager-next" title="Go to page {{ loop.index }}">{{ loop.index }}</a>
+    {%- endif %}
+  {%- elif shouldEllipse %}
+    <span class="pager-ellipsis">…</span>
+  {%- endif %}
+  {%- endfor %}
+
+  </span><!-- /.pager-list -->
+
+  {%- if pagination.href.next %}
+    <a href="{{ pagination.href.next }}" class="{% if pagination.href.next === pagination.href.last %}pager-last{% else %}pager-next{% endif %}" title="Go to next page">next ›</a>
+
+    <a href="{{ pagination.href.last }}" class="pager-last" title="Go to last page">last »</a>
+  {%- endif %}
+</div>
+{%- endif %}

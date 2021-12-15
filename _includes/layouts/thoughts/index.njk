@@ -1,0 +1,25 @@
+---
+layout: layouts/base.njk
+pagination:
+  data: collections.thoughts
+  size: 10
+  alias: thoughtItems
+  reverse: true
+  pageOnEmptyData: true
+---
+<h1>{{ renderData.title or title }}</h1>
+
+{%- if thoughtItems.length %}
+
+{# Can't use a regular nunjucks for loop because inlineThumbnails is an async filter #}
+{# See: https://github.com/11ty/eleventy/issues/2088 #}
+{%- asyncAll thoughtItem in thoughtItems %}
+{% include "components/thought_teaser.njk" %}
+{%- endall %}
+
+{% include "components/pagination.njk" %}
+{%- else %}
+
+<p><em>I'm thoughtless!</em></p>
+
+{%- endif %}

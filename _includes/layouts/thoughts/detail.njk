@@ -4,9 +4,11 @@ layout: layouts/base.njk
 <article>
   <h1>{{ renderData.title or title }}</h1>
 
+  <p><time datetime="{{ date | dateISO }}">{{ date | dateDMY }}</time></p>
+
   {{ content | inlineThumbnails | autop | safe }}
 
-  {% if fileAttachments and 0 %}
+  {% if fileAttachments %}
   <h2>File attachments</h2>
   <ul>
     {% for fileAttachment in fileAttachments %}

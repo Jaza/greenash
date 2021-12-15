@@ -1,0 +1,297 @@
+---
+title: Cross-vocabulary taxonomy hierarchies
+date: 2005-02-13
+fileAttachments:
+  - taxonomy.greenash_crossvocab.module
+  - taxonomy.module.greenash_crossvocab.patch
+  - taxonomy_context.greenash_crossvocab.module
+  - taxonomy_context.module.greenash_crossvocab.patch
+teaser: |-
+  <em>Part 2 of</em> <strong>"making taxonomy work <em>my</em> way"</strong>.
+
+  Category hierarchies are cool, but in Drupal's taxonomy system, they can only span one vocabulary... until now! Join me as I continue my home-renovation of the taxonomy module, by allowing a term in one vocab to have a 'distant parent' in another one. The breadcrumb improvements made in part 1 really shine here, as we generate breadcrumbs that span several vocabularies.
+---
+<blockquote><em>Part 2 of</em> <strong>"making taxonomy work <em>my</em> way"</strong>.</blockquote>
+
+In <a href="/posts/thoughts/basic_breadcrumbs_and_taxonomy">part 1</a> of this series, we examined a few of the bugs in the breadcrumb generation mechanisms employed by Drual's taxonomy system. We didn't really implement anything new: we just patched up some of the existing functionality so that it worked better. Our 'test platform' for Drupal now boasts beautiful breadcrumbs - both for nodes and for terms - that reflect a master taxonomy hierarchy quite accurately (as they should).
+
+Now, things are going to start getting more serious. We're going to be adding a new custom table to Drupal's database structure, putting some data in it, and changing code all over the place in order to use this new data. The result of this: a cross-vocabulary hierarchy structure, in which a term in one vocab may have a 'distant parent' in another one.
+
+Before you read on, though, please be aware that I'm assuming you've already read and (possibly) implemented what was introduced in part 1, <a href="/posts/thoughts/basic_breadcrumbs_and_taxonomy">basic breadcrumbs and taxonomy</a>. I will be jumping in right at the deep end in this article. There is no sprawling introduction, no guide to setting up your clean Drupal installation, and no instructions on adding categories and content. Basically, if you're planning on <em>doing</em> the stuff in this article, you should have already done all the stuff in the previous one: and that includes the patches to taxonomy and taxonomy_context, because the patches here are dependant on those I've already demonstrated.
+
+Still here? Glad to have you, <del>soldier</del> hacker. OK, our goal in this tutorial is to allow a term in one vocabulary to have a 'distant parent' in another one. Our changes cannot break the existing system, which relies on the top-level term(s) in any vocabulary having a parent ID of 0 (i.e. having no parent): seeing that we will have to give some top-level terms an actual (i.e. non-zero) parent ID, in order to achieve our goal, things could get a bit tricky if we're not careful. Once we've implemented such a system, we want to see it being reflected in our breadcrumbs: that is, we want breadcrumbs that at times span more than one vocabulary.
+
+<h2>But... why?</h2>
+
+Why do we need to be able to link together terms in different vocabularies, you ask? We can see why by looking at what we've got now in our current Drupal test system. At the moment, there are two vocabularies: <em>Sections</em> (which has a top-level term <em>posts</em>, and <em>news</em>, which is a child of <em>posts</em>); and <em>News by priority</em> (which also has a top-level term - <em>browse by priority</em> - and a child term <em>important</em>). So this is our current taxonomy hierarchy:
+
+<pre class="no-highlight"><code>(Sections) Posts -> News
+(News by priority) Browse by priority -> Important</code></pre>
+
+But the term <em>browse by priority</em> is really a particular method of browsing news items. It only applies to news items, not to nodes categorised in any of the other terms in <em>Sections</em>. So really, our hierarchy should be like this:
+
+<pre class="no-highlight"><code>(Sections) Posts -> News -> (News by priority) Browse by priority -> Important
+</code></pre>
+
+Once we've changed the hierarchy so that it makes more sense, the potential next step becomes obvious. We can make more vocabularies, and link them to the term <em>news</em>, and classify news items according to many different structures! For example:
+
+<pre class="no-highlight"><code>Posts -> News -> Browse by priority -> Important
+Posts -> News -> Browse by category -> Computer hardware
+Posts -> News -> Browse by mood -> Angry
+Posts -> News -> Browse by length -> Long and rambling</code></pre>
+
+And so, by doing this, we really have achieved the best of both worlds: we can utilise the power of taxonomy exactly as it was designed to be utilised - for categorising nodes under many different vocabularies, according to many different criteria; <strong>plus</strong>, <em>at the same time</em> we can still maintain a single master hierarchy for the entire site! Cool, huh?
+
+Now, while you may be nodding your head right now, and thinking: <em>"yeah, that is pretty cool"</em>; I know that you might also be shaking your head, and still wondering: <em>"why?"</em> And after explaining my motivations, I can understand why many of you would fail to see the relevance or the usefulness of such a system in any site of your own. This is something that not every site needs - it's only for sites where you have lots of nodes, and you need (or want) to classify them in many different ways - and it's also simply not for everyone: many of you, I'm sure, would prefer sticking to the current system, which is more flexible than mine, albeit with some sacrifice to your site's structure. So don't be alarmed if you really don't want to implement this, but you <em>do</em> want to implement the hierarchical URL system in part 3: it is quite possible to skip this, and go straight on to the final part of the series, and still have a fully functional code base.
+
+<h2>Step 1: modify the database</h2>
+
+OK, let's get started! In order to get through this first part of the tutorial, it is essential that you have a backend database tool at your disposal. If you don't have it already, I highly recommend that you grab a copy of <a href="http://www.phpmyadmin.net/">phpMyAdmin</a>, which uses a PHP-based web interface, and is the world's most popular MySQL administration tool (for a good reason, too). Some other alternatives include Drupal's <a href="http://drupal.org/node/8482">dba.module</a> (which I hear is alright); and for those of you that are feeling particularly geeky, there is always the MySQL command line tool itself (part of all MySQL installations). If you're using PostgreSQL, then I'm afraid my only experience with this environment is one where I used a command line tool, so I don't know what to recommend to you. Also, nothing in this tutorial has been tested in PostgreSQL: you have been warned.
+
+Using your admin tool, open up the database for your Drupal test site, and have a look at the tables (there's quite a lot of them). For this tutorial, we're only interested in those beginning with <em>term_</em>, as they're the ones that store information about our taxonomy terms. The first table you should get to know is <em>term_data</em>, as this is where the actual terms are stored. If you browse the contents of this table, you should see something like this:
+
+[thumbnail term_data_brows.jpg Contents of term_data table (screenshot)]
+
+The table that we're <em>really</em> interested in, however, is <em>term_hierarchy</em>: this is where Drupal stores the parent(s) of each taxonomy term for your site. If you browse the contents of <em>term_hierarchy</em>, what you see should look a fair bit like this:
+
+[thumbnail term_hierarchy_browse.jpg Contents of term_hierarchy table (screenshot)]
+
+Looking at this can be a bit confusing, because all you can see are the term IDs, and no actual names. If you want to map the IDs to their corresponding terms, you might want to keep <em>term_data</em> open in another window as a reference.
+
+As you can see, each term has another term as its parent, except the top-level terms, which have a <em>tid</em> of zero (0). Now, if you wanted to make some of those top-level terms the children of other terms (in different vocabs), the first solution you'd think of would undoubtedly be to simply change those <em>tid</em>s from zero to something else. You can try this if you want; or you can save yourself the hassle, and trust me when I tell you: <em>it doesn't work</em>. If you do this, then when you go into the <em>administer -> categories</em> page on your site, the term whose parent ID you changed - and all its children - will have disappeared off the face of the output. And what's more, doing this won't make Drupal generate the cross-vocabulary breadcrumbs that we're aiming for. So we need to think of a plan B.
+
+What we need is a way to let Drupal know about our cross-vocabulary hierarchies, without changing anything in the <em>term_hierarchy</em> table. And the way that we're going to do this is by having another table, with exactly the same structure as <em>term_hierarchy</em>, but with a record of all the terms on our site that have distant parents (instead of those that have local parents). We're going to create a new table in our database, called <em>term_distantparent</em>. To do this, open up the query interface in your admin tool, and enter the following SQL code:
+
+<pre class="sql"><code>CREATE TABLE term_distantparent (
+  tid int(10) unsigned NOT NULL default 0,
+  parent int(10) unsigned NOT NULL default 0,
+  PRIMARY KEY  (tid),
+  KEY IdxDistantParent (parent)
+) TYPE=MyISAM;</code></pre>
+
+As the code tells us, this table is to have a <em>tid</em> column and a <em>parent</em> column (just like <em>term_hierarchy</em>); its primary key (value that must be unique for each row) is to be <em>tid</em>; and the <em>parent</em> column is to be indexed for fast access. The table is to be of type <em>MyISAM</em>, which is the default type for MySQL, and which is used by all tables in a standard Drupal database. The screenshot below shows how phpMyAdmin describes our new table, after it's been created:
+
+[thumbnail distantparent_justadded.jpg Newly created term_distantparent table (screenshot)]
+
+The next step, now that we have this shiny new table, is to insert some data into it. In order to work out what values need to be inserted, you should refer to your <em>term_data</em> table. Find the <em>tid</em> of the term <em>news</em> (2 for me), and of the term <em>browse by priority</em> (3 for me). Then use this SQL script to insert a cross-vocabulary relationship into your new table (substituting the correct values for your database, if need be):
+
+<pre class="sql"><code>INSERT INTO term_distantparent (
+  tid,
+  parent )
+VALUES (
+  3,
+  2
+);</code></pre>
+
+You will now be able to browse the contents of your <em>term_distantparent</em> table, and what you see should look like this:
+
+[thumbnail distantparent_onerow.jpg Term_distantparent with data (screenshot)]
+
+<h2>Step 2: modify the SQL</h2>
+
+Our Drupal database now has all the information it needs to map together a cross-vocabulary hierarchy. All we have to do now is tell Drupal where this data is, and what should be done with it. We will do this by modifying the SQL that the taxonomy module currently uses for determining the current term and its parents.
+
+Open up <code>taxonomy.module</code>, and find the following piece of code:
+
+<pre class="php"><code><?php
+/**
+ * Find all parents of a given term ID.
+ */
+function taxonomy_get_parents($tid, $key = 'tid') {
+  if ($tid) {
+    $result = db_query('SELECT t.* FROM {term_hierarchy} h, {term_data} t WHERE h.parent = t.tid AND h.tid = %d ORDER BY weight, name', $tid);
+    $parents = array();
+    while ($parent = db_fetch_object($result)) {
+      $parents[$parent->$key] = $parent;
+    }
+    return $parents;
+  }
+  else {
+    return array();
+  }
+}
+?></code></pre>
+
+Now replace it with this code:
+<pre class="php"><code><?php
+/**
+ * Find all parents of a given term ID.
+ * Patched to allow cross-vocabulary relationships.
+ * Patch done by x on xxxx-xx-xx.
+ */
+function taxonomy_get_parents($tid, $key = 'tid', $distantparent = FALSE) {
+  if ($tid) {
+    if ($distantparent) {
+      // Cross-vocabulary-aware SQL query
+      $sql_distantparent = 'SELECT t.* FROM {term_data} t, {term_hierarchy} h LEFT JOIN {term_distantparent} d ON h.tid = d.tid '.
+      'WHERE h.tid = %d AND (d.parent = t.tid OR h.parent = t.tid)';
+      $result = db_query($sql_distantparent, $tid);
+    } else {
+      //Original drupal query
+      $result = db_query('SELECT t.* FROM {term_hierarchy} h, {term_data} t WHERE h.parent = t.tid AND h.tid = %d ORDER BY weight, name', $tid);
+    }
+    $parents = array();
+    while ($parent = db_fetch_object($result)) {
+      $parents[$parent->$key] = $parent;
+    }
+    return $parents;
+  }
+  else {
+    return array();
+  }
+}
+?></code></pre>
+
+The original SQL query was designed basically to look in <em>term_hierarchy</em> for the parents of a given term, and to return any results found. The new query, on the other hand, looks in both <em>term_distantparent</em> and in <em>term_hierarchy</em> for parents of a given term: if results are found in the former table, then they are returned; <em>otherwise</em>, results from the latter are returned. This means that distant parents are now looked for as a matter of priority over local parents (so for all those terms with a local parent ID of zero, the local parent is discarded); and it also means that the existing (local parent) functionality of the taxonomy system functions exactly as it did before, so nothing has been broken.
+
+Notice that an optional boolean argument has been added to the function, with a default value of false (<code>$distantparent = FALSE</code>). When the function is called without this new argument, it uses the original SQL query; only when called <em>with</em> the new argument (and with it set to <code>TRUE</code>) will the distant parent query become activated. This is to prevent any problems for other bits of code (current or future) that might be calling the function, and expecting it to work in its originally intended way.
+
+<h2>Step 3: modify the dependent functions</h2>
+
+We've now implemented everything that logically needs to be implemented, in order for Drupal to function with cross-vocabulary hierarchies. All that must be done now is some slight modifications to the dependent functions: that is, the functions that make use of the code containing the SQL we've just modified. This should be easy for anyone who's familiar with (<em>"Hi Everybody!" "Hi..."</em>) Dr. Nick from <em>The Simpsons</em>, as he gives us the following advice when trying to isolate a problem: <em>"The knee bone's connected to the: something. The something's connected to the: red thing. The red thing's connected to my: wristwatch. Uh-oh."</em> So let's see if we can apply Dr. Nick's method to the problem at hand - only let's hope we have more success with it than he did. And by the way, feel free to sing along as we go.
+
+<strong>The <code>taxonomy_get_parents()</code> function is called by the: <code>taxonomy_get_parents_all()</code> function.</strong>
+
+So find the following code in <code>taxonomy.module</code>:
+
+<pre class="php"><code><?php
+/**
+ * Find all ancestors of a given term ID.
+ */
+function taxonomy_get_parents_all($tid) {
+  $parents = array();
+  if ($tid) {
+    $parents[] = taxonomy_get_term($tid);
+    $n = 0;
+    while ($parent = taxonomy_get_parents($parents[$n]->tid)) {
+      $parents = array_merge($parents, $parent);
+      $n++;
+    }
+  }
+  return $parents;
+}
+?></code></pre>
+
+And replace it with this code:
+<pre class="php"><code><?php
+/**
+ * Find all ancestors of a given term ID.
+ * Patched to call helper functions using the optional "distantparent" argument, so that cross-vocabulary-aware queries are activated.
+ * Patch done by x on xxxx-xx-xx.
+ */
+function taxonomy_get_parents_all($tid, $distantparent = FALSE) {
+  $parents = array();
+  if ($tid) {
+    $parents[] = taxonomy_get_term($tid);
+    $n = 0;
+    while ($parent = taxonomy_get_parents($parents[$n]->tid, 'tid', $distantparent)) {
+      $parents = array_merge($parents, $parent);
+      $n++;
+    }
+  }
+  return $parents;
+}
+?></code></pre>
+
+What's next, Dr. Nick?
+
+<strong>The <code>taxonomy_get_parents_all()</code> function is called by the: <code>taxonomy_context_get_breadcrumb()</code> function.</strong>
+
+Ooh... hang on, Dr. Nick. Before we go off and replace the code in this function, we should be aware that we already modified its code in part 1, in order to implement our breadcrumb patch. So we have to make sure that when we add our new code, we also keep the existing changes. This is why both the original and the new code below still have the breadcrumb patch in them.
+
+OK, now find the following code in <code>taxonomy_context.module</code>:
+
+<pre class="php"><code><?php
+/**
+ * Return the breadcrumb of taxonomy terms ending with $tid
+ * Patched to display the current term only for nodes, not for terms
+ * Patch done by x on xxxx-xx-xx
+ */
+function taxonomy_context_get_breadcrumb($tid, $mode) {
+  $breadcrumb[] = l(t("Home"), "");
+
+  if (module_exist("vocabulary_list")) {
+    $vid = taxonomy_context_get_term_vocab($tid);
+    $vocab = taxonomy_get_vocabulary($vid);
+    $breadcrumb[] = l($vocab->name, "taxonomy/page/vocab/$vid");
+  }
+
+  if ($tid) {
+    $parents = taxonomy_get_parents_all($tid);
+    if ($parents) {
+      $parents = array_reverse($parents);
+      foreach ($parents as $p) {
+        // The line below implements the breadcrumb patch
+        if ($mode != "taxonomy" || $p->tid != $tid)
+          $breadcrumb[] = l($p->name, "taxonomy/term/$p->tid");
+      }
+    }
+  }
+  return $breadcrumb;
+}
+?></code></pre>
+
+And replace it with this code:
+
+<pre class="php"><code><?php
+/**
+ * Return the breadcrumb of taxonomy terms ending with $tid
+ * Patched to display the current term only for nodes, not for terms
+ * Patch done by x on xxxx-xx-xx
+ * Patched to call taxonomy_get_parents_all() with the optional $distantparent argument set to TRUE, to implement cross-vocabulary hierarches.
+ * Patch done by x on xxxx-xx-xx
+ */
+function taxonomy_context_get_breadcrumb($tid, $mode) {
+  $breadcrumb[] = l(t("Home"), "");
+
+  if (module_exist("vocabulary_list")) {
+    $vid = taxonomy_context_get_term_vocab($tid);
+    $vocab = taxonomy_get_vocabulary($vid);
+    $breadcrumb[] = l($vocab->name, "taxonomy/page/vocab/$vid");
+  }
+
+  if ($tid) {
+    // New $distantparent argument added with value TRUE
+    $parents = taxonomy_get_parents_all($tid, TRUE);
+    if ($parents) {
+      $parents = array_reverse($parents);
+      foreach ($parents as $p) {
+        // The line below implements the breadcrumb patch
+        if ($mode != "taxonomy" || $p->tid != $tid)
+          $breadcrumb[] = l($p->name, "taxonomy/term/$p->tid");
+      }
+    }
+  }
+  return $breadcrumb;
+}
+?></code></pre>
+
+Any more, Dr. Nick?
+
+<strong>The <code>taxonomy_context_get_breadcrumb()</code> function is called by the: <code>taxonomy_context_init()</code> function.</strong>
+
+That's alright: we're not passing the <code>$distantparent</code> argument up the line any further, and we already fixed up the call from this function in part 1.
+
+After that, Dr. Nick?
+
+<strong>The <code>taxonomy_context_init()</code> function is called by the: Drupal <code>_init</code> hook.</strong>
+
+Hooray! We've reached the end of our great long function-calling chain; Drupal handles the rest of the function calls from here on. Thanks for your help, Dr. Nick! We should now be able to test out our cross-vocabulary hierarchy, by loading a term that has a distant parent somewhere in its ancestry, and having a look at the breadcrumbs. Try opening the page for the term <em>important</em> (you can find a link to it from your node) - it should look something like this:
+
+[thumbnail cross_hierarchy_vocab.jpg Term with cross-vocabulary breadcrumbs (screenshot)]
+
+And what a beautiful sight that is! Breadcrumbs that span more than one vocabulary: simply perfect.
+
+<h2>Room for improvement</h2>
+
+What I've presented in this tutorial is a series of code patches, and a database modification. I've used minimal tools and made minimal changes, and what I set out to achieve now works. However, I am more than happy to admit that the whole thing could have been executed much better, and that there is plenty of room for improvement, particularly in terms of usability (and reusability).
+
+My main aim - by implementing a cross-vocabulary hierarchy - was to get the exact menu structure and breadcrumb navigation that I wanted. Because this was all I really cared about, I have left out plenty of things that other people might consider an essential (but missing) part of my patch. For example, I have not implemented distant children, only distant parents. This means that if you're planning to use taxonomy_context for automatically generating a list of subterms (which I don't do), then distant children won't be generated unless you add further functionality to my patch.
+
+There is also the obvious lack of any frontend admin interface whatsoever for managing distant parents. Using my patch as it is, distant parents must be managed by manually adding rows to the database table, using a backend admin tool such as phpMyAdmin. It would be great if my patch had this functionality, but since I haven't needed it myself as yet, and I haven't had the time to develop it either, it's simply not there.
+
+The <code>$distantparent</code> variable should ideally be able to be toggled through a frontend interface, so that the entire cross-vocabulary functionality could be turned on or off by the site's administrator, without changing the actual code. The reasons for this being absent are the same as the reasons (given above) for the lack of a distant parent editing interface. Really, in order for this system to be executed properly, either the taxonomy interface needs to be extended quite a bit, or an entire distantparent module needs to be written, to implement all the necessary frontend administration features.
+
+At the moment, I'm still relatively new to Drupal, and have no experience in using Drupal's core APIs to write a proper frontend interface (let alone a proper Drupal module). Hopefully, I'll be able to get into this side of Drupal sometime in the near future, and learn how to actually develop proper stuff for Drupal, in which case I'll surely be putting the many and varied finishing touches on cross-vocabulary hierarchies - finishing touches that this tutorial is lacking.
+
+As with part 1, patches and replacement code can be found at the bottom of the page (patches are to be run against a clean install, <em>not</em> against code from part 1). Stay tuned for part 3 - the grand finale to this series - in which we put together everything we've done so far, and much more, in order to produce an automatic hierarchical URL aliasing system, such that the URLs on every page of your site match your breadcrumbs and your taxonomy structure. Until then, happy coding!
