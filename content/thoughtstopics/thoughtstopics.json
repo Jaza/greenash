@@ -1,0 +1,7 @@
+{
+  "layout": "layouts/thoughts/topic.njk",
+  "permalink": "/thoughts/topics/{{ title | slug }}/",
+  "tags": [
+    "thoughtstopics"
+  ]
+}

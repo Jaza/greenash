@@ -1,0 +1,20 @@
+---js
+{
+  layout: "layouts/base.njk",
+  pagination: {
+    data: (data) => {
+      return "collections.thoughtstopics/" + data.page.fileSlug;
+    },
+    size: 10,
+    reverse: true,
+    alias: "items"
+  }
+}
+---
+<h1>Thoughts filed in: <em>{{ renderData.title or title }}</em></h1>
+
+{% include "components/pagination.njk" %}
+
+{% include "components/thoughts/listing.njk" %}
+
+{% include "components/pagination.njk" %}

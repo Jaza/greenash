@@ -1,0 +1,55 @@
+---
+title: A plain-text program design standard
+date: 2005-10-07
+teaser: |-
+  I've been working on a project at University, in which my team had to produce a large number of software design documents, which now have to be translated into working code. Wouldn't it be great if I could write just one design specification, and if from that, numerous diagrams and skeleton code could all be auto-generated? What the world needs is a plain-text program design standard.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/innovations
+---
+I've been working on a project at University, in which my team had to produce a large number of software design documents, in order to fulfil the System Architecture objectives of the project. The documents included UML class diagrams, UML sequence diagrams, class-based system specifications, and more.
+
+The design phase of our project is now finished, but all of these documents now have to be translated into working code. This basically involves taking the high-level design structure specified in the design documents, and converting it into skeleton code in the object-oriented programming language of our choice. Once that's done, this 'skeleton code' of stubs has to actually be implemented.
+
+Of course, all of this is manual work. Even though the skeleton code is virtually the same as the system specifications, which in turn are just a text-based representation of the graphical class diagram, each of these artefacts are created using separate software tools, and each of them must be created independently. This is not the first Uni project in which I've had to do this sort of work; but due to the scale of the project I'm currently working on, it really hit me that what we have to do is crazy, and that surely there's a better, more efficient way of producing all these equivalent documents.
+
+Wouldn't it be great if I could write just one design specification, and if from that, numerous diagrams and skeleton code could all be auto-generated? Wouldn't it make everyone's life easier if the classes and methods and operations of a system only needed to be specified in one document, and if that one document could be processed in order to produce all the other equivalent documents that describe this information? What the world needs is a plain-text program design standard.
+
+I say plain-text, because this is essential if the standard is to be universally accessible, easy to parse and process, and open. And yes, by 'standard', I do mean 'open standard'. That is: firstly, a standard in which documents are text rather than binary, and can be easily opened by many existing text editors; and secondly (and more importantly), a standard whose specification is published on the public domain, and that can therefore be implemented and interfaced to by any number of third-party developers. Such a standard would ideally be administered and maintained by a recognised standards body, such as the <a href="http://www.iso.org/">ISO</a>, <a href="http://www.ansi.org/">ANSI</a>, the <a href="http://www.omg.org/">OMG</a>, or even the <a href="http://www.w3.org/">W3C</a>.
+
+I envision that this standard would be of primary use in object-oriented systems, but then again, it could also be used for more conventional procedural systems, and maybe even for other programming paradigms, such as <a href="http://en.wikipedia.org/wiki/Functional_programming">functional programming</a> (e.g. in <a href="http://en.wikipedia.org/wiki/Haskell_programming_language">Haskell</a>). Perhaps it could even be extended to the database arena, to allow automation between database design tasks (e.g. ERD diagramming) and SQL <code>CREATE TABLE</code> statements.
+
+This would be the 'dream standard' for programmers and application developers all over the world. It would cut out an enormous amount of time that is wasted on repetitive and redundant work that can potentially be automated. To make life simpler (and for consistency with all the other standards of recent times), the standard would be an XML-based markup language. At its core would simply be the ability to define the classes,  attributes, and operations of a system, in both a diagram-independent and a language-independent manner.
+
+Here's what I imagine a sample of a document written to such a standard might look like (for now, let's call it ODML, or Object Design Markup Language):
+
+<pre class="no-highlight"><code><odml>
+__<class>
+____<name>Vehicle</name>
+____<attributes>
+______<attr>
+________<name>weight</name>
+________<value>2 tonnes</value>
+______</attr>
+____</attributes>
+____<methods>
+______<method>
+________<name>drive</name>
+________<arg>
+__________<name>dist</name>
+__________<type>int</type>
+________</arg>
+______</method>
+____</methods>
+__</class>
+</odml></code></pre>
+
+<em>(Sorry about the underscores, guys - due to technical difficulties in getting indenting spaces to output properly, I decided to resort to using them instead.)</em>
+
+From this simple markup, programs could automatically generate design documents, such as class diagrams and system specifications. Using the same markup, skeleton code could also be generated for any OO language, such as Java, C#, C++, and PHP.
+
+I would have thought that surely something this cool, and this important, already exists. But after doing some searching on the Web, I was unable to find anything that came even remotely near to what I've described here. However, I'd be most elated to learn that I simply hadn't searched hard enough!
+
+When I explained this idea to a friend of mine, he cynically remarked that were such a standard written, and tools for it developed, it would make developers' workloads greater rather than smaller. He argued that this would be the logical expected result, based on past improvements in productivity. Take the adoption of the PC, for example: once people were able to get more work done in less time, managers the world over responded by simply giving people more work to do! The same applies to the industrial revolution of the 19th century (once workers had machines to help them, they could produce more goods); to the invention of the electric light bulb (if you have light to see at night, then you can work 24/7); and to almost every other technological advancement that you can think of. I don't deny that an effective program design standard would quite likely have the same effect. However, that's an unavoidable side effect of any advancement in productivity, and is no reason to shun the introduction of the advancement.
+
+A plain-text program design standard would make the programmers and system designers of the world much happier people. No question about it. Does such a thing exist already? If so, where the hell do I get it? If not, I hope someone invents it real soon!

@@ -2,9 +2,12 @@
 layout: layouts/base.njk
 ---
 <article>
-  <h1>{{ renderData.title or title }}</h1>
+  <h1><a href="{{ page.url | url }}" title="Permanent link to this thought">{{ renderData.title or title }}</a></h1>
 
-  <p><time datetime="{{ date | dateISO }}">{{ date | dateDMY }}</time></p>
+  <p><time datetime="{{ date | dateISO }}">{{ date | dateDM }} <a href="/thoughts/{{ date | dateY }}" title="Time warp to {{ date | dateY }}">{{ date | dateY }}</a></time></p>
+
+  {%- set items = tags | getTopicsForThought(collections.thoughtstopics) %}
+  {% include 'components/thoughts/topics.njk' %}
 
   {{ content | inlineThumbnails | autop | safe }}
 

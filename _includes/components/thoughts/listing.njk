@@ -1,0 +1,9 @@
+<section class="articles">
+  {# Can't use a regular nunjucks for loop because inlineThumbnails is an async filter #}
+  {# See: https://github.com/11ty/eleventy/issues/2088 #}
+  {%- asyncEach item in items %}
+
+    {% include "components/thoughts/teaser.njk" %}
+
+  {%- endeach %}
+</section>

@@ -6,6 +6,9 @@ const Nunjucks = require("nunjucks");
 const params = require("./_data/params");
 
 module.exports = function(eleventyConfig) {
+  const THOUGHTS_TOPICS_PREFIX = "thoughtstopics/";
+  const THOUGHTS_TOPICS_PATH = "/thoughts/topics/";
+
   const nunjucksEnvironment = new Nunjucks.Environment(
     new Nunjucks.FileSystemLoader("_includes")
   );
@@ -29,8 +32,12 @@ module.exports = function(eleventyConfig) {
     return DateTime.fromJSDate(dateObj).toFormat("yyyy/LL");
   });
 
-  eleventyConfig.addFilter("dateDMY", dateObj => {
-    return DateTime.fromJSDate(dateObj).toFormat("d LLL yyyy");
+  eleventyConfig.addFilter("dateDM", dateObj => {
+    return DateTime.fromJSDate(dateObj).toFormat("d LLL");
+  });
+
+  eleventyConfig.addFilter("dateY", dateObj => {
+    return DateTime.fromJSDate(dateObj).toFormat("yyyy");
   });
 
   eleventyConfig.addFilter("dateISO", dateObj => {
@@ -209,6 +216,67 @@ module.exports = function(eleventyConfig) {
 
       callback(null, newValue);
     });
+  });
+
+  const getPageByUrl = (collection, pageURL) => {
+    const pages = collection.filter(item => {
+      return item.url === pageURL;
+    });
+
+    return pages.length ? pages[0] : null;
+  };
+
+  eleventyConfig.addFilter("getTopicsForThought", (tags, collection) => {
+    if (!tags) {
+      return [];
+    }
+
+    return tags
+      .filter(tag => tag.startsWith(THOUGHTS_TOPICS_PREFIX))
+      .map(tag => tag.replace(THOUGHTS_TOPICS_PREFIX, ""))
+      .filter(tag => getPageByUrl(collection, THOUGHTS_TOPICS_PATH + tag + "/"))
+      .map(tag => {
+        return {
+          url: THOUGHTS_TOPICS_PATH + tag + "/",
+          title: getPageByUrl(collection, THOUGHTS_TOPICS_PATH + tag + "/").data.title
+        };
+      });
+  });
+
+  // Thanks to: https://github.com/11ty/eleventy/issues/316
+  eleventyConfig.addCollection("thoughtsByYear", (collection) => {
+    let contentByDate = {};
+
+    collection.getAllSorted().forEach(function(item) {
+      if ("date" in item.data) {
+        let tags = item.data.tags;
+
+        if (typeof tags === "string") {
+          tags = [tags];
+        }
+
+        if (tags && tags.includes("thoughts")) {
+          let itemDate = item.data.date;
+          const date = DateTime.fromJSDate(itemDate).toFormat("yyyy");
+
+          if (!(date in contentByDate)) {
+            contentByDate[date] = [];
+          }
+
+          contentByDate[date].push(item);
+        }
+      }
+    });
+
+    for (const [key, value] of Object.entries(contentByDate)) {
+      contentByDate[key] = value.sort((a, b) => {
+        return b.date - a.date;
+      });
+    }
+
+    console.log('contentByDate:');
+    console.log(contentByDate);
+    return contentByDate;
   });
 
   // Don't process folders with static assets e.g. images

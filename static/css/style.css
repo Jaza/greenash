@@ -50,6 +50,18 @@ a {
   text-decoration: underline;
 }
 
+h1 > a {
+  text-decoration: none;
+}
+
+a:hover {
+  background: rgba(0, 102, 0, .1);
+}
+
+h1 > a:hover {
+  background: none;
+}
+
 /* Thanks to: https://css-tricks.com/snippets/css/simple-and-nice-blockquote-styling/ */
 
 blockquote {
@@ -146,9 +158,8 @@ table {
 }
 
 table thead tr {
-  background-color: #060;
+  background: rgba(0, 102, 0, .1);
   text-align: left;
-  color: white;
   font-family: "Lato", sans-serif;
   font-size: 1.2em;
 }
@@ -190,23 +201,119 @@ article > h1, article > h2, article > p, article > ul, article > ol, article > d
 }
 
 main {
-  margin: 0 24px 40px;
+  margin: 0 2em 2.5em;
 }
 
 @media (min-width: 728px) {
   main {
-    margin: 0 48px 40px;
+    margin-left: 3em;
+    margin-right: 3em;
   }
 }
 
 @media (min-width: 1080px) {
   main {
-    margin: 0 64px 40px;
+    margin-left: 4em;
+    margin-right: 4em;
   }
+}
+
+article {
+  margin-bottom: 3em;
+}
+
+.articles article {
+  margin-bottom: 5em;
 }
 
 @media (min-width: 1320px) {
   article > figure, article > .wideflex-wrapper {
     max-width: 1192px;
   }
+}
+
+/* Thanks to: https://codepen.io/tomhodgins/pen/zqZeqv */
+
+.pagination,
+.pagination *,
+.pagination *:before,
+.pagination *:after {
+  box-sizing: border-box;
+  text-rendering: optimizeLegibility;
+  font-kerning: auto;
+}
+
+.pagination {
+  font-size: 1.3em;
+  line-height: 1;
+  font-weight: 400;
+  font-family: "Lato", sans-serif;
+  margin: 1em auto;
+  text-align: center;
+  padding: .5em;
+}
+
+.pagination ul {
+  list-style-type: none;
+  display: inline;
+  font-size: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.pagination ul li {
+  display: inline-block;
+  font-size: 100%;
+  width: auto;
+  border-radius: 3px;
+  padding: 0;
+  margin: 0;
+}
+
+.pagination a {
+  font-size: 100%;
+  text-decoration: none;
+}
+
+.pagination a, .pagination .pagination-item-inner {
+  display: inline-block;
+  padding: .5em .8em;
+}
+
+.pagination a:hover {
+  background: rgba(0, 102, 0, .1);
+}
+
+.pagination > a {
+  line-height: 1.6;
+}
+
+.pagination li.current {
+  background: rgba(128, 128, 128, .1);
+}
+
+.tags ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 3em 0;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 3em;
+}
+
+.tags ul li {
+  font-family: "Lato", sans-serif;
+  font-size: 1.1em;
+  line-height: 1em;
+  margin: 0 0.5em 0 0;
+}
+
+.tags ul li a {
+  background: rgba(128, 128, 128, .1);
+  padding: 0.8em 1em 0.9em;
+  text-decoration: none;
+}
+
+.tags ul li a:hover {
+  background: rgba(0, 102, 0, .1);
 }
