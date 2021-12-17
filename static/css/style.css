@@ -191,11 +191,11 @@ body, .wideflex-wrapper {
   justify-content: center;
 }
 
-article > h1, article > h2, article > p, article > ul, article > ol, article > dl {
+h1, article > h2, article > p, article > ul, article > ol, article > dl, .tags {
   max-width: 680px;
 }
 
-article > h1, article > h2, article > p, article > ul, article > ol, article > dl, article > figure, article > .wideflex-wrapper {
+h1, article > h2, article > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper {
   margin-left: auto;
   margin-right: auto;
 }
@@ -292,20 +292,36 @@ article {
   background: rgba(128, 128, 128, .1);
 }
 
-.tags ul {
+.tags ul, .tag-cloud ul {
   list-style: none;
-  padding-left: 0;
-  margin: 3em 0;
   display: flex;
   flex-wrap: wrap;
+  padding-left: 0;
+  margin: 3em 0;
+}
+
+.tags ul {
   row-gap: 3em;
 }
 
-.tags ul li {
+.tag-cloud ul {
+  justify-content: center;
+  row-gap: 1em;
+}
+
+.tags ul li, .tag-cloud ul li {
   font-family: "Lato", sans-serif;
+  margin: 0 0.5em 0 0;
+}
+
+.tags ul li {
   font-size: 1.1em;
   line-height: 1em;
-  margin: 0 0.5em 0 0;
+}
+
+.tag-cloud ul li {
+  font-size: 1.4em;
+  line-height: 1.4em;
 }
 
 .tags ul li a {

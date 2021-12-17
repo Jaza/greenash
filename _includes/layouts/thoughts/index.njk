@@ -8,6 +8,10 @@ pagination:
 ---
 <h1>{{ renderData.title or title }}</h1>
 
+{%- if not pagination.href.previous %}
+{% include "components/thoughts/tag_cloud.njk" %}
+{%- endif %}
+
 {% include "components/pagination.njk" %}
 
 {% include "components/thoughts/listing.njk" %}

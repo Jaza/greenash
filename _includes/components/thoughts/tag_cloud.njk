@@ -1,0 +1,10 @@
+{%- set items = collections.thoughtstopics | getThoughtsTopicsTagCloud %}
+<nav class="tag-cloud">
+  <ul>
+  {%- for item in items %}
+    <li>
+      <a href="{{ item.url | url }}" style="font-size: {{ item.size }}em" title="{{ collections[item.key] | length }} thought{% if (collections[item.key] | length) > 1 %}s{% endif %}">{{ item.title }}</a>
+    </li>
+  {%- endfor %}
+  </ul>
+</nav>

@@ -9,6 +9,9 @@ module.exports = function(eleventyConfig) {
   const THOUGHTS_TOPICS_PREFIX = "thoughtstopics/";
   const THOUGHTS_TOPICS_PATH = "/thoughts/topics/";
 
+  const TAG_CLOUD_MIN_SIZE = 0.75;
+  const TAG_CLOUD_ROUNDING_FACTOR = 10e6;
+
   const nunjucksEnvironment = new Nunjucks.Environment(
     new Nunjucks.FileSystemLoader("_includes")
   );
@@ -274,9 +277,57 @@ module.exports = function(eleventyConfig) {
       });
     }
 
-    console.log('contentByDate:');
-    console.log(contentByDate);
     return contentByDate;
+  });
+
+  eleventyConfig.addFilter("getThoughtsTopicsTagCloud", (collection) => {
+    if (!collection) {
+      return [];
+    }
+
+    let minCount = 0;
+    let maxCount = 0;
+
+    const topicsWithCount = collection.map(item => {
+      const tag = item.url.replace(THOUGHTS_TOPICS_PATH, "").replace("/", "");
+      const itemCount = item.data.items.length;
+
+      if (!minCount || itemCount < minCount) {
+        minCount = itemCount;
+      }
+
+      if (itemCount > maxCount) {
+        maxCount = itemCount;
+      }
+
+      return {
+        key: THOUGHTS_TOPICS_PREFIX + tag,
+        url: item.url,
+        title: item.data.title,
+        itemCount,
+      };
+    });
+
+    const constant = Math.log(maxCount - (minCount - 1));
+
+    return topicsWithCount.map(item => {
+      const size = (
+        (Math.log(item.itemCount - (minCount - 1)) / constant) + TAG_CLOUD_MIN_SIZE
+      );
+
+      const sizeRounded = (
+        Math.round(
+          (size + Number.EPSILON) * TAG_CLOUD_ROUNDING_FACTOR
+        ) / TAG_CLOUD_ROUNDING_FACTOR
+      );
+
+      return {
+        ...item,
+        size: sizeRounded,
+      };
+    }).sort((a, b) => {
+      return a.title.localeCompare(b.title);
+    });
   });
 
   // Don't process folders with static assets e.g. images

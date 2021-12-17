@@ -1,50 +1,50 @@
 {%- if pagination.pages.length > 1 %}
 <nav class="pagination">
   {%- if pagination.href.previous %}
-    <a href="{{ pagination.href.first }}" title="Go to first page">«</a>
-
-    <a href="{{ pagination.href.previous }}" title="Go to previous page">‹</a>
+  <a href="{{ pagination.href.first }}" title="Go to first page">«</a>
+  <a href="{{ pagination.href.previous }}" title="Go to previous page">‹</a>
   {%- endif %}
 
   <ul>
-
   {%- set ellipsed = false %}
   {%- set shouldEllipse = false %}
   {%- set pageNumber = 0 %}
+
   {%- for pageEntry in pagination.pages %}
-  {%- if page.url == pagination.hrefs[loop.index0] %}
-  {%- set pageNumber = loop.index %}
-  {%- endif %}
-  {%- endfor %}
-  {%- for pageEntry in pagination.pages %}
-  {%- set right = pagination.pages.length - loop.index %}
-  {%- set showNumber = (loop.index <= 3) or (not right) %}
-  {%- set showNumber = showNumber or (pagination.pages.length <= 5) %}{# Issue #7523 #}
-  {%- set showNumber = showNumber or ((pageNumber > (loop.index - 2)) and (pageNumber < (loop.index + 2))) %}
-  {%- if showNumber %}
-    {%- set ellipsed = false %}
-    {%- set shouldEllipse = false %}
-  {%- else %}
-    {%- set shouldEllipse = not ellipsed %}
-    {%- set ellipsed = true %}
-  {%- endif %}
-  {%- if showNumber %}
-    {%- if page.url === pagination.hrefs[loop.index0] %}
-    <li class="current"><span class="pagination-item-inner">{{ loop.index }}</span></li>
-    {%- else %}
-    <li><a href="{{ pagination.hrefs[loop.index0] }}" title="Go to page {{ loop.index }}">{{ loop.index }}</a></li>
+    {%- if page.url == pagination.hrefs[loop.index0] %}
+      {%- set pageNumber = loop.index %}
     {%- endif %}
-  {%- elif shouldEllipse %}
-    <li><span class="pagination-item-inner">…</span></li>
-  {%- endif %}
   {%- endfor %}
 
+  {%- for pageEntry in pagination.pages %}
+    {%- set right = pagination.pages.length - loop.index %}
+    {%- set showNumber = (loop.index <= 3) or (not right) %}
+    {%- set showNumber = showNumber or (pagination.pages.length <= 5) %}{# Issue #7523 #}
+    {%- set showNumber = showNumber or ((pageNumber > (loop.index - 2)) and (pageNumber < (loop.index + 2))) %}
+
+    {%- if showNumber %}
+      {%- set ellipsed = false %}
+      {%- set shouldEllipse = false %}
+    {%- else %}
+      {%- set shouldEllipse = not ellipsed %}
+      {%- set ellipsed = true %}
+    {%- endif %}
+
+    {%- if showNumber %}
+      {%- if page.url === pagination.hrefs[loop.index0] %}
+    <li class="current"><span class="pagination-item-inner">{{ loop.index }}</span></li>
+      {%- else %}
+    <li><a href="{{ pagination.hrefs[loop.index0] }}" title="Go to page {{ loop.index }}">{{ loop.index }}</a></li>
+      {%- endif %}
+    {%- elif shouldEllipse %}
+    <li><span class="pagination-item-inner">…</span></li>
+    {%- endif %}
+  {%- endfor %}
   </ul>
 
   {%- if pagination.href.next %}
-    <a href="{{ pagination.href.next }}" title="Go to next page">›</a>
-
-    <a href="{{ pagination.href.last }}" title="Go to last page">»</a>
+  <a href="{{ pagination.href.next }}" title="Go to next page">›</a>
+  <a href="{{ pagination.href.last }}" title="Go to last page">»</a>
   {%- endif %}
 </nav>
 {%- endif %}
