@@ -247,7 +247,7 @@ module.exports = function(eleventyConfig) {
   });
 
   // Thanks to: https://github.com/11ty/eleventy/issues/316
-  eleventyConfig.addCollection("thoughtsByYear", (collection) => {
+  const thoughtsByYear = (collection) => {
     let contentByDate = {};
 
     collection.getAllSorted().forEach(function(item) {
@@ -278,6 +278,20 @@ module.exports = function(eleventyConfig) {
     }
 
     return contentByDate;
+  };
+
+  eleventyConfig.addCollection("thoughtsByYear", thoughtsByYear);
+
+  eleventyConfig.addCollection("thoughtsYears", (collection) => {
+    let thoughtsYears = [];
+
+    for (const [key, value] of Object.entries(thoughtsByYear(collection))) {
+      thoughtsYears.push({year: key, itemCount: value.length});
+    }
+
+    return thoughtsYears.sort((a, b) => {
+      return b.year - a.year;
+    });
   });
 
   eleventyConfig.addFilter("getThoughtsTopicsTagCloud", (collection) => {

@@ -191,11 +191,11 @@ body, .wideflex-wrapper {
   justify-content: center;
 }
 
-h1, article > h2, article > p, article > ul, article > ol, article > dl, .tags {
+h1, h2, article > p, article > ul, article > ol, article > dl, .tags {
   max-width: 680px;
 }
 
-h1, article > h2, article > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper {
+h1, h2, article > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper {
   margin-left: auto;
   margin-right: auto;
 }
@@ -292,7 +292,7 @@ article {
   background: rgba(128, 128, 128, .1);
 }
 
-.tags ul, .tag-cloud ul {
+.tags ul, .tag-cloud ul, .years ul {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
@@ -304,12 +304,12 @@ article {
   row-gap: 3em;
 }
 
-.tag-cloud ul {
+.tag-cloud ul, .years ul {
   justify-content: center;
   row-gap: 1em;
 }
 
-.tags ul li, .tag-cloud ul li {
+.tags ul li, .tag-cloud ul li, .years ul li {
   font-family: "Lato", sans-serif;
   margin: 0 0.5em 0 0;
 }
@@ -319,7 +319,7 @@ article {
   line-height: 1em;
 }
 
-.tag-cloud ul li {
+.tag-cloud ul li, .years ul li {
   font-size: 1.4em;
   line-height: 1.4em;
 }

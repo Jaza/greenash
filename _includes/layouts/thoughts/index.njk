@@ -9,7 +9,15 @@ pagination:
 <h1>{{ renderData.title or title }}</h1>
 
 {%- if not pagination.href.previous %}
-{% include "components/thoughts/tag_cloud.njk" %}
+
+<h2>Topics</h2>
+
+  {% include "components/thoughts/tag_cloud.njk" %}
+
+<h2>Years</h2>
+
+  {% include "components/thoughts/years.njk" %}
+
 {%- endif %}
 
 {% include "components/pagination.njk" %}

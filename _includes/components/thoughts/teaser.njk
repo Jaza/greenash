@@ -1,7 +1,7 @@
 <article>
   <h2><a href="{{ item.url | url }}">{{ item.data.title }}</a></h2>
 
-  <p><time datetime="{{ item.date | dateISO }}">{{ item.date | dateDM }} <a href="/thoughts/{{ item.date | dateY }}" title="Time warp to {{ item.date | dateY }}">{{ item.date | dateY }}</a></time></p>
+  <p><time datetime="{{ item.date | dateISO }}">{{ item.date | dateDM }} <a href="/thoughts/{{ item.date | dateY }}/" title="Time warp to {{ item.date | dateY }}">{{ item.date | dateY }}</a></time></p>
 
   {%- set items = item.data.tags | getTopicsForThought(collections.thoughtstopics) %}
   {% include 'components/thoughts/topics.njk' %}

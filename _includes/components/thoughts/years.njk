@@ -1,0 +1,10 @@
+{%- set items = collections.thoughtsYears %}
+<nav class="years">
+  <ul>
+  {%- for item in items %}
+    <li>
+      <a href="/thoughts/{{ item.year }}/" title="{{ item.itemCount }} thought{% if item.itemCount > 1 %}s{% endif %}">{{ item.year }}</a>
+    </li>
+  {%- endfor %}
+  </ul>
+</nav>
