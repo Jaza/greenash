@@ -1,0 +1,30 @@
+---
+title: "An IE AJAX gotcha: page caching"
+date: 2006-03-13
+permalink: /thoughts/2006/03/an-ie-ajax-gotcha-page-caching/
+teaser: |-
+  While doing some AJAX programming, I discovered a serious and extremely frustrating bug when using XMLHTTP in Internet Explorer. It appears that IE is prone to malfunctioning, unless a document accessed through AJAX has its HTTP header set to disallow caching. Beware!
+tags:
+  - thoughtstopics/drupal
+  - thoughtstopics/web-design
+---
+While doing some AJAX programming, I discovered a serious and extremely frustrating bug when using XMLHTTP in Internet Explorer. It appears that IE is prone to malfunctioning, unless a document accessed through AJAX has its HTTP header set to disallow caching. Beware!
+
+I was working on the <a href="http://drupal.org/">Drupal</a> <a href="http://drupal.org/node/49976">activeselect module</a>, which allows one select box on a form to update the options in another form dynamically, through AJAX. I was having a very strange problem, where the AJAX worked fine when I first loaded the page in IE, but then refused to work properly whenever I refreshed or re-accessed the page. Only closing and re-opening the browser window would make it work again. Past the first time / first page load, everything went haywire.
+
+I was tearing my hair out trying to work out the cause of this problem. I was searching on Google for anything I could think of to help me solve the problem. One page suggested <a href="http://www.webreference.com/dhtml/column59/3.html">setting all JavaScript variables that reference page elements to null</a> (<a href="http://72.14.203.104/search?q=cache:ukLCqW_3HeEJ:www.webreference.com/dhtml/column59/3.html+javascript+elements+to+null+onunload&hl=en&gl=au&ct=clnk&cd=1">Google cache version</a>), as soon as the user leaves the page. I tried this: no effect.
+
+Another page led me to believe that <a href="http://wt.jrc.it/rss/webtech?catname=/Browsers">changing the encoding from UTF-8 to iso-8859-1</a> (<a href="http://72.14.203.104/search?q=cache:FooYWY9UFNYJ:wt.jrc.it/rss/webtech%3Fcatname%3D/Browsers+xmlhttp+%22works+once%22&hl=en&gl=au&ct=clnk&cd=2">Google HTML version</a>) would end my woes. Once again, no cigar.
+
+Finally, I found <a href="http://www.topxml.com/BizTalk-2004/re-3232_Encounter-Trouble-With-XML-HTTP-Request.aspx">a page suggesting that I set the HTTP response headers to disallow caching</a>. It worked! My beautiful AJAX is now working in IE, just as well as it is working in decent browsers (i.e. Firefox et al). What I did was put the following response headers in the page (using the PHP <code>header()</code> function):
+
+<pre class="php"><code><?php header("Expires: Sun, 19 Nov 1978 05:00:00 GMT");
+header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+header("Cache-Control: no-store, no-cache, must-revalidate");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+?></code></pre>
+
+These are the same response headers that the Drupal core uses for cached pages (that's where I copied them from). Evidently, when IE is told to invoke an AJAX HTTP request on a page that it thinks it should 'cache', it simply can't handle it.
+
+So, for anyone else that finds that their AJAX code is bizarrely not working in IE after the first page load, this may be the answer! May this post end your troubles sooner rather than later.

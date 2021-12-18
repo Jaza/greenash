@@ -46,7 +46,7 @@ p, figcaption, li, dt, dd, table {
   word-break: break-word;
 }
 
-a {
+a, summary {
   text-decoration: underline;
 }
 
@@ -54,7 +54,7 @@ h1 > a {
   text-decoration: none;
 }
 
-a:hover {
+a:hover, .summary-inner:hover {
   background: rgba(0, 102, 0, .1);
 }
 
@@ -104,7 +104,7 @@ img {
 }
 
 figure {
-  margin: 2em 0 0;
+  margin: 3em 0;
 }
 
 figcaption {
@@ -184,6 +184,17 @@ tbody tr:last-of-type {
   border-bottom: 2px solid #999;
 }
 
+summary {
+  margin: 2em 0;
+  font-family: "Lato", sans-serif;
+  font-size: 1.8em;
+  font-weight: bold;
+}
+
+.summary-inner {
+  cursor: pointer;
+}
+
 /* Thanks to: inspecting medium.com styles manually */
 
 body, .wideflex-wrapper {
@@ -191,11 +202,11 @@ body, .wideflex-wrapper {
   justify-content: center;
 }
 
-h1, h2, article > p, article > ul, article > ol, article > dl, .tags {
+h1, h2, summary, article > p, article > ul, article > ol, article > dl, .tags {
   max-width: 680px;
 }
 
-h1, h2, article > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper {
+h1, h2, summary, article > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper {
   margin-left: auto;
   margin-right: auto;
 }

@@ -10,13 +10,21 @@ pagination:
 
 {%- if not pagination.href.previous %}
 
-<h2>Topics</h2>
+<details>
+
+  <summary><span class="summary-inner">Topics</span></summary>
 
   {% include "components/thoughts/tag_cloud.njk" %}
 
-<h2>Years</h2>
+</details>
+
+<details>
+
+  <summary><span class="summary-inner">Years</span></summary>
 
   {% include "components/thoughts/years.njk" %}
+
+</details>
 
 {%- endif %}
 

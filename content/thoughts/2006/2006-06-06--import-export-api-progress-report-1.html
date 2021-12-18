@@ -1,0 +1,27 @@
+---
+title: "Import / Export API: progress report #1"
+date: 2006-06-06
+permalink: /thoughts/2006/06/import-export-api-progress-report-1/
+teaser: |-
+  It's been almost two weeks since the 2006 <a href="http://code.google.com/soc/">Summer of Code</a> began, and with it, my work to develop an import / export API module for Drupal. In case you missed it, my work is being documented <a href="http://basement.greenash.net.au/soc2006/">on this wiki</a>. My latest code is now also available <a href="http://drupal.org/node/67043">as a project on drupal.org</a>. Since I've barely started, I think that this is a stupid time to sit back and reflect on what I've done so far. But I'm doing it anyway.
+tags:
+  - thoughtstopics/drupal
+  - thoughtstopics/summer-of-code
+---
+It's been almost two weeks since the 2006 <a href="http://code.google.com/soc/">Summer of Code</a> began, and with it, my work to develop an import / export API module for Drupal. In case you missed it, my work is being documented <a href="http://basement.greenash.net.au/soc2006/">on this wiki</a>. My latest code is now also available <a href="http://drupal.org/node/67043">as a project on drupal.org</a>. Since I've barely started, I think that this is a stupid time to sit back and reflect on what I've done so far. But I'm doing it anyway.
+
+Let's start with some excuses. I'm working full-time at the moment, I've got classes on in between, and I just joined the cast of an amateur musical (seriously, what was I thinking?). So due to my current shortage of time, I've decided to focus on documentation for now, which - let's face it - should ideally be done in large quantities before any code is produced, anyway. So I've posted a fair bit of initial documentation on the wiki, including research on existing import / export solutions in Drupal, key features of the new API, and possible problems that will be encountered.
+
+Last weekend, I decided that I was kind of sick of documentation, and that I could ignore the urge to code no longer. Hence, the beginnings of the API are now in place, and are up in Drupal CVS. I will no doubt be returning to documentation over the next few days, in the hope of fattening up my shiny new wiki, which is currently looking rather anorexic.
+
+<em>On a related note:</em> anonymous commenting has been disabled on the wiki, as it was receiving unwelcome comment spam. If you want to post comments, you will HaveToLogin using your name InCamelCase (which is getting on my nerves a bit - but I have to admit that it does the job and does it well).
+
+So far, I've coded the first draft of the data definition for the 'user' entity, and in the process, I've defined-through-experimentation what a data definition will look like in my module. The data definition attributes and structure are currently undocumented, and I see no reason to change that until it all matures a lot more. But ultimately, the plan is to have a reference for it, similar to the <a href="http://api.drupal.org/api/HEAD/file/developer/topics/forms_api_reference.html">Drupal forms API reference</a>.
+
+There are six 'field types' in the current definition system: string (the default), int, float, file, array, and entity. An 'entity' is the top-level field, and is for all practical purposes <em>not a field</em>, but is rather <em>the thing that fields go in</em>. An array is for holding lists of values, and is what will be used for representing 1-M (and even N-M) data within the API. <strong>Note to self:</strong> support for nested arrays is currently lacking, and is desperately needed.
+
+I have also coded the beginnings of the export engine. This engine is currently capable of taking a data definition, querying the database according to that definition, and providing an array of results, that are structured into the definition (as 'value' fields), and that can then be passed to the rendering part of the engine. The next step is to actually write the rendering part of the engine, and to plug an XML formatter into this engine to begin with. Once that's done, it will be possible to test the essentials of the export process (i.e. database -> array data -> text file data) from beginning to end. I think it's important to show this end-to-end functionality as early on as possible, to prove to myself that I'm on the right track, and to provide real feedback that the system is working. Once this is done, the complexities can be added (e.g. field mapping system, configurable field output).
+
+Overall, what I've coded so far looks very much like a cross between the forms API (with <code>_alter()</code> hooks, recursive array building, and extensible definitions), and the views module (with a powerful definition system, that gets used to build queries). Thank you to the respective authors of both these systems: Adrian / Vertice (one of my mentors); and Earl / Merlinofchaos (who is not my mentor, but who is <em>a</em> mentor, as well as a cool cool coder). Your efforts have provided me with heaps of well-engineered code to copy - er, I mean, emulate! If my project is able to be anywhere near as flexible or as powerful as either of these two systems, I will be very happy.
+
+Thanks also to Adrian and to Sami for the feedback that you've given me so far. I've been in contact with both of my mentors, and both of them have been great in terms of providing advice and guidance.
