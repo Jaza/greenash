@@ -6,6 +6,10 @@
   {%- set items = item.data.tags | getTopicsForThought(collections.thoughtstopics) %}
   {% include 'components/thoughts/topics.njk' %}
 
+  {% if item.data.comments %}
+  <p>Comments: {{ item.data.comments | length }}</p>
+  {% endif %}
+
   {% if item.data.teaser %}
   {{ item.data.teaser | inlineThumbnails | autop | safe }}
   {% endif %}

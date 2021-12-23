@@ -24,3 +24,24 @@ layout: layouts/base.njk
   </ul>
   {% endif %}
 </article>
+
+{% include 'components/thoughts/comment_form.njk' %}
+
+{% if comments %}
+
+<h2>Comments</h2>
+<p><strong>{{ comments | length }}</strong></p>
+
+  {% for comment in comments %}
+
+<article>
+  <h3>{% if comment.url %}<a href="{{ comment.url | url }}" rel="nofollow">{% endif %}{{ comment.name }}{% if comment.url %}</a>{% endif %}</h3>
+
+  <p><time datetime="{{ comment.date }}">{{ comment.date | parseISODate | dateDMY }}</time></p>
+
+  {{ comment.comment | autop | safe }}
+</article>
+
+  {% endfor %}
+
+{% endif %}

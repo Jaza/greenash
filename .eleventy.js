@@ -35,6 +35,10 @@ module.exports = function(eleventyConfig) {
     return DateTime.fromJSDate(dateObj).toFormat("yyyy/LL");
   });
 
+  eleventyConfig.addFilter("dateDMY", dateObj => {
+    return DateTime.fromJSDate(dateObj).toFormat("d LLL yyyy");
+  });
+
   eleventyConfig.addFilter("dateDM", dateObj => {
     return DateTime.fromJSDate(dateObj).toFormat("d LLL");
   });
@@ -45,6 +49,10 @@ module.exports = function(eleventyConfig) {
 
   eleventyConfig.addFilter("dateISO", dateObj => {
     return DateTime.fromJSDate(dateObj).setZone("utc").toString();
+  });
+
+  eleventyConfig.addFilter("parseISODate", dateStr => {
+    return DateTime.fromISO(dateStr).toJSDate();
   });
 
   // Thanks to: https://stackoverflow.com/a/6234804

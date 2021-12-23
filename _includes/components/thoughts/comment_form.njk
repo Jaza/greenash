@@ -1,0 +1,24 @@
+<h2>Post a comment</h2>
+
+<form name="comments-queue" method="POST" action="{{ page.url }}?comment_posted=1" data-netlify>
+  <input type="hidden" name="path" value="{{ page.url }}">
+  <p>
+    <label for="name">Name:</labe>
+    <input type="text" name="name" id="name" maxlength="50" required>
+  </p>
+  <p>
+    <label for="email">Email address:</label>
+    <input type="email" name="email" id="email" required>
+  </p>
+  <p>
+    <label for="url">URL:</label>
+    <input type="text" name="url" id="url">
+  </p>
+  <p>
+    <label for="comment">Comment:</label>
+    <textarea name="comment" id="comment" cols="40" rows="10" maxlength="3000" required></textarea>
+  </p>
+  <p>
+    <button type="submit">Post</button>
+  </p>
+</form>
