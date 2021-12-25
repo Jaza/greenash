@@ -34,8 +34,12 @@ layout: layouts/base.njk
 
   {% for comment in comments %}
 
-<article>
+<article{% if comment.isAuthorReply %} class="author-comment"{% endif %}>
+    {% if comment.isAuthorReply %}
+  <h3><a href="{{ params.authorURL }}">{{ params.authorName }}</a></h3>
+    {% else %}
   <h3>{% if comment.url %}<a href="{{ comment.url | url }}" rel="nofollow">{% endif %}{{ comment.name }}{% if comment.url %}</a>{% endif %}</h3>
+    {% endif %}
 
   <p><time datetime="{{ comment.date }}">{{ comment.date | parseISODate | dateDMY }}</time></p>
 
