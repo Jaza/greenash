@@ -227,6 +227,8 @@ const getNotifyMailText = (name, email, url, comment, moderateUrl) => {
   );
 };
 
+// Loosely based on:
+// https://www.seancdavis.com/posts/netlify-function-sends-conditional-email/
 const sendMail = async (
   sparkpostToken,
   fromEmail,
