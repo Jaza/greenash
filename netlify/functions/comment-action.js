@@ -26,6 +26,19 @@ const doRequest = (options, data) => {
       });
 
       res.on("end", () => {
+        if (!responseBody) {
+          if (SUCCESS_HTTP_RESPONSE_CODES.has(statusCode)) {
+            resolve();
+          }
+          else {
+            reject(new Error(
+              `Response status code: ${statusCode} (empty response body)`
+            ));
+          }
+
+          return;
+        }
+
         try {
           const responseJson = JSON.parse(responseBody);
 
@@ -303,6 +316,8 @@ const approveComment = async (
   githubToken,
   githubUser,
   githubRepo,
+  netlifyToken,
+  id,
   path,
   title,
   date,
@@ -334,6 +349,8 @@ const approveComment = async (
     await putNewCommentsFile(
       githubToken, githubUser, githubRepo, path, title, date, name, newJson, existingSha
     );
+
+    await purgeComment(id, netlifyToken);
 
     return { statusCode: 200, body: "Comment approved" };
   }
@@ -383,6 +400,8 @@ exports.handler = async (event, context) => {
       githubToken,
       githubUser,
       githubRepo,
+      netlifyToken,
+      id,
       path,
       title,
       date,

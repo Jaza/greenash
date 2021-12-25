@@ -1,7 +1,8 @@
 <h2>Post a comment</h2>
 
 <form name="comments-queue" method="POST" action="{{ page.url }}?comment_posted=1" data-netlify>
-  <input type="hidden" name="path" value="{{ page.url }}">
+  <input type="hidden" name="path" value="{{ page.inputPath | replace("./", "") | replace(".html", "") }}">
+  <input type="hidden" name="title" value="{{ title }}">
   <p>
     <label for="name">Name:</labe>
     <input type="text" name="name" id="name" maxlength="50" required>
