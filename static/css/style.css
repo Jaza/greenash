@@ -363,18 +363,19 @@ input, textarea {
   border: 1px solid #ddd;
   outline: 0;
   font-size: 1em;
-  margin-bottom: 1em;
 }
 
 input {
   font-family: "Lora", serif;
   width: 95%;
+  margin-bottom: 1em;
 }
 
 textarea {
   width: 95.5%;
-  height: 150px;
+  height: 10em;
   line-height: 150%;
+  margin-bottom: 2em;
 }
 
 input:hover, textarea:hover,
@@ -401,4 +402,8 @@ button:hover, input[type="submit"]:hover {
 
 .vermiciousknid {
   display: none;
+}
+
+.g-recaptcha {
+  margin-bottom: 3em;
 }
