@@ -1,0 +1,39 @@
+{
+  "comments": [
+    {
+      "date": "2005-04-02T01:20:54Z",
+      "name": "moshe weitzman",
+      "comment": "fantasic writeup. i agree that we ought to show breadcrumbs on nodes. as a way to get there, i suggest we fix up <code>taxonomy_context</code> so it does what we want without patching. once we agree on that, then we push a patch into core.\n\nof course, i have a few comments on the text\n<ul>\n<li><code>taxonomy_context_init()</code> is very very bad. The init hook should be rarely used, and never used for something like a <code>node_load()</code>. This breaks \"the bootstrap\" and essentially means your whole site will be slower for anonymous users and more taxed than needed. i will contact the module owner and get this fixed.</li>\n<li>\"Third bug\" is not a bug IMO. That a helpful link to a related page. Of course, I wrote the taxo breadcrumb code so who am i to say.</li>\n</ul>"
+    },
+    {
+      "date": "2005-04-02T13:26:55Z",
+      "isAuthorReply": true,
+      "comment": "I agree that <code>taxonomy_context</code> needs to be fixed up so that it implements this patch. I just wasn't sure if this was a patch that everyone wanted, or if it was considered more of a fork. After all, I'm sure many users don't want breadcrumbs showing up on their nodes, because they implement a more complex taxonomy structure, e.g. where a term has more than one parent term. In such cases, breadcrumbs are not only inappropriate but also impossible to implement.\n\nIf a patch does happen, I think that ultimately it should happen on the core taxonomy module itself - the breadcrumb functionality should be moved from <code>taxonomy_context</code> to the core module. But I know that Drupal core changes are not the easiest things in the world to get through, so I'm not hanging on my seat for that to happen.\n\nDidn't realise that the <code>_init()</code> hook was part of the bootstrap mechanism - this is indeed quite inefficient. But hey, that's how I got it! I just took it from there.\n\nAnd last but not least... thanks for the praise! I'm flattered."
+    },
+    {
+      "date": "2005-04-06T15:25:08Z",
+      "name": "Nedjo",
+      "comment": "I've applied the patch to <code>taxonomy_context.module</code>, thanks for the improvements."
+    },
+    {
+      "date": "2005-04-06T22:33:09Z",
+      "isAuthorReply": true,
+      "comment": "<strong>Attention all people who are doing this tutorial:</strong>\n\nNow that <code>taxonomy_context.module</code> has been patched to implement the stuff in this article (see previous comment), you no longer need to do steps 1 and 3. Step 2 is still useful, if you want to specify which of your vocabs is used to define your site's master hierarchy (step 2 patches <code>taxonomy.module</code>, which has not changed for 4.5.x since time of writing).\n\nHope that this avoids any confusion in reading this article, and in trying to follow the instructions that it gives. The content of this article will not be changed, as it is a static document and should be kept for historical purposes. Also, although some of the code samples are now obselete, the text itself is still both interesting and relevant for Druapl users who want to understand the taxonomy system better."
+    },
+    {
+      "date": "2005-04-07T03:25:31Z",
+      "name": "Ramdak",
+      "comment": "Great development! I am happy that your hard work has become useful.\n\nWhere can I get the updated <code>taxonomy_context</code> module? I didn't find on the Drupal downloads page. \n\nJust want to clarify a couple of things:\n\n<ol>\n<li>Is it correct that hierarchical aliases are still available only through your patch?</li>\n<li>And, index pages for vocabularies still need to be done?</li>\n</ol>\n\nRamdak"
+    },
+    {
+      "date": "2005-04-07T06:53:06Z",
+      "name": "Nate",
+      "comment": "You'll have to get the module from CVS; it's not the \"official\" version yet."
+    },
+    {
+      "date": "2005-04-07T15:43:08Z",
+      "name": "Ramdak",
+      "comment": "Many thanks."
+    }
+  ]
+}

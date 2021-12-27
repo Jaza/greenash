@@ -12,23 +12,34 @@ h1, h2, p, figcaption, a, li, dt, dd {
   text-rendering: optimizeLegibility;
 }
 
-h1 {
+h1, h2, h3 {
   font-family: "Lato", sans-serif;
-  font-size: 2.7em;
   text-align: left;
+}
+
+h1 {
+  font-size: 2.7em;
   margin: 0.6em 0 0.28em;
   font-weight: normal;
 }
 
 h2 {
-  font-family: "Lato", sans-serif;
   font-size: 1.9em;
   font-weight: 700;
   padding: 0;
-  margin: 1.25em 0 0.28em;
-  text-align: left;
+  margin: 1.25em 0 2em;
   line-height: 1.2em;
   letter-spacing: 0;
+}
+
+article > h2 {
+  margin: 1.25em 0 0.28em;
+}
+
+h3 {
+  font-size: 1.4em;
+  line-height: 1.4em;
+  line-height: 1.4em;
 }
 
 time {
@@ -202,11 +213,11 @@ body, .wideflex-wrapper {
   justify-content: center;
 }
 
-h1, h2, summary, article > p, article > ul, article > ol, article > dl, .tags {
+h1, h2, h3, summary, form, article > p, article > ul, article > ol, article > dl, .tags {
   max-width: 680px;
 }
 
-h1, h2, summary, article > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper {
+h1, h2, article > h2, h3, summary, form, article > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper {
   margin-left: auto;
   margin-right: auto;
 }
@@ -233,7 +244,7 @@ article {
   margin-bottom: 3em;
 }
 
-.articles article {
+.articles article, .comment {
   margin-bottom: 5em;
 }
 
@@ -335,12 +346,59 @@ article {
   line-height: 1.4em;
 }
 
-.tags ul li a {
+.tags ul li a, button, input[type="submit"] {
   background: rgba(128, 128, 128, .1);
   padding: 0.8em 1em 0.9em;
   text-decoration: none;
 }
 
-.tags ul li a:hover {
+.tags ul li a:hover, button:hover, input[type="submit"]:hover {
   background: rgba(0, 102, 0, .1);
+}
+
+/* Thanks to: https://gist.github.com/asilbalaban/7985790 */
+
+input, textarea {
+  padding: 0.6em;
+  border: 1px solid #ddd;
+  outline: 0;
+  font-size: 1em;
+  margin-bottom: 1em;
+}
+
+input {
+  font-family: "Lora", serif;
+  width: 95%;
+}
+
+textarea {
+  width: 95.5%;
+  height: 150px;
+  line-height: 150%;
+}
+
+input:hover, textarea:hover,
+input:focus, textarea:focus {
+  border-color: #c9c9c9;
+}
+
+label {
+  font-family: "Lato", sans-serif;
+  font-size: 1.3em;
+  display: inline-block;
+  margin: 0.5em 0;
+}
+
+button, input[type="submit"] {
+  border: 0;
+  font-size: 1em;
+  margin-bottom: 1em;
+}
+
+button:hover, input[type="submit"]:hover {
+  cursor: pointer;
+}
+
+.vermiciousknid {
+  display: none;
 }

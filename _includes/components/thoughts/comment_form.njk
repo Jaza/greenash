@@ -1,25 +1,32 @@
-<h2>Post a comment</h2>
+<details>
+  <summary>Post a comment</summary>
 
-<form name="comments-queue" method="POST" action="{{ page.url }}?comment_posted=1" data-netlify>
-  <input type="hidden" name="path" value="{{ page.inputPath | replace("./", "") | replace(".html", "") }}">
-  <input type="hidden" name="title" value="{{ title }}">
-  <p>
-    <label for="name">Name:</labe>
-    <input type="text" name="name" id="name" maxlength="50" required>
-  </p>
-  <p>
-    <label for="email">Email address:</label>
-    <input type="email" name="email" id="email" required>
-  </p>
-  <p>
-    <label for="url">URL:</label>
-    <input type="text" name="url" id="url">
-  </p>
-  <p>
-    <label for="comment">Comment:</label>
-    <textarea name="comment" id="comment" cols="40" rows="10" maxlength="3000" required></textarea>
-  </p>
-  <p>
-    <button type="submit">Post</button>
-  </p>
-</form>
+  <form name="comments-queue" method="POST" action="{{ page.url }}?comment_posted=1" data-netlify netlify-honeypot="bot-field" data-netlify-recaptcha>
+    <input type="hidden" name="path" value="{{ page.inputPath | replace("./", "") | replace(".html", "") }}">
+    <input type="hidden" name="title" value="{{ title }}">
+    <p>
+      <label for="name">Name:</label>
+      <input type="text" name="name" id="name" maxlength="50" required>
+    </p>
+    <p>
+      <label for="email">Email address:</label>
+      <input type="email" name="email" id="email" required>
+    </p>
+    <p>
+      <label for="url">URL:</label>
+      <input type="text" name="url" id="url">
+    </p>
+    <p class="vermiciousknid">
+      <label for="vermiciousknid">Vermicious knid:</label>
+      <input type="text" name="vermiciousknid" id="vermiciousknid">
+    </p>
+    <p>
+      <label for="comment">Comment:</label>
+      <textarea name="comment" id="comment" cols="40" rows="10" maxlength="3000" required></textarea>
+    </p>
+    <div data-netlify-recaptcha></div>
+    <p>
+      <button type="submit">Post</button>
+    </p>
+  </form>
+</details>

@@ -29,14 +29,13 @@ layout: layouts/base.njk
 
 {% if comments %}
 
-<h2>Comments</h2>
-<p><strong>{{ comments | length }}</strong></p>
+<h2>Comments: {{ comments | length }}</h2>
 
   {% for comment in comments %}
 
-<article{% if comment.isAuthorReply %} class="author-comment"{% endif %}>
+<article class="comment{% if comment.isAuthorReply %} author-comment{% endif %}">
     {% if comment.isAuthorReply %}
-  <h3><a href="{{ params.authorURL }}">{{ params.authorName }}</a></h3>
+  <h3>{{ params.authorName }}</h3>
     {% else %}
   <h3>{% if comment.url %}<a href="{{ comment.url | url }}" rel="nofollow">{% endif %}{{ comment.name }}{% if comment.url %}</a>{% endif %}</h3>
     {% endif %}
