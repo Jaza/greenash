@@ -69,7 +69,7 @@ a:hover, .summary-inner:hover {
   background: rgba(0, 102, 0, .1);
 }
 
-h1 > a:hover {
+main h1 > a:hover {
   background: none;
 }
 
@@ -213,11 +213,15 @@ body, .wideflex-wrapper {
   justify-content: center;
 }
 
-h1, h2, h3, summary, form, article > p, article > ul, article > ol, article > dl, .tags {
+body {
+  flex-direction: column;
+}
+
+h1, h2, h3, summary, form, article > p, main > p, article > ul, article > ol, article > dl, .tags {
   max-width: 680px;
 }
 
-h1, h2, article > h2, h3, summary, form, article > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper {
+.nav-wrapper, h1, h2, article > h2, h3, summary, form, article > p, main > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper {
   margin-left: auto;
   margin-right: auto;
 }
@@ -255,7 +259,7 @@ article {
 }
 
 @media (min-width: 1320px) {
-  article > figure, article > .wideflex-wrapper {
+  article > figure, article > .wideflex-wrapper, .nav-wrapper {
     max-width: 1192px;
   }
 }
@@ -412,4 +416,127 @@ button:hover, input[type="submit"]:hover {
 
 .g-recaptcha {
   margin-bottom: 3em;
+}
+
+/* Thanks to: https://codepen.io/mithicher/pen/opDgn */
+
+header {
+  background: rgba(128, 128, 128, .1);
+  margin-bottom: 2em;
+}
+
+.nav-wrapper {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  position: relative;
+}
+
+header p, header li, #menu-icon {
+  font-family: "Lato", sans-serif;
+}
+
+header h1, header p {
+  font-size: 1.3em;
+  line-height: 1.55em;
+  letter-spacing: 0.2em;
+  margin: 0;
+  font-weight: bold;
+  padding: 0;
+}
+
+header h1 a, header p a {
+  display: block;
+  color: rgba(0, 102, 0, .9);
+  text-decoration: none;
+  padding: 0.6em 0.8em;
+}
+
+header h1 a:hover, header p a:hover {
+  background: #ddd;
+}
+
+header nav {
+  display: none;
+}
+
+.expand nav {
+  display: block;
+}
+
+header ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+header li {
+  list-style-type: none;
+  display: block;
+  margin: 0;
+}
+
+header li a {
+  display: block;
+  text-decoration: none;
+  background: rgba(128, 128, 128, .2);
+}
+
+header li a:hover {
+  background: rgba(0, 102, 0, .1);
+}
+
+.site-name-wrapper, header li a {
+  border-bottom: 1px solid #bbb;
+}
+
+header h1 a, header li a {
+  padding: 0.6em 0.8em;
+}
+
+#menu-icon {
+  position: absolute;
+  top: 0;
+  right: 1em;
+  font-size: 1.3em;
+  padding: 0.7em 0.2em;
+}
+
+#menu-icon:hover {
+  background: none;
+}
+
+header h1 a, #menu-icon {
+  display: block;
+  text-decoration: none;
+}
+
+@media (min-width: 728px) {
+  .nav-wrapper {
+    flex-direction: row;
+  }
+
+  #menu-icon {
+    display: none;
+  }
+
+  header nav {
+    display: block;
+  }
+
+  header li {
+    display: inline-block;
+  }
+
+  .site-name-wrapper, header li a {
+    border-bottom: 0;
+  }
+
+  header {
+    border-bottom: 1px solid #bbb;
+  }
+
+  header li a {
+    background: none;
+  }
 }

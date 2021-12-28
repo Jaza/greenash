@@ -1,0 +1,19 @@
+<header>
+  <div class="nav-wrapper">
+    <div class="site-name-wrapper">
+      <{% if not isFront %}p{% else %}h1{% endif %}><a href="/">{{ metadata.title }}</a></{% if not isFront %}p{% else %}h1{% endif %}>
+
+      <a id="menu-icon">&#9776;</a>
+    </div>
+
+    <nav>
+      <ul>
+        <li><a href="/thoughts/">Thoughts</a></li>
+        <li><a href="/services/">Services</a></li>
+        <li><a href="/portfolio/">Portfolio</a></li>
+        <li><a href="/about/">About</a></li>
+        <li><a href="/contact/">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>

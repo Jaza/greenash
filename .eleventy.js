@@ -55,6 +55,12 @@ module.exports = function(eleventyConfig) {
     return DateTime.fromISO(dateStr).toJSDate();
   });
 
+  // Needed because the nunjucks built-in slice filter is actually a chunker, but we
+  // want regular JS slice behaviour
+  eleventyConfig.addFilter("jsslice", (value, start, end) => {
+    return value.slice(start, end);
+  });
+
   // Thanks to: https://stackoverflow.com/a/6234804
   const escapeHtml = unsafe => {
     return unsafe

@@ -1,5 +1,24 @@
 ---
 layout: layouts/base.njk
 ---
-<h1>{{ metadata.title }}</h1>
 {{ content | safe }}
+
+<p style="margin-bottom: 3em"><em>Fresh <a href="/thoughts/">thoughts</a>:</em></p>
+
+{% set items = [ collections.thoughts | last ] %}
+
+{% include "components/thoughts/listing.njk" %}
+
+<section class="wideflex-wrapper">
+  <div>
+    <p><em>Also fresh:</em></p>
+
+    {% set items = collections.thoughts | reverse | jsslice(1, 4) %}
+
+    <ul>
+    {% for item in items %}
+      <li><a href="{{ item.url | url }}">{{ item.data.title }}</a> ({{item.date | dateDMY }})</li>
+    {% endfor %}
+    </ul>
+  </div>
+</section>

@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="/css/highlight.css" type="text/css" media="all">
   </head>
   <body>
+    {% include 'components/header.njk' %}
+
     <main>
       {{ content | safe }}
     </main>
@@ -24,6 +26,11 @@
     ready(() => {
       hljs.tabReplace = '    ';
       hljs.initHighlightingOnLoad();
+
+      document.getElementById("menu-icon").addEventListener("click", e => {
+        document.querySelector("header").classList.toggle("expand");
+        return false;
+      });
     });
   </script>
 </html>
