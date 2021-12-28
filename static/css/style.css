@@ -248,6 +248,12 @@ article {
   margin-bottom: 5em;
 }
 
+.author-comment > p:not(.date) {
+  padding-left: 1em;
+  padding-right: 1.3em;
+  border-left: 0.3em solid rgba(205, 255, 205, 0.68);
+}
+
 @media (min-width: 1320px) {
   article > figure, article > .wideflex-wrapper {
     max-width: 1192px;
