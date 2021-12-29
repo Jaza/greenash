@@ -1,5 +1,5 @@
 <details>
-  <summary>Post a comment</summary>
+  <summary><span class="summary-inner">Post a comment</span></summary>
 
   <form name="comments-queue" method="POST" action="{{ page.url }}?comment_posted=1" data-netlify netlify-honeypot="bot-field" data-netlify-recaptcha>
     <input type="hidden" name="path" value="{{ page.inputPath | replace("./", "") | replace(".html", "") }}">

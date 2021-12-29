@@ -42,10 +42,19 @@ h3 {
   line-height: 1.4em;
 }
 
-time {
-  color: rgba(117, 117, 117, 1);
+time, .comments-link {
   font-family: "Lato", sans-serif;
   font-size: 0.8em;
+  color: rgba(117, 117, 117, 1);
+}
+
+time {
+  padding-right: 1.5em;
+}
+
+.comments-link {
+  cursor: pointer;
+  text-decoration: none;
 }
 
 p, figcaption, li, dt, dd, table {
