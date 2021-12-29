@@ -1,0 +1,10 @@
+{
+  "comments": [
+    {
+      "date": "2005-10-10T10:17:54Z",
+      "name": "Grant",
+      "url": "http://synapsechronicles.com",
+      "comment": "Hi Jeremy - I've been looking for this kind of tool as well for some time. The only systems I've found have been very expensive proprietary systems like Rational Rose etc. Certainly not the plain-text variation you suggest.\n\nI've actually seen a system that has a \"round-trip\" implementation - you do your specs, they get turned into code, you modify the code, those changes get reflected back to the spec etc. (it had a fully \"ajaxified\" web UI too, before ajax was a term). Very cool stuff, but again the tool was very expensive, and proprietary...\n\nI think this is in part a reflection of the fact that things like UML diagrams and this level of up-front design is most common in large organisations, who can generally afford the expensive tools.\n\nGiven the shift away from big-design-up-front approach towards agile and XP style development techniques suggests these kind of tools are not going come around any time soon. But definitely something to look into if you think you're going to be doing a lot of this kind of thing at uni.\n\nAs an aside - the other obvious benefit of using XML in your approach is easy transformation via XSLT for web display (inheritance would be difficult to visualise I suspect, but I digress)."
+    }
+  ]
+}

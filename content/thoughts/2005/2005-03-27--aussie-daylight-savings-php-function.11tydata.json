@@ -1,0 +1,9 @@
+{
+  "comments": [
+    {
+      "date": "2005-11-16T09:50:02Z",
+      "name": "Elke",
+      "comment": "Hi,\n\nYou algorythm is is not quite right that daylight savings ends with the last Sunday in March. In 2006 it will end on 2/4/2005, the first Sunday in April. Please refer to the <a href=\"http://www.bom.gov.au/climate/averages/tables/dst_times.shtml\">daylight savings defined by BOM</a>.\n\nThese Australian timezones are a nightmare.\n\nElke"
+    }
+  ]
+}

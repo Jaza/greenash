@@ -9,6 +9,12 @@
       "date": "2005-07-20T07:11:11Z",
       "name": "Geoff",
       "comment": "I tried out these patches and they worked great for breadcrumbs but not for the menu block.  Any idea which functions need to be patched for this or am I doing something wrong?"
+    },
+    {
+      "date": "2005-09-17T06:22:29Z",
+      "name": "void",
+      "url": "http://plasti.com.uy/plastico",
+      "comment": "Hi, reviewing the assoc filter of your <code>taxonomy_assoc</code> module you call a patched version (for distantparent) of <code>taxonomy_get_children</code> but the patch isn't anywhere, could you provide it?\n\nOther question: are you using <code>taxonomy_hide</code>, to hide the Sections from your post or using some custom hack?\n\nP.S: sorry for my bad english i'm from Uruguay"
     }
   ]
 }

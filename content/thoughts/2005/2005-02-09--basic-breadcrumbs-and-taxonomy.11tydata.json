@@ -105,6 +105,12 @@
       "name": "dtabach",
       "url": "http://archiclube.org",
       "comment": "<blockquote>Therefore, and that was not clear for me, it is crucial to apply the patch in step2 of this docu to get the functionality</blockquote>\n\nI applied the second patch to <code>taxonomy.module</code> 4.6.3, and get the following error message:\n\n<pre class=\"no-highlight\"><code>Parse error: parse error, unexpected T_VARIABLE in /home/dtabach/public_html/modules/taxonomy.module on line 432</code></pre>\n\nI'm using the latest <code>taxonomy_context.module</code> from drupal's downloads, not modified."
+    },
+    {
+      "date": "2005-12-16T13:46:31Z",
+      "name": "Ken Collins",
+      "url": "http://www.metaskills.net",
+      "comment": "One of the things I was hoping to learn, and may have missed, is to find out how to make any of the three top-level terms in my blog category show all the posts when clicked in the breadcrumb. For instance, making <code>taxonomy/term/2</code> really work like <code>taxonomy/term/2/all</code>. Any ideas? TIA"
     }
   ]
 }
