@@ -4,6 +4,11 @@
       "date": "2005-04-02T00:05:20Z",
       "isAuthorReply": true,
       "comment": "I told you I'd do it, and now I have! It's been almost 2 months since I wrote this article and released the patch, but now I've finally gotten myself a CVS account on drupal.org, and I've written a new 'distantparent module' and committed it. This is actually a very simple module: all it does is provide a front-end admin interface for managing (i.e. add / edit / delete) distant parents, so that you don't have to go into the database backend and manage them from there.\n\nThe distantparent module is not a replacement for the patches in this article: it is an extension to them. <strong>You still need the patches for cross-vocab hierarchies to work.</strong> As I clearly state in the help text for my module, it's still the same old patches - not the new module - that's doing the real work.\n\n<a href=\"http://drupal.org/node/19813\">Get the distantparent module.</a>"
+    },
+    {
+      "date": "2005-07-20T07:11:11Z",
+      "name": "Geoff",
+      "comment": "I tried out these patches and they worked great for breadcrumbs but not for the menu block.  Any idea which functions need to be patched for this or am I doing something wrong?"
     }
   ]
 }
