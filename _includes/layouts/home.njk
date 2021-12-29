@@ -3,15 +3,17 @@ layout: layouts/base.njk
 ---
 {{ content | safe }}
 
-<p style="margin-bottom: 3em"><em>Fresh <a href="/thoughts/">thoughts</a>:</em></p>
+<p class="byline"><em>Fresh <a href="/thoughts/">thoughts</a>:</em></p>
 
 {% set items = [ collections.thoughts | last ] %}
 
-{% include "components/thoughts/listing.njk" %}
+<section class="freshest">
+  {% include "components/thoughts/listing.njk" %}
+</section>
 
 <section class="wideflex-wrapper">
   <div>
-    <p><em>Also fresh:</em></p>
+    <p class="byline"><em>Also fresh:</em></p>
 
     {% set items = collections.thoughts | reverse | jsslice(1, 4) %}
 

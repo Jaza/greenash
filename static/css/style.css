@@ -57,6 +57,10 @@ p, figcaption, li, dt, dd, table {
   word-break: break-word;
 }
 
+.byline {
+  margin-bottom: 2em;
+}
+
 a, summary {
   text-decoration: underline;
 }
@@ -244,7 +248,7 @@ main {
   }
 }
 
-article {
+article, .freshest .articles article {
   margin-bottom: 3em;
 }
 
@@ -432,7 +436,7 @@ header {
   position: relative;
 }
 
-header p, header li, #menu-icon {
+header p, header li, #menu-icon, footer p {
   font-family: "Lato", sans-serif;
 }
 
@@ -446,7 +450,7 @@ header h1, header p {
 }
 
 header h1 a, header p a {
-  display: block;
+  display: inline-block;
   color: rgba(0, 102, 0, .9);
   text-decoration: none;
   padding: 0.6em 0.8em;
@@ -457,11 +461,13 @@ header h1 a:hover, header p a:hover {
 }
 
 header nav {
-  display: none;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .4s;
 }
 
 .expand nav {
-  display: block;
+  max-height: 20em;
 }
 
 header ul {
@@ -500,6 +506,7 @@ header h1 a, header li a {
   right: 1em;
   font-size: 1.3em;
   padding: 0.7em 0.2em;
+  cursor: pointer;
 }
 
 #menu-icon:hover {
@@ -521,7 +528,7 @@ header h1 a, #menu-icon {
   }
 
   header nav {
-    display: block;
+    max-height: none;
   }
 
   header li {
@@ -539,4 +546,14 @@ header h1 a, #menu-icon {
   header li a {
     background: none;
   }
+}
+
+footer p {
+  text-align: center;
+  font-size: 0.9em;
+  letter-spacing: 0.05em;
+}
+
+footer p, footer a {
+  color: #999;
 }
