@@ -369,14 +369,25 @@ article, .freshest .articles article {
   line-height: 1.4em;
 }
 
-.tags ul li a, button, input[type="submit"] {
+.tags ul li a, button, input[type="submit"], .button a {
   background: rgba(128, 128, 128, .1);
   padding: 0.8em 1em 0.9em;
   text-decoration: none;
 }
 
-.tags ul li a:hover, button:hover, input[type="submit"]:hover {
+.tags ul li a:hover, button:hover, input[type="submit"]:hover, .button a:hover {
   background: rgba(0, 102, 0, .1);
+}
+
+.button {
+  font-family: "Lato", sans-serif;
+  font-size: 1.4em;
+  text-align: center;
+  margin-bottom: 2em;
+}
+
+.button a {
+  display: inline-block;
 }
 
 /* Thanks to: https://gist.github.com/asilbalaban/7985790 */
