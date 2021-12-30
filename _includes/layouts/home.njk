@@ -1,7 +1,9 @@
 ---
 layout: layouts/base.njk
 ---
-{{ content | safe }}
+<article>
+  {{ content | autop | safe }}
+</article>
 
 <p class="byline"><em>Fresh <a href="/thoughts/">thoughts</a>:</em></p>
 
@@ -11,16 +13,14 @@ layout: layouts/base.njk
   {% include "components/thoughts/listing.njk" %}
 </section>
 
-<section class="wideflex-wrapper">
-  <div>
-    <p class="byline"><em>Also fresh:</em></p>
+<article>
+  <p class="byline"><em>Also fresh:</em></p>
 
-    {% set items = collections.thoughts | reverse | jsslice(1, 4) %}
+  {% set items = collections.thoughts | reverse | jsslice(1, 4) %}
 
-    <ul>
-    {% for item in items %}
-      <li><a href="{{ item.url | url }}">{{ item.data.title }}</a> ({{item.date | dateDMY }})</li>
-    {% endfor %}
-    </ul>
-  </div>
-</section>
+  <ul>
+  {% for item in items %}
+    <li><a href="{{ item.url | url }}">{{ item.data.title }}</a> ({{item.date | dateDMY }})</li>
+  {% endfor %}
+  </ul>
+</article>
