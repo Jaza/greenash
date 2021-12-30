@@ -12,6 +12,10 @@ module.exports = function(eleventyConfig) {
   const TAG_CLOUD_MIN_SIZE = 0.75;
   const TAG_CLOUD_ROUNDING_FACTOR = 10e6;
 
+  const JAZA_AGE = Math.floor(
+    (new Date() - Date.parse(params.jazaDob)) / 1000 / 60 / 60 / 24 / 365.25
+  );
+
   const nunjucksEnvironment = new Nunjucks.Environment(
     new Nunjucks.FileSystemLoader("_includes")
   );
@@ -356,6 +360,10 @@ module.exports = function(eleventyConfig) {
     }).sort((a, b) => {
       return a.title.localeCompare(b.title);
     });
+  });
+
+  eleventyConfig.addFilter("jazaAge", (value) => {
+    return value.replace(/JAZA_AGE/g, `${JAZA_AGE}`);
   });
 
   // Don't process folders with static assets e.g. images
