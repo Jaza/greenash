@@ -1,0 +1,32 @@
+---
+title: "Import / Export API: progress report #2"
+date: 2006-06-26
+permalink: /thoughts/2006/06/import-export-api-progress-report-2/
+teaser: |-
+  The <a href="http://code.google.com/soc/studentfaq.html#timeline">mid-program mentor evaluation</a> (a.k.a. <em>crunch time</em>) for the Summer of Code is almost here, and as such, I've been working round-the-clock to get my project looking as presentable as possible. The <a href="http://drupal.org/node/67043">Import / Export API module</a> has made significant progress since my last report, but there's still plenty of work left to be done.
+tags:
+  - thoughtstopics/drupal
+  - thoughtstopics/summer-of-code
+---
+The <a href="http://code.google.com/soc/studentfaq.html#timeline">mid-program mentor evaluation</a> (a.k.a. <em>crunch time</em>) for the Summer of Code is almost here, and as such, I've been working round-the-clock to get my project looking as presentable as possible. The <a href="http://drupal.org/node/67043">Import / Export API module</a> has made significant progress since my last report, but there's still plenty of work left to be done.
+
+It gives me great pride to assert that if you download the module right now, you'll find that it actually does something. :-) I know, I know - it doesn't do much (in fact, I may simply be going delusional and crazy from all the coding I've been doing, and it may actually do <em>nothing</em>) - but what it does do is pretty cool. The <abbr title="eXtensible Markup Languge">XML</abbr> export engine is now functional, which means that you can already use the module to export any entities that currently have a definition available (which is only users and roles, at present), as plain-text XML:
+
+[thumbnail xml_export.png XML export screenshot]
+
+The import system isn't quite ready to go as yet, but the XML-to-array engine is pretty much done, and with a little more work, the array-to-<abbr title="Data Base">DB</abbr> engine will be done as well.
+
+The really exciting stuff, however, has been happening under the hood, in the dark and mysterious depths of the API's code. Alright, alright - exciting <em>if</em> you're the kind of twisted individual that believes <em>recursive array building</em> and <em>refactored function abstraction</em> are hotter than <a href="http://pix.maxeline.com/mxpix_albums/tomb_raider_angelina_jolie/pix_maxeline_com_tombraider_01.jpg">Angelina's Tomb Raiders&trade;</a>. But hey, who doesn't?
+
+Some of the stuff that's been keeping me busy lately:
+
+<ul>
+  <li>The new <a href="http://basement.greenash.net.au/soc2006/GetAndPutApi">Get and Put API</a> has been implemented. All engines now implement either a 'get' or a 'put' operation (e.g. <em>get</em> data from the database, <em>put</em> data into an XML string). All exports and imports are now distinctly broken up into a 'get' and a 'put' component, with the data always being in a standard structured form in-between.</li>
+  <li>Nested arrays are now fully supported, even though I couldn't find any structures in Drupal that require a nested array definition (I wrote a test module that uses nested arrays, just to see that it works).</li>
+  <li>The definition building system has been made more powerful. Fields can now be modified at any time after the definition 'library' is first built. Specific engines can take the original definitions, and build them using their own custom callbacks, for adding and modifying custom attributes.</li>
+  <li>Support for <a href="http://basement.greenash.net.au/soc2006/AlternateKeyFields">Alternate key fields</a> has been added. This means that you can export unique identifiers that are more human-friendly than database IDs (e.g. user names instead of user IDs), and these fields will automatically get generated whenever their ID equivalents are found in a definition. This will get really cool when the import system is ready - you will be able to import data that only has alternate keys, and not ID keys - and the system will be able to translate them for you.</li>
+</ul>
+
+Also, for those of you that want to get involved in this project, and to offer your feedback and opinions, head on over to the <a href="http://groups.drupal.org/soc-import-export-api">Import / Export API group</a>, which is part of the new <a href="http://groups.drupal.org/">groups.drupal.org</a> community site, and which is open for anyone to join. I'd love to hear whatever you may have to say about the module - anything from questions about how it can help you in your <a href="http://en.wikipedia.org/wiki/Monty_Python_and_the_Holy_Grail">quest for the holy grail</a> (sorry, only African Swallows can be exported at this time, support for European Swallows is not yet ready), to complaints about it <a href="http://en.wikipedia.org/wiki/Dead_Parrot">killing your parrot</a> (be sure that it isn't just resting) - all this and more is welcome.
+
+I hope to have more code, and another report, ready in the near future. Thanks for reading this far!
