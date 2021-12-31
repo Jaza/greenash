@@ -1,0 +1,19 @@
+---
+title: "Import / Export API: progress report #3"
+date: 2006-07-15
+permalink: /thoughts/2006/07/import-export-api-progress-report-3/
+teaser: |-
+  The Summer of Code is now past its half-way mark. For some reason, I passed the mid-term evaluation, and I'm still here. The <a href="http://drupal.org/node/67043">API</a> is getting ever closer to meeting its <a href="http://basement.greenash.net.au/soc2006/SpecificationAndSuccessCriteria">success criteria</a>, although not as close as I'd hoped for it to be by this point. A very crude XML import and export is now possible, but the ID and reference handling system - which is set to be one of the API's killer features - is only half-complete at present. Unfortunately, it's going to stay that way for a while, because I'm away on vacation for the next full week.
+tags:
+  - thoughtstopics/drupal
+  - thoughtstopics/summer-of-code
+---
+The Summer of Code is now past its half-way mark. For some reason, I passed the mid-term evaluation, and I'm still here. Blame my primary mentor, <a href="http://daemon.co.za/">Adrian</a>, who was responsible for passing me with flying colours. The <a href="http://drupal.org/node/67043">API</a> is getting ever closer to meeting its <a href="http://basement.greenash.net.au/soc2006/SpecificationAndSuccessCriteria">success criteria</a>, although not as close as I'd hoped for it to be by this point.
+
+My big excuse for being behind schedule is that I got extremely sidetracked, with my recent work on the Drupal core patch to <a href="http://drupal.org/node/62340">get a subset of CCK into core</a> (CCK is the <a href="http://drupal.org/project/cck">Content Construction Kit module</a>, the successor to <a href="http://drupal.org/project/flexinode">Flexinode</a>, a tool for allowing administrators to define new structured content types in Drupal). However, this patch is virtually complete now, so it shouldn't be sidetracking me any more.
+
+A very crude XML import and export is now possible. This is a step up from my previous announcements, where I had continually given the bad news that importing was not yet ready at all. You can now import data from an XML file into the database, and stuff will actually <em>happen</em>! But just what you can import is very limited; and if you step outside of that limit, then you're stepping beyond the API's still-constricted boundaries.
+
+The ID and reference handling system - which is set to be one of the API's killer features - is only half-complete at present. I've spent a lot of time today working on the ID generation system, which is an important part of the overall reference handling system, and which is now almost done. This component of the API required a lot of thinking and planning before it happened, as can be seen by the <a href="http://basement.greenash.net.au/soc2006/IdHandlingScenarioMatrix">very complicated Boolean decision table</a> that I've documented. This is for working out the various scenarios that need to be handled, and for planning the control logic that determines what actions take place for each scenario.
+
+Unfortunately, as I said, the reference handling system is only half-done. And it's going to stay that way for a while, because I'm away on vacation for the next full week. I hate to just pack up and leave at this critical juncture of development, but hey: I code all year round, and I only get to ski for one week of the year! Anyway, despite being a bit behind schedule, I'm very happy with the quality and the cleanliness of the code thus far (same goes for the documentation, within and outside of the code). And in the Drupal world, the general attitude is that it's better to get something done a bit late, as long as it's done right. I hope that I'm living up to that attitude, and I wish that the rest of the world followed the same mantra.

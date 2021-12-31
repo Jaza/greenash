@@ -1,0 +1,74 @@
+---
+title: "Import / Export API: final thoughts"
+date: 2006-09-07
+permalink: /thoughts/2006/09/import-export-api-final-thoughts/
+teaser: |-
+  The <a href="http://code.google.com/soc/">Summer of Code</a> has finally come to an end, and it's time for me to write up my final thoughts on my involvement in it. The <a href="http://drupal.org/project/importexportapi">Import / Export API module</a> has been a long and challenging project, but it's also been great fun and has, in my opinion, been a worthwhile cause to devote my time to. My mentor has given my work the final tick of approval (which is great!), and I personally feel that the project has been an overwhelming success.
+tags:
+  - thoughtstopics/drupal
+  - thoughtstopics/summer-of-code
+---
+The <a href="http://code.google.com/soc/">Summer of Code</a> has finally come to an end, and it's time for me to write up my final thoughts on my involvement in it. The <a href="http://drupal.org/project/importexportapi">Import / Export API module</a> has been a long and challenging project, but it's also been great fun and has, in my opinion, been a worthwhile cause to devote my time to. My mentor has given my work the final tick of approval (which is great!), and I personally feel that the project has been an overwhelming success.
+
+Filling out the final student evaluation for the SoC was an interesting experience, because it made me realise that as someone with significant prior experience in developing for my mentor organisation (i.e. Drupal), I was actually in the minority. Many of the questions didn't apply to me, or weren't entirely relevant, as they assumed that I was just starting out with my mentor organisation, and that the SoC was my 'gateway' to learning the ropes of that organisation. I, on the other hand, already had about 18 months of experience as a Drupal developer when the SoC began, and I always viewed SoC as an opportunity to work on developing an important large-scale module (that I wouldn't have had time to develop otherwise), rather than as a 'Drupal boot camp'.
+
+The Import / Export API is also something of a unique project, in that it's actually quite loosely coupled to Drupal. I never envisaged that it would turn out like this, but the API is actually <em>so</em> loosely coupled, that it could very easily be used as an import / export tool for almost any other application. This makes me question whether it would have been better to develop the API as a completely stand-alone project, with zero dependency on Drupal, rather than as a Drupal module, with a few (albeit fairly superficial) dependencies. In this context, the API is a bit like <a href="http://www.openngo.org/">CiviCRM</a>, in that it is basically a fully-functional application (or library, in the API's case) all by itself, but in that it relies on Drupal for a few lil' things, such as providing a pretty face to the user, and integration as part of a content-managed web site.
+
+<h2>The module today</h2>
+
+For those of you that haven't tried it out yet, the API is an incredibly useful and flexible tool, when it comes to getting data in and out of your site. The module currently supports importing and exporting any entity in Drupal core, in either XML or in CSV format. Support for CCK nodes, node types, and fields is also currently included. All XML tags or CSV field names can have custom mappings defined during import or export. At the moment, the UI is very basic (the plan is to work on this some more in the future), but it exposes the essential functionality of the API well enough, and it's reasonably easy to use.
+
+The module is superior to existing import modules, because it allows you to import a variety of different entities, but to maintain and to manage the relationships between those entities. For example: nodes, comments, and users are all different entities, but they are also all related to each other; nodes are written by users, and comments are written about particular nodes by users. You <em>could</em> import nodes and users using the <a href="http://drupal.org/project/node_import">node_import</a> and <a href="http://drupal.org/project/user_import">user_import</a> modules. But these two modules would not make any effort to link your nodes to your users, or to maintain any link that existed in your imported data. The Import / Export API recognises and maintains all such links.
+
+As for stability, the API still has a few significant known bugs lurking around in it, but overall it's quite stable and reliable. The API is still officially in beta mode, and more beta testing is still very much welcome. Many thanks to the people who have dedicated their time to testing and bug fixing thus far (you know who you are!) - it wouldn't be the useful tool that it is without your help.
+
+<h2>The module tomorrow</h2>
+
+And now for the most important question of all: what is the future of the API? What additional features would I (and others) like to see implemented post-SoC? What applications are people likely to build on top of it? And will the module, in some shape or form, to a greater or lesser extent, ever become part of Drupal core?
+
+First, the additional features. I was hoping to get some of these in as part of the SoC timeframe, but as it turned out, I barely had time to meet the base requirements that I originally set for myself. So here's my wish list for the API (and in my case, mere <em>wishing</em> ain't gonna make 'em happen - only <em>coding</em> will!):
+
+<ol>
+  <li><strong>File handling</strong>. The 'file' field type in the current API is nothing more than a stub - at present, it's almost exactly the same as the 'string' field type. I would like to actually implement file handling, so that files can be seamlessly imported and exported, along with the database-centric data in a Drupal site. Many would argue that this is critical functionality. I feel you, folks - that's why this is no. 1.</li>
+  <li><strong>Filtering and sorting in queries</strong>. The 'db' engines of the API are cutting-edge in their support for references and relationships, but they currently lack all but the most basic support for filtering and sorting in database queries. Ideally, the API will have an extensible system for this, similar to what is currently offered for node queries by the <a href="http://drupal.org/project/views">views module</a>. A matching UI of views' calibre would be awesome, too.</li>
+  <li><strong>Good-looking and flexible UI</strong>. The current UI is about as basic as it gets. The long-term plan is to move the UI out into a separate project (it's already a separate module), and to expose much more of the API through the interface, e.g. disabling import / export of specified fields, forcing of ID key generation / key matching and updating, control over alternate key handling. There are also plenty of cosmetic improvements that could be made to the UI, e.g. more wizard-like form dialogs (I think I'll wait for Drupal 5.0 / <a href="http://lists.drupal.org/archives/development/2006-08/msg00659.html">FAPI 2.0</a> before doing this), flexible control of output format (choice between file download, save output on server, display raw output, etc).</li>
+  <li><strong>Validate and submit (and more?) callbacks</strong>. This is really kind of dependent on the API's status in regards to going into Drupal core (see further down). But the general plan is to implement FAPI-like validate and submit callbacks within the API's data definition system.</li>
+</ol>
+
+Next, there are the possible applications of the API. The API is a great foundation for a plethora of possibilities. I have faith that, over the course of the near future, developers will start to have a look at the API, and that they will recognise its potential, and that they will start to develop really cool things on top of it. Of course, I may be wrong. It's possible that almost no developers will ever look at the API, and that the API will rot away in the dark corners of Drupal contrib, before sinking slowly into the depths of oblivion. But I hope that doesn't happen.
+
+Some of the possible applications that have come to my mind, and that other people have mentioned to me:
+
+<ul>
+  <li>Import / export (duh!)</li>
+  <li>Automated backup</li>
+  <li>Migration from test to production environment</li>
+  <li>Production site migration</li>
+  <li>Site merging</li>
+  <li>Multisite content sharing (a la <a href="http://drupal.org/project/publish">publish</a> and <a href="http://drupal.org/project/subscribe">subscribe</a>)</li>
+  <li>Migration from other software (e.g. <a href="http://movabletype.com/">Movable Type</a>, <a href="http://wordpress.org/">WordPress</a>)</li>
+</ul>
+
+Finally, there is the question of whether or not (and what parts of) the API will ever find itself in Drupal core. From the very beginning, my mentor <a href="http://daemon.co.za/">Adrian</a> has been letting me in on his secret super-evil plan for world domination (or, at the least, for Drupal domination). I can confide to all of you that getting parts of the API in core <strong>is</strong> part of this plan. In particular, the data definition system is a potential candidate for what will be the new 'data model / data layer / data API' foundation of FAPI 3.0 (i.e. Drupal post-upcoming-5.0-release).
+
+However, I cannot guarantee that the data definition system of the API will ever make it into core, and I certainly cannot predict in what form it will be by the time that it gets in (if it gets in, that is). Adrian has let slip <a href="http://lists.drupal.org/archives/development/2006-09/msg00046.html">a few ideas of his own</a> lately (in the form of PHP pseudo-code), and his ideas for a data definition system seem to be quite different from mine. No doubt every other Drupal developer will also have their own ideas on this - after all, it will be a momentous change for Drupal when it happens, and everyone has a right to be a part of that change. Anyway, Adrian has promised to reveal his grand plans for FAPI 3.0 during <a href="http://drupalcon.org/node/22">his presentation at the upcoming Brussels DrupalCon</a> (which I unfortunately won't be able to attend), so I'm sure that after that has happened, we'll all be much more enlightened.
+
+The API's current data definition system is not exactly perfectly suited for Drupal core. It was developed specifically to support a generic import / export system, and that fact shows itself in many ways. The system is based around directly reflecting the structure of the Drupal database, for the purposes of SQL query generation and plain text transformation. That will have to change if the system goes into Drupal core, because Drupal core has very different priorities. Drupal core is concerned more with a flexible callback system, with a robust integration into the form generation system, and with rock-solid performance all round. Whether the data definition system of the API is able to adapt to meet these demands, is something that remains to be seen.
+
+<h2>Further resources</h2>
+
+Well, that's about all that I have to say about the Import / Export API module, and about my involvement in the 2006 Google Summer of Code. But before you go away, here are some useful links to get you started on your forays into the world of importing and exporting in Drupal:
+
+<ul>
+  <li><a href="http://drupal.org/project/importexportapi">Import / Export API project page on drupal.org</a></li>
+  <li><a href="http://groups.drupal.org/soc-import-export-api">Discussion group on groups.drupal.org</a></li>
+  <li><a href="http://basement.greenash.net.au/soc2006/">Development wiki (will not continue to be used)</a></li>
+  <li><a href="http://cvs.drupal.org/viewcvs/*checkout*/drupal/contributions/modules/importexportapi/docs/developer/topics/importexportapi_guide.html">API QuickStart guide</a></li>
+  <li><a href="http://cvs.drupal.org/viewcvs/*checkout*/drupal/contributions/modules/importexportapi/docs/developer/topics/importexportapi_reference.html">API reference guide</a></li>
+</ul>
+
+Many thanks to Angie Byron (a.k.a. <a href="http://drupal.org/user/24967">webchick</a>) for your great work last year on the Forms API <a href="http://api.drupal.org/api/HEAD/file/developer/topics/forms_api.html">QuickStart guide</a> and <a href="http://api.drupal.org/api/HEAD/file/developer/topics/forms_api_reference.html">reference guide</a> documents, which proved to be an invaluable template for me to use in writing these documents for the Import / Export API. Thanks also, Angie, for your great work as part of the SoC organising team this year!
+
+And, last but not least, a big thankyou to <a href="http://daemon.co.za/">Adrian</a>, <a href="http://samikhan.org/">Sami</a>, <a href="http://www.robshouse.net/">Rob</a>, <a href="http://drupal.org/user/9446">Karoly</a>, <a href="http://tejasa.com/">Moshe</a>, <a href="http://www.angrydonuts.com/">Earl</a>, <a href="http://coders.co.nz/">Dan</a>, and everyone else who has helped me to get through the project, and to learn heaps and to have plenty of fun along the way. I couldn't have done it without you - all of you!
+
+SoC - it's been a blast. ;-)

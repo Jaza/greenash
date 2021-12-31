@@ -1,0 +1,35 @@
+---
+title: "Import / Export API: progress report #4"
+date: 2006-08-11
+permalink: /thoughts/2006/08/import-export-api-progress-report-4/
+teaser: |-
+  In a small, poorly ventilated room, somewhere in Australia, there are four geeky fingers and two geeky thumbs, and they are attached to two geeky hands. All of the fingers and all of the thumbs are racing haphazardly across a black keyboard, trying to churn out PHP; but mostly they're just tapping repeatedly, and angrily, on the 'backspace' key. A pair of eyes squint tiredly at the LCD monitor before them, trying to discern whether the miniscule black dot that they perceive is a speck of dirt, or yet another pixel that has gone to pixel heaven.
+tags:
+  - thoughtstopics/drupal
+  - thoughtstopics/summer-of-code
+---
+In a small, poorly ventilated room, somewhere in Australia, there are four geeky fingers and two geeky thumbs, and they are attached to two geeky hands. All of the fingers and all of the thumbs are racing haphazardly across a black keyboard, trying to churn out PHP; but mostly they're just tapping repeatedly, and angrily, on the 'backspace' key. A pair of eyes squint tiredly at the LCD monitor before them, trying to discern whether the miniscule black dot that they perceive is a speck of dirt, or yet another pixel that has gone to pixel heaven.
+
+But the black dot is neither of these things. The black dot is but a figment of this young geek's delirious and overly-caffeinated imagination. Because, you see, on this upside-down side of the world, where the seasons are wrong and the toilets flush counter-clockwise, there is a Drupaller who has been working on the Summer of Code all winter long. And he has less than two weeks until the deadline!
+
+That's right: in just 10 days, the Summer of Code will be over, and the Drupal <a href="http://drupal.org/node/67043">Import / Export API</a> will (hopefully) have met its outcomes, and will be ready for public use. That is the truth. Most of the other statements that I made above, however, are not the truth. In fact:
+
+<ul>
+  <li>I still don't drink any coffee at all (and I call myself a geek?!);</li>
+  <li>that whole <a href="http://www.esu.edu/~jjewett/ocean.lect7.html">'toilets-flushing-the-wrong-way-in-Australia' thing from The Simpsons</a> has no scientific basis; and</li>
+  <li>as far as I can see (and I may be wrong, I admit), my monitor is still pixel-perfect.</li>
+</ul>
+
+Anyway, on to the real deal...
+
+The current status of the Import / Export API is as follows. The DB, XML, and CSV engines are now all complete, and are (I hope) at beta-quality. However, they are still in need of a fair bit of testing and bug fixing. The same can be said for the alternate key and ID key handling systems. The data definitions for all Drupal 4.7 core entities (except for a few that weren't on the to-do list) are now complete.
+
+There are two things that still need to be done urgently. The first of these is a system for passing custom mappings (and other attributes), for any field, into the <code>importexportapi_get_data()</code> function. The whole point of the mapping system is that field mappings are completely customisable, but this point cannot be realised until custom mappings can actually be provided to the API. The second of these is the data definitions for CCK fields and node types. Many people have been asking me about this, including my mentor Adrian, and it will certainly be very cool when it is ready and working.
+
+One more thing that also needs to be done before the final deadline, is to write a very basic UI module, that allows people to actually demo the API. I won't be able to build my dream import / export whiz-bang get-and-put-anything-in-five-easy-steps UI in 10 days. But I should be able to build something functional enough, that it allows people (such as my reviewers) to test out and enjoy the key things that the API can do. Once this UI module is written, I will be removing all of the little bits of UI cruftiness that are currently in the main module.
+
+Was there something I didn't mention? Ah, yes. Documentation, documentation, documentation - how could I forget thee? As constant as the northern star, and almost as hard to find, the task of documentation looms over us all. I will be endeavouring to produce a reference guide for the import / export API within the deadline, which will be as complete as possible. But no guarantees that it will be complete within that time. The reference guide will focus on documenting the field types and their possible attributes, much like the <a href="http://api.drupal.org/api/HEAD/file/developer/topics/forms_api_reference.html">Drupal forms API reference</a> does. Other docs - such as tutorials, explanations, and tips - will come later.
+
+There are many things that the API is currently lacking, and that I would really like to see it ultimately have. Most of these things did not occur to me until I was well into coding the project, and none of them will actually be coded until after the project has finished. One of these things is an extensible query filtering and sorting system, much like the system that the amazing <a href="http://drupal.org/project/views">views module</a> boasts. Another is a validation and fine-grained error-handling system (mainly for imports).
+
+But more on these ideas another time. For now, I have a module to finish coding.

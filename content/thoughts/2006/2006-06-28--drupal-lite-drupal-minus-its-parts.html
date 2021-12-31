@@ -1,0 +1,55 @@
+---
+title: "Drupal lite: Drupal minus its parts"
+date: 2006-06-28
+permalink: /thoughts/2006/06/drupal-lite-drupal-minus-its-parts/
+teaser: |-
+  It is said that a house is <a href="http://www.importanceofphilosophy.com/Metaphysics_EntitySumOfParts.html">the sum of its parts</a>. If you take away the doors, the windows, the roof, the floorboads, the inside walls, the power lines, and the water pipes, is it still a house? In developing <a href="http://basement.greenash.net.au/drupallite/">Drupal Lite</a>, I hope to have answered this question in relation to Drupal. What are the absolute essentials, without which Drupal simply cannot be called Drupal? If you remove nodes, users, and the entire database system from Drupal, is it still Drupal?
+tags:
+  - thoughtstopics/drupal
+  - thoughtstopics/web-design
+---
+It is said that a house is <a href="http://www.importanceofphilosophy.com/Metaphysics_EntitySumOfParts.html">the sum of its parts</a>. If you take away all the things that make it a house, then it is no longer a house. But how much can you remove, before it can no longer be called a house? This is an age-old question in the school of philosophy, and it is one for which every person has a different answer. If you take away the doors, the windows, the roof, the floorboads, the inside walls, the power lines, and the water pipes, is it still a house? In developing <a href="http://basement.greenash.net.au/drupallite/">Drupal Lite</a>, I hope to have answered this question in relation to Drupal. What are the absolute essentials, without which Drupal simply cannot be called Drupal? If you remove nodes, users, and the entire database system from Drupal, is it still Drupal?
+
+Drupal Lite is, as its name suggests, a <em>very</em> lightweight version of Drupal, that I whipped up in about two hours last night. I developed it because I've been asked to develop a new site, which will consist mainly of static brochureware pages, with a contact form or two, and perhaps a few other little bits of functionality; but which will have to run with <em>no database</em>. Of course, I could just do it the ol' fashioned way, with static HTML pages, and with a CGI script for the contacts forms. Or I could whip up some very basic PHP for template file inclusion.
+
+<em>But muuum, I wanna use Druuupal!</em>
+
+<em>Too bad</em>, right? <em>No database, no Drupal</em> - right? <strong>Wrong.</strong>
+
+Drupal Lite would have to be the lightest version of Drupal known to man. It's even lighter than what I came up with the <a href="http://drupal.org/node/37939">last time that I rewrote Drupal to be lighter</a>. And unlike with my previous attempt, I didn't waste time doing anything stupid, like attempting to rewrite Drupal in an object-oriented fashion. In fact, I barely did any hacking at all. I just removed an enormous amount of code from Drupal core, and I made some small modifications to a few little bits (such as the module loader, and the static variable system), to make them database-unreliant.
+
+This has all been done for a practical purpose. But it brings up the interesting question: just how much can you remove from Drupal, before what you've got left can no longer be called Drupal? The answer, in my opinion, is: lots. Everything that is database-reliant has been removed from Drupal Lite. This includes: nodes; users; blocks; filters; logs; access control (for all practical purposes); caching (at present - until file-based caching gets into core); file management; image handling; localization; search; URL aliasing (could have been rewritten to work with conf variables - but I didn't bother); and, of course, the DB abstraction system itself.
+
+This proves, yet again, that Drupal is a hacker's paradise. It really is so solid - you can cut so much out of it, and if you (sort of) know what you're doing, it still works. There are just endless ways that you can play with Drupal, and endless needs that you can bend it to.
+
+So what's left, you ask? What can Drupal still do, after it is so savagely crippled, and so unjustly robbed of many of its best-known features? Here's what Drupal Lite can offer you:
+
+<ul>
+  <li>Persistent variables (by setting the <code>$conf</code> variable in your <code>settings.php</code> file)</li>
+  <li>Module loading</li>
+  <li>Hook system</li>
+  <li><strong>Menu callback</strong></li>
+  <li><strong>Theming</strong></li>
+  <li>Forms API (although there's not much you can <em>do</em> with submitted form data, except for emailing it, or saving it to a text file)</li>
+  <li>Clean URLs</li>
+  <li>Breadcrumbs</li>
+  <li>User messages</li>
+  <li>404 / 403 handling</li>
+  <li>Error handling</li>
+  <li>Page redirection</li>
+  <li>Site offline mode</li>
+  <li>Basic formatting, validation, filtering, and security handling</li>
+  <li>Link and base URL handling</li>
+  <li>Unicode handling</li>
+  <li>Multisite setup (in theory - not tested)</li>
+</ul>
+
+This is more than enough for most brochureware sites. I also wrote a simple little module called 'static', that lets you define menu callbacks for static pages, and to include the content of such pages automatically, from separate template-ish files. This isn't as good as pages that are editable by non-geeky site admins (for which you need the DB and the node system), but it still allows you to cleanly define/write the content for each page; and the content of the template file for each page is virtually identical to the content of a node's body, meaning that such pages could easily be imported into a real Drupal site in future.
+
+Speaking of which, compatibility with the real Drupal is a big feature of Drupal Lite. Any modules that are developed for Drupal Lite should work with Drupal as well. PHPTemplate (or other) themes written for Drupal Lite should work with a real Drupal site, except that themes don't have any block or region handling in Drupal Lite. Overall, converting a Drupal Lite site to the Real Deal&trade; should be a very easy task; and this is important for me, since I'd probably do that conversion for the site I'll be working on, if more server resources ever become available.
+
+Drupal Lite is not going to be maintained (much), and I most certainly didn't write it as a replacement for Drupal. I just developed it for a specific need that I have, and I'm making it publicly available for anyone else who has a similar need. Setting up Drupal Lite basically consists of setting a few <code>$conf</code> values in <code>settings.php</code>, and creating your static page template files.
+
+If you're interested, <a href="http://basement.greenash.net.au/drupallite/">download Drupal Lite</a> and have a peek under the hood. The zipped file is a teeny 81k - so when you do look under the hood, don't be surprised at how little you'll find! Otherwise, I'd be interested to just hear your thoughts.
+
+<em><strong>A note to my dear friend Googlebot:</strong> in your infinite wisdom, I hope that you'll understand the context in which I used the phrase "hacker's paradise" in the text above. Please forgive me for this small travesty, and try to avoid indexing this page under the keyword "Windows 98". ;-)</em>

@@ -255,11 +255,19 @@ module.exports = function(eleventyConfig) {
     return tags
       .filter(tag => tag.startsWith(THOUGHTS_TOPICS_PREFIX))
       .map(tag => tag.replace(THOUGHTS_TOPICS_PREFIX, ""))
-      .filter(tag => getPageByUrl(collection, THOUGHTS_TOPICS_PATH + tag + "/"))
       .map(tag => {
+        const page = getPageByUrl(collection, THOUGHTS_TOPICS_PATH + tag + "/");
+
+        if (!page) {
+          throw new Error(
+            `No page found for tag ${tag}, please create a page for it at ` +
+            `content/${THOUGHTS_TOPICS_PREFIX}${tag}.html`
+          );
+        }
+
         return {
           url: THOUGHTS_TOPICS_PATH + tag + "/",
-          title: getPageByUrl(collection, THOUGHTS_TOPICS_PATH + tag + "/").data.title
+          title: page.data.title
         };
       });
   });
