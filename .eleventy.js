@@ -204,7 +204,7 @@ module.exports = function(eleventyConfig) {
       const title = match[3];
 
       const thumbnailOptions = {
-        widths: [680],
+        widths: [1192],
         formats: [ext],
         outputDir: "./_site/img/",
       };
