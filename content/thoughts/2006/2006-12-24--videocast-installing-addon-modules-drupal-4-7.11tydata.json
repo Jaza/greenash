@@ -1,0 +1,15 @@
+{
+  "comments": [
+    {
+      "date": "2007-01-03T22:31:24Z",
+      "name": "Amnon Levav",
+      "url": "http://www.levavie.com",
+      "comment": "This video series practices Downloading from CVS, but it doesn't explain how to connect to the CVS server.\n\n<p>Amnon Levav<br><a href=\"http://www.drupal.org.il\">Drupal Israel</a> - Co-Founder.</p>"
+    },
+    {
+      "date": "2007-01-04T11:12:12Z",
+      "isAuthorReply": true,
+      "comment": "<a href=\"http://drupal.org/repos\">repos docs</a>"
+    }
+  ]
+}

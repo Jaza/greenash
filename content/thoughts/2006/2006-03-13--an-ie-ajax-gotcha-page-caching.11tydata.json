@@ -69,6 +69,37 @@
       "name": "Tom Chappell",
       "url": "http://www.tomchappell.com/blog",
       "comment": "And indeed, as the main poster points out in \"An IE AJAX gotcha: page caching\", simply including the relevant no-cache headers in the XML content of your AJAX responses does prevent IE from caching THAT content. I can use GET, rather than POST, for my AJAX requests, if my AJAX response includes those headers. There's still the issue of bugs in the JavaScript being cached, but surely some of the solutions posted here will address that."
+    },
+    {
+      "date": "2007-02-09T04:20:25Z",
+      "name": "Anonymous",
+      "comment": "did it for me!!\n\nNice 1......big thanks."
+    },
+    {
+      "date": "2007-04-18T03:30:13Z",
+      "name": "joran",
+      "comment": "whats so hard about just appending time to the end of the URL?\n\n<pre class=\"php\"><code>\"http://www.whatever.com/?var1=\".$svar.\"&time=\".time();</code></pre>\n\nand it should never cache?"
+    },
+    {
+      "date": "2007-06-06T04:25:46Z",
+      "name": "Anonymous",
+      "comment": "While I hate IE 6+ I still think it is unfair to put the whole blame on it just because it uses cache more often than FF. It is the combination of server response headers and IE cache handling that is causing the trouble. For those interested I suggest reading this <a href=\"http://www.mnot.net/cache_docs/\">caching tutorial</a>. It is very well written.\n\nAbout JS files caching - check the response headers of JS files to see if they are correct and don't blame IE until you do so. :)"
+    },
+    {
+      "date": "2007-07-30T05:32:17Z",
+      "name": "villiard",
+      "url": "http://www.villiard.com",
+      "comment": "AH! OK, This is just want I wanted to know! Thanks a lot! Geez I hate Microsoft.. :-)"
+    },
+    {
+      "date": "2007-11-16T03:30:50Z",
+      "name": "John U.",
+      "comment": "<pre class=\"no-highlight\"><code><cfheader name=\"Cache-Control\" value=\"no-store\" />\n<cfheader name=\"Pragma\" value=\"no-cache\" />\n<cfheader name=\"Expires\" value=\"Tue, 16 Oct 1973 00:00:00 GMT\" /></code></pre>\n\ncoldfusion if anyone wants it\n\nBy the way a good way to check caching issues in ie is to go to\n\n<p>Tools<br>Internet options<br>Browsing History (Settings)<br>Check for newer versions of stored pages: Every time I visit the page\n\nThis will make it work if its a caching issue."
+    },
+    {
+      "date": "2007-12-29T07:37:43Z",
+      "name": "George",
+      "comment": "There is an easier way instead of wacky header modifications.\n\nAdd <strong>a dummy variable</strong> to your GET request.\n\nExample:\n\n<pre class=\"javascript\"><code>var randomnumber = Math.floor(Math.random()*1000001);\nvar file = 'ajaxfile.php?dummy=' + randomnumber;\nxmlhttp.open('GET', file , true);</code></pre>\n\nThis forces all browsers to resubmit (well, it doesn't work once in a million)"
     }
   ]
 }
