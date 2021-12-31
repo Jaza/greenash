@@ -1,0 +1,37 @@
+---
+title: Useful SQL error reporting in Drupal 6
+date: 2007-10-13
+teaser: |-
+  The upcoming Drupal 6 has a very small but very useful new feature, which went into <abbr title="Concurrent Versioning System">CVS</abbr> quietly and with almost no fanfare about 6 weeks ago. The new feature is called "<a href="http://drupal.org/node/168812">useful <abbr title="Structured Query Language">SQL</abbr> error reporting</a>". As any Drupal developer would know, whenever you're coding away at that whiz-bang new module, and you've made a mistake in one of your module's database queries, Drupal will glare at you with an error such as this:
+
+  <pre class="no-highlight"><code>user warning: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'd5_node n INNER JOIN d5_users u ON u.uid = n.uid INNER JOIN d5_node_revisions r ' at line 1 query: SELECT n.nid, n.vid, n.type, n.status, n.created, n.changed, n.comment, n.promote, n.sticky, r.timestamp AS revision_timestamp, r.title, r.body, r.teaser, r.log, r.format, u.uid, u.name, u.picture, u.data FROMMM d5_node n INNER JOIN d5_users u ON u.uid = n.uid INNER JOIN d5_node_revisions r ON r.vid = n.vid WHERE n.nid = 1 <strong>in C:\www\drupal5\includes\database.mysql.inc on line 172.</strong></code></pre>
+
+  That message is all well and good: it tells you that the problem is an SQL syntax error; it prints out the naughty query that's causing you the problem; and it tells you that Drupal's "includes/database.mysql.inc" file is where the responsible code lies. But that last bit &mdash; about the "database.mysql.inc" file &mdash; isn't quite true, is it? Because although that file does indeed contain the code that <em>executed</em> the naughty query (namely, the <code>db_query()</code> function in Drupal's database abstraction system), that isn't where the query actually <em>is</em>.
+
+  In Drupal 6, this same message becomes a lot more informative:
+
+  <pre class="no-highlight"><code>user warning: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'd6_node n INNER JOIN d6_users u ON u.uid = n.uid INNER JOIN d6_node_revisions r ' at line 1 query: SELECT n.nid, n.vid, n.type, n.language, n.title, n.uid, n.status, n.created, n.changed, n.comment, n.promote, n.moderate, n.sticky, n.tnid, n.translate, r.nid, r.vid, r.uid, r.title, r.body, r.teaser, r.log, r.timestamp AS revision_timestamp, r.format, u.name, u.data FROMMM d6_node n INNER JOIN d6_users u ON u.uid = n.uid INNER JOIN d6_node_revisions r ON r.vid = n.vid WHERE n.nid = 2 <strong>in C:\www\drupal\modules\node\node.module on line 669.</strong></code></pre>
+
+  This may seem like a small and insignificant new feature. But considering that a fair chunk of the average Drupal developer's debugging time is consumed by fixing SQL errors, it's going to be a godsend for many, many people. The value and the usefulness of this feature, for developers and for others, should not be underestimated.
+tags:
+  - thoughtstopics/drupal
+---
+The upcoming Drupal 6 has a very small but very useful new feature, which went into <abbr title="Concurrent Versioning System">CVS</abbr> quietly and with almost no fanfare about 6 weeks ago. The new feature is called "<a href="http://drupal.org/node/168812">useful <abbr title="Structured Query Language">SQL</abbr> error reporting</a>". As any Drupal developer would know, whenever you're coding away at that whiz-bang new module, and you've made a mistake in one of your module's database queries, Drupal will glare at you with an error such as this:
+
+[thumbnail sql_reporting_drupal5.jpg SQL error reporting in Drupal 5]
+
+<strong>Text reads:</strong>
+
+<pre class="no-highlight"><code>user warning: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'd5_node n INNER JOIN d5_users u ON u.uid = n.uid INNER JOIN d5_node_revisions r ' at line 1 query: SELECT n.nid, n.vid, n.type, n.status, n.created, n.changed, n.comment, n.promote, n.sticky, r.timestamp AS revision_timestamp, r.title, r.body, r.teaser, r.log, r.format, u.uid, u.name, u.picture, u.data FROMMM d5_node n INNER JOIN d5_users u ON u.uid = n.uid INNER JOIN d5_node_revisions r ON r.vid = n.vid WHERE n.nid = 1 <strong>in C:\www\drupal5\includes\database.mysql.inc on line 172.</strong></code></pre>
+
+That message is all well and good: it tells you that the problem is an SQL syntax error; it prints out the naughty query that's causing you the problem; and it tells you that Drupal's "includes/database.mysql.inc" file is where the responsible code lies. But that last bit &mdash; about the "database.mysql.inc" file &mdash; isn't quite true, is it? Because although that file does indeed contain the code that <em>executed</em> the naughty query (namely, the <code>db_query()</code> function in Drupal's database abstraction system), that isn't where the query actually <em>is</em>.
+
+In Drupal 6, this same message becomes a lot more informative:
+
+[thumbnail sql_reporting_drupal6.jpg SQL error reporting in Drupal 6]
+
+<strong>Text reads:</strong>
+
+<pre class="no-highlight"><code>user warning: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'd6_node n INNER JOIN d6_users u ON u.uid = n.uid INNER JOIN d6_node_revisions r ' at line 1 query: SELECT n.nid, n.vid, n.type, n.language, n.title, n.uid, n.status, n.created, n.changed, n.comment, n.promote, n.moderate, n.sticky, n.tnid, n.translate, r.nid, r.vid, r.uid, r.title, r.body, r.teaser, r.log, r.timestamp AS revision_timestamp, r.format, u.name, u.data FROMMM d6_node n INNER JOIN d6_users u ON u.uid = n.uid INNER JOIN d6_node_revisions r ON r.vid = n.vid WHERE n.nid = 2 <strong>in C:\www\drupal\modules\node\node.module on line 669.</strong></code></pre>
+
+This may seem like a small and insignificant new feature. But considering that a fair chunk of the average Drupal developer's debugging time is consumed by fixing SQL errors, it's going to be a godsend for many, many people. The value and the usefulness of this feature, for developers and for others, should not be underestimated.

@@ -219,8 +219,8 @@ summary {
   cursor: pointer;
 }
 
-sup {
-  line-height: 1.5em;
+sup, sub {
+  line-height: 1.2em;
 }
 
 /* Thanks to: inspecting medium.com styles manually */
