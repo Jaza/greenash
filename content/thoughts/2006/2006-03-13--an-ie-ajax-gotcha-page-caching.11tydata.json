@@ -1,0 +1,74 @@
+{
+  "comments": [
+    {
+      "date": "2006-03-27T09:08:04Z",
+      "name": "Tony",
+      "comment": "Thank you! Thank You! Thank You!\n\nI too have been stumped on why my AJAX code was working in Firefox and not in IE. Yes, I knew it was cache-related, but not how to fix it. Many suggestions on the web, like your experience, were ineffective.\n\nThank You!!!!"
+    },
+    {
+      "date": "2006-04-07T02:19:48Z",
+      "name": "darkfrog",
+      "comment": "After adding all the headers above it was still caching in IE for me, so I ended up adding a <code>'&count=' + ++count;</code> to the end of my URL I'm querying so every request made is determined by IE to be a different page request."
+    },
+    {
+      "date": "2006-04-13T07:05:46Z",
+      "name": "Anonymous",
+      "comment": "darkfrog, you saved my life with the <code>++count</code> suggestion.\n\nIE sucks big time mang. I waste so much time ensuring things work in both FF and IE."
+    },
+    {
+      "date": "2006-04-13T07:14:29Z",
+      "name": "Anonymous",
+      "comment": "actually one more MEGA catcha, is that u HAVEEEEEEEEE to flush ur cache anytime u make changes to ur JS in IE.\n\nThis is another thing which caused me tons of heartache headache stomach ache"
+    },
+    {
+      "date": "2006-04-13T13:34:38Z",
+      "isAuthorReply": true,
+      "comment": "I've heard of the technique of adding a random number to the end of the AJAX URL, to make it 'unique' so that IE doesn't cache it. But I found that in my case, I didn't need to do this: just setting the HTTP headers did it for me. It's possible that IE is so crap, that you need to use different techniques for different individual examples of JS. Perhaps sometimes you need to set the headers, sometimes you need a unique URL, sometimes you need both."
+    },
+    {
+      "date": "2006-04-14T05:29:49Z",
+      "name": "Chris",
+      "url": "http://labs.lcls.org/",
+      "comment": "Thanks for posting this. Just today I was stuck on the same thing: Firefox worked great, but not IE. I'm coding in C#, so in case someone stumbles upon this, this is what I used:\n\n<pre class=\"cs\"><code>Response.AddHeader(\"Cache-Control\", \"no-store, no-cache, must-revalidate\");</code></pre>\n\nThat did the trick!"
+    },
+    {
+      "date": "2006-07-25T00:00:05Z",
+      "name": "Kurapica",
+      "url": "http://my.lintun.com/Kurapica/",
+      "comment": "I use java and have the same problem with you. Thank you very much for tipping.\n\nDepending on my expierence on AJAX, only setting <code>'no-cache'</code> may not affect SILLY IE. So I add a timestamp to the XML:\n\n<pre class=\"java\"><code>response.setContentType(\"text/xml; charset=UTF-8\");\nresponse.setHeader(\"Cache-Control\", \"no-cache\");\nPrintWriter out = response.getWriter();\nout.println(\"<r>\"+Calendar.getInstance().getTime().getTime()+\"</r>\");\nout.flush();\nout.close();</code></pre>\n\nNow it works fine!! Thank you again guys!"
+    },
+    {
+      "date": "2006-08-18T09:21:48Z",
+      "name": "Ben",
+      "comment": "I ran around in circles on this for a while, none of the above worked for me in IE when hitting the refresh button.\n\nOf course, the answer was right in the AJAX documentation:\n\nPage Caching\n\nWe have implemented a method to prevent page cacheing from undermining the AJAX methods in a page.  If you send in an input argument to a <code>CGI::Ajax-exported</code> function called <code>'NO_CACHE'</code>, the a special parameter will get attached to the end or your url with a random number in it. This will prevent a browser from caching your request.\n\n<pre class=\"perl\"><code>exported_func(['input1','NO_CACHE'],['result1']);</code></pre>\n\nThe extra param is called <code>pjxrand</code>, and won't interfere with the order of processing for the rest of your parameters."
+    },
+    {
+      "date": "2006-09-22T06:52:08Z",
+      "name": "Christiaan",
+      "url": "http://chees.info",
+      "comment": "I had the same problem but when I used POST for the Ajax call instead of GET, IE didn't cache it anymore. I haven't seen this anywhere else yet and I've just started using it so I'm not completely sure if it works in all cases but so far it's working fine for me."
+    },
+    {
+      "date": "2006-11-11T06:27:11Z",
+      "name": "Anonymous",
+      "comment": "I thought that would work bur it didn't. Unique'ing the URL did it however."
+    },
+    {
+      "date": "2006-11-30T09:18:13Z",
+      "name": "Anonymous",
+      "comment": "hey, just another person adding a 'thanks'.\n\nWTF IE!!!\n\n:)"
+    },
+    {
+      "date": "2006-12-13T20:35:16Z",
+      "name": "Tom Chappell",
+      "url": "http://www.tomchappell.com/blog",
+      "comment": "...and yet another 'thanks'. WTF, IE, indeed. Using POST instead of GET solved it for me, AND clearing the cache in my client so that the cached JavaScript would be flushed. That's absolutely retarded, I'm going to have to find a solution so that my clients don't have to clear their caches when I fix a bug in my JavaScript. Maybe put the JavaScript in a separate import file, and/or adding no-cache headers, and/or changing the URL each time, as other posters have mentioned."
+    },
+    {
+      "date": "2006-12-13T20:57:10Z",
+      "name": "Tom Chappell",
+      "url": "http://www.tomchappell.com/blog",
+      "comment": "And indeed, as the main poster points out in \"An IE AJAX gotcha: page caching\", simply including the relevant no-cache headers in the XML content of your AJAX responses does prevent IE from caching THAT content. I can use GET, rather than POST, for my AJAX requests, if my AJAX response includes those headers. There's still the issue of bugs in the JavaScript being cached, but surely some of the solutions posted here will address that."
+    }
+  ]
+}

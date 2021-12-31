@@ -1,0 +1,42 @@
+{
+  "comments": [
+    {
+      "date": "2006-05-24T20:25:37Z",
+      "name": "Sami Khan",
+      "url": "http://www.samikhan.org",
+      "comment": "This has <a href=\"http://drupal.org/node/35422\">already been implemented</a> as a patch by hunmonk\n\nI look forward to working with your on your SoC project :)"
+    },
+    {
+      "date": "2006-05-24T22:22:13Z",
+      "isAuthorReply": true,
+      "comment": "I am aware of the trash can patch by hunmonk, and I am very excited about it going in. But the trash can only covers the undoing of delete operations, and it only covers the data structures and modules that implement it. This idea, on the other hand, covers <em>every</em> ins / upd / del operation in the database, for all data structures and modules (except for those that are specifically excluded). It is a more low-level plan than the trash can idea.\n\nThis idea is not designed to be in competition with the trash can. I think that it works in a different way and serves a different purpose, and I think that both ideas potentially belong in Drupal core (the trash can <em>definitely</em> belongs there, not sure if this one does). The two features could even work together - i.e. even after emptying the trash can, there is still a way to find and restore your deleted data, albeit a more 'crude' way.\n\nPS: great to hear that you're my mentor! Great that I got in! I look forward to starting work with you."
+    },
+    {
+      "date": "2006-05-24T23:04:54Z",
+      "name": "Sami Khan",
+      "url": "http://www.samikhan.org",
+      "comment": "I actually skimmed over it before, but reading it I see where you're coming from and I can see how it may be different in many cases from a trash can. My major concern would be that it would cause the number of queries to increase two-fold... Hmm, I wonder what rest of the group thinks, seems like a very novel idea for sure and I can see quite a bit of application for something like this, at times I have deleted things, not just content, but run queries that I wish I hadn't. Perhaps initally a patch that would allow this to exist as a module might be a good first step...?"
+    },
+    {
+      "date": "2006-05-25T00:32:49Z",
+      "name": "greggles",
+      "url": "http://growingventuresolutions.com",
+      "comment": "I agree with Sami that performance is perhaps the biggest issue here (aside from a implementation...).  However, if this functionality were configurable and were turned off by default with a \"Note: enabling this feature will adversely affect performance\" then I think it makes great sense."
+    },
+    {
+      "date": "2006-05-25T01:34:30Z",
+      "name": "clouseau",
+      "comment": "What you're really proposing is a journaling system for Drupal. It's a very powerful idea, but a tough nut to crack.\n\nWe have talked about this at a higher level, with the actions module. In short:\n\n<ul>\n<li>each \"operation\" is an action</li>\n<li>each action writes undo information as it executes</li>\n<li>action summaries are available to watchdog with a \"rollback\" button</li>\n</ul>\n\nThe problem with this is when you think it through it becomes highly complex, especially given that your request does not have exclusive access to the data store (something that desktop applications don't have to deal with).\n\nThe <a href=\"http://www.seaside.st/\">Seaside</a> demo in Vancouver showed some of this, but it has the benefit of smalltalk behind it.\n\nIt may ultimately be less complicated (but certainly less user-friendly) to put the journaling layer closer to the database -- maybe even inside it."
+    },
+    {
+      "date": "2006-05-25T10:07:14Z",
+      "isAuthorReply": true,
+      "comment": "One solution to the complexity problem, and to the problem of rolling back only parts of data structures that are interrelated, is to force the undo operations to be 'linear'. That is, you can only undo the last operation, or the last 10 operations, etc - not the 35<sup>th</sup> to the 58<sup>th</sup> last operations.\n\nThis would be analogous to the way that undo works in desktop apps: with Photoshop's <em>history</em> feature, for example, you can't undo that crop that you performed 5 actions ago, and not undo the other 4 actions that you performed since then; thus the problem of some operations depending on others is drastically reduced. However, as you said, your request does not have exclusive access to the data store, so this kind of inflexible rule might not work in a database-driven context.\n\nSomething else to make this work better would be to group queries together logically, by passing some kind of 'group query ID' as an argument to <code>db_query()</code>. You would then only be able to undo an entire group of queries, rather than just undoing a single query. This would be a semi-simulation of a database-level transaction <code>ROLLBACK</code> system, which MySQL unfortunately doesn't fully support. Speaking of MySQL problems, it would also be nice if MySQL supported triggers, which could be used to perform these 'journaling' queries, rather than handling it at the PHP level.\n\n<em>sigh</em> - It's such a pity that cross-DB compatibility comes at the price of sacrificing virtually <em>all</em> of the really cool features that modern databases offer. It seems that cross-DB applications (many of which are web applications) have had to emulate things like stored procedures, triggers, views, transactions, and even constraints, at the server-side code level. This is IMO unfortunate, inefficient, and completely defeating the purpose of bothering to utilise databases in the first place. But this issue is something that I could write a whole new article about, so I should stop ranting now. :-p"
+    },
+    {
+      "date": "2006-05-25T11:50:37Z",
+      "name": "Ramdak",
+      "comment": "I have found myself wishing often for this kind of feature, but each time I thought it was simply wishful thinking.\n\nMy host (Site5) offered/offers a subversion-based Flashback system (seemingly never fully implemented) that gives the option of rolling back any kind of change to the files, so potentially, a file or any change to a file is never ever lost. I don't know if this handles stuff linearly or not.\n\nI wonder if this can be an alternative to the limitations of a database-based undo system."
+    }
+  ]
+}

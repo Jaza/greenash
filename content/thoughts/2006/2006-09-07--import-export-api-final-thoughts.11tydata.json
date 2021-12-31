@@ -1,0 +1,10 @@
+{
+  "comments": [
+    {
+      "date": "2006-09-08T08:48:13Z",
+      "name": "Lior",
+      "url": "http://www.linnovate.net",
+      "comment": "Hi Jeremy\n\nAs a freelance consultant which is focused on drupal work I find that importing data (from older crummy asp sites) is a pattern that reccurs in a lot of projects.\n\nThis is extremely valuable for me and I'd like to thank both you and google for your summer's work.\n\nI need to import a structured heirachial taxonomy is that supported yet?\n\nI was just about to take a <code>mysqldump</code>, add a taxonmy, take another dump and diff to understand the data model - but I'd be thrilled to hear what your strategy would be in this case."
+    }
+  ]
+}

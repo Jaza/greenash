@@ -111,6 +111,16 @@
       "name": "Ken Collins",
       "url": "http://www.metaskills.net",
       "comment": "One of the things I was hoping to learn, and may have missed, is to find out how to make any of the three top-level terms in my blog category show all the posts when clicked in the breadcrumb. For instance, making <code>taxonomy/term/2</code> really work like <code>taxonomy/term/2/all</code>. Any ideas? TIA"
+    },
+    {
+      "date": "2006-01-18T14:53:26Z",
+      "name": "akeimou",
+      "comment": "in our case, there are at least three types of drupal users:\n\n<ol>\n<li>the people who set up and configure the system (administrator, power user)</li>\n<li>the people who use the configured system to provide content</li>\n<li>the people who consume the content</li>\n</ol>\n\nour type2 users are such that with a properly configured taxonomy, they will find it easier to select attribute values while creating a page than what they are doing right now because they are not able to relate well to concepts of child and parent pages. for this aspect alone i find that drupal taxonomy will be simpler and, therefore, useful.\n\nthe more complicated part of taxonomies, well, that will have to be something that type1 user (e.g., me) should be able to deal with. i'm a drupal newbie and wouldn't mind going advanced. and modeling and organizing info i've always found challenging and yet exhilirating. so thanks to Jaza's tutorials and others, i think this is even going to be fun.\n\nand then, yes, there's the SQL Search (the new Trip Search) which will allow type3 users to search not only using the usual expressions (cumbersome for most), but also by taxonomy terms (might be easier this way), and with MySQL full text search at that. cool!\n\nregarding relationships between terms. we're looking at multiple hierarchies for our application.  say (very hypothetical), we had people categorized by the music they listen to and the alcohol brand they drink. now, it would be nice if there's a mapping module for taxonomy that will show the music distribution for Remy Martin drinkers. and i wonder which music genre takes the biggest piece.\n\neven if i'll need a week to learn taxonomy, i'll take it. that's nothing compared to creating that kind of web-based database app from scratch."
+    },
+    {
+      "date": "2006-02-23T04:13:28Z",
+      "name": "Anonymous",
+      "comment": "And if so, which versions of it?"
     }
   ]
 }

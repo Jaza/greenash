@@ -219,6 +219,10 @@ summary {
   cursor: pointer;
 }
 
+sup {
+  line-height: 1.5em;
+}
+
 /* Thanks to: inspecting medium.com styles manually */
 
 body, .wideflex-wrapper {

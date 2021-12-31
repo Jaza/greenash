@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "date": "2006-06-26T05:39:19Z",
+      "name": "Jeff Eaton",
+      "url": "http://jeff.viapositiva.net",
+      "comment": "This sounds like a really grat piece of work, Jeremy. Really looking forward to seeing it in action!"
+    },
+    {
+      "date": "2006-06-29T22:41:29Z",
+      "name": "smoothstr",
+      "url": "http://www.tanasity.com",
+      "comment": "Hi Jaza - I've just been reading all the docs and trying out the download. In your original spec you thought the 20th would be your date for beta. What's the most likely date now? \n\nThe subtext: I started to upgrade the <code>import_export</code> module to 4.7 before I found your project and I'm wondering whether there's any point in continuing seeing as what you have is so much better designed and built.\n\nThanks,\n\nsmoothly"
+    },
+    {
+      "date": "2006-06-30T09:39:45Z",
+      "isAuthorReply": true,
+      "comment": "I just had a look over my original proposal, and yes, indeed, I did put Jun 20 as my target date for quite a lot of things. But you know what they say about software development time estimates: add a few weeks to them, multiply them by 2, etc, and you get the <em>real</em> estimate. ;-)\n\nThe data definition API is certainly beta-quality already, as are the XML 'get' and 'put' engines, and the DB 'get' engine. But: the DB 'put' engine is still under development; the CSV engines haven't yet been started; and the UI is now out of scope, and will only be developed time-permitting (see the <a href=\"http://basement.greenash.net.au/soc2006/SpecificationAndSuccessCriteria\">official success criteria</a> for more details). At this point, I'm not prepared to give any dates, except to say that I'm committed to finishing everything in the official success criteria by the SoC final deadline (Aug 20).\n\nAs for the <code>import_export</code> module, I think that it has a lot of great functionality; and I think that if you or others need that functionality for 4.7, then by all means go ahead and upgrade it. I would certainly encourage you to consider joining forces with the import / export API instead, or at least re-architecting the <code>import_export</code> module to be built on top of the API; but that decision is up to you."
+    },
+    {
+      "date": "2006-07-03T19:28:46Z",
+      "name": "smoothstr",
+      "url": "http://www.tanasity.com",
+      "comment": "Thanks; I wouldn't give dates either. As far as Import-Export is concerned: I put a day in on the convert and it's 95% done. The UI is horrid, as you indicated in your notes when you were trying out the various modules. If I get time I may do something about that. Clearly using your api is a <strong>much</strong> better approach, and I think you are right, at the least it should be built on top of your api, and I'll look at that.\n\nAre you interested in bug reports yet? I think it's premature, myself, but I did get a crash when I downloaded your code and tried it out. (Unsupported operand types in <code>importexportapi.module</code> on line 236). If you want I'll file a proper bug report with details."
+    }
+  ]
+}
