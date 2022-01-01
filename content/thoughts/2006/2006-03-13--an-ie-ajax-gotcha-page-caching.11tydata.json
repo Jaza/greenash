@@ -100,6 +100,21 @@
       "date": "2007-12-29T07:37:43Z",
       "name": "George",
       "comment": "There is an easier way instead of wacky header modifications.\n\nAdd <strong>a dummy variable</strong> to your GET request.\n\nExample:\n\n<pre class=\"javascript\"><code>var randomnumber = Math.floor(Math.random()*1000001);\nvar file = 'ajaxfile.php?dummy=' + randomnumber;\nxmlhttp.open('GET', file , true);</code></pre>\n\nThis forces all browsers to resubmit (well, it doesn't work once in a million)"
+    },
+    {
+      "date": "2008-04-21T19:40:17Z",
+      "name": "franferns",
+      "comment": "Hi,\n\nIm using the <code>XMLHttpRequest</code> object which calls an XML file i am using a HTML file where my Javascript AJAX code is present..!!\n\nI call this function every 5 sec and any change made to the XML file needs to be reflected in the browser..! Its works all fine but only in Mozilla,Netscape and Safari but not on IE 6 and Opera...!!! Please suggest me with something..!!! As to i think this is the caching problem associated ..!!\n\n<p>Regards,<br>Ferns</p>"
+    },
+    {
+      "date": "2008-05-03T15:55:59Z",
+      "name": "alfa",
+      "comment": "no cache with headers didn't work for me ...however\n\nadding a random no in URL worked for me...\n\nThanx a lot for this input..:)"
+    },
+    {
+      "date": "2008-09-25T16:47:31Z",
+      "name": "Anil",
+      "comment": "Thanks your suggestion is very helpfull to me\n\nYes\n\nGod is great!"
     }
   ]
 }

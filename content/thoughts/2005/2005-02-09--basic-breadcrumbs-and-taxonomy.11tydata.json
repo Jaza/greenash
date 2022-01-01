@@ -121,6 +121,11 @@
       "date": "2006-02-23T04:13:28Z",
       "name": "Anonymous",
       "comment": "And if so, which versions of it?"
+    },
+    {
+      "date": "2008-03-13T01:22:18Z",
+      "name": "Manuel",
+      "comment": "For this purpose I use the <a href=\"http://drupal.org/project/taxonomy_forceall\"> taxonomy_force_all</a> module"
     }
   ]
 }
