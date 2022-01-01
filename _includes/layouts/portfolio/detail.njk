@@ -1,0 +1,27 @@
+---
+layout: layouts/base.njk
+---
+<article>
+  <h1>{{ renderData.title or title }}</h1>
+
+  <p class="date">
+    <time datetime="{{ date | dateISO }}">{{ date | dateM }} <a href="/portfolio/year/{{ date | dateY }}/">{{ date | dateY }}</a></time>
+
+    {% if siteUrl %}
+    <a href="//{{ siteUrl }}" class="comments-link">{{ siteUrl }}</a>
+    {% endif %}
+  </p>
+
+  {%- set items = tags | getTagsForPortfolio(collections.portfoliotype) %}
+  {% include 'components/portfolio/tags.njk' %}
+
+  {% if teaser %}
+  <p>{{ teaser }}</p>
+  {% endif %}
+
+  {% if contentImage %}
+  <figure>{% if siteUrl %}<a href="//{{ siteUrl }}" title="{{ title }}">{% endif %}<img src="{{ params.uploadsBaseURL }}portfolio_content_images/{{ contentImage }}" width="720" height="432" alt="{{ title }}">{% if siteUrl %}</a>{% endif %}</figure>
+  {% endif %}
+
+  {{ content | autop | safe }}
+</article>

@@ -1,0 +1,7 @@
+{
+  "layout": "layouts/portfolio/detail.njk",
+  "permalink": "/portfolio/{{ title | slug }}/",
+  "tags": [
+    "portfolio"
+  ]
+}

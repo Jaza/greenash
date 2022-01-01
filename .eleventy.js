@@ -9,6 +9,9 @@ module.exports = function(eleventyConfig) {
   const THOUGHTS_TOPICS_PREFIX = "thoughtstopics/";
   const THOUGHTS_TOPICS_PATH = "/thoughts/topics/";
 
+  const PORTFOLIO_TYPE_PREFIX = "portfoliotype/";
+  const PORTFOLIO_TYPE_PATH = "/portfolio/type/";
+
   const TAG_CLOUD_MIN_SIZE = 0.75;
   const TAG_CLOUD_ROUNDING_FACTOR = 10e6;
 
@@ -45,6 +48,10 @@ module.exports = function(eleventyConfig) {
 
   eleventyConfig.addFilter("dateDM", dateObj => {
     return DateTime.fromJSDate(dateObj).toFormat("d LLL");
+  });
+
+  eleventyConfig.addFilter("dateM", dateObj => {
+    return DateTime.fromJSDate(dateObj).toFormat("LLL");
   });
 
   eleventyConfig.addFilter("dateY", dateObj => {
@@ -372,6 +379,31 @@ module.exports = function(eleventyConfig) {
 
   eleventyConfig.addFilter("jazaAge", (value) => {
     return value.replace(/JAZA_AGE/g, `${JAZA_AGE}`);
+  });
+
+  eleventyConfig.addFilter("getTagsForPortfolio", (tags, portfoliotypeCollection) => {
+    if (!tags) {
+      return [];
+    }
+
+    return tags
+      .filter(tag => tag.startsWith(PORTFOLIO_TYPE_PREFIX))
+      .map(tag => tag.replace(PORTFOLIO_TYPE_PREFIX, ""))
+      .map(tag => {
+        const page = getPageByUrl(portfoliotypeCollection, PORTFOLIO_TYPE_PATH + tag + "/");
+
+        if (!page) {
+          throw new Error(
+            `No page found for tag ${tag}, please create a page for it at ` +
+            `content/${PORTFOLIO_TYPE_PREFIX}${tag}.html`
+          );
+        }
+
+        return {
+          url: PORTFOLIO_TYPE_PATH + tag + "/",
+          title: page.data.title
+        };
+      });
   });
 
   // Don't process folders with static assets e.g. images

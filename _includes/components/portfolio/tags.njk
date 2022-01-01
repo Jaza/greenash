@@ -1,0 +1,9 @@
+{%- if items %}
+<nav class="tags">
+  <ul>
+  {%- for item in items %}
+    <li><a href="{{ item.url | url }}">{{ item.title }}</a></li>
+  {%- endfor %}
+  </ul>
+</nav>
+{%- endif %}

@@ -135,6 +135,15 @@ figure {
   margin: 3em 0;
 }
 
+figure > a {
+  display: block;
+  margin: 0 auto;
+}
+
+figure > a:hover {
+  background: none;
+}
+
 figcaption {
   font-style: italic;
   text-align: center;
@@ -395,6 +404,19 @@ article, .freshest .articles article {
 }
 
 .button a {
+  display: inline-block;
+}
+
+.portfolio-listing {
+  display: flex;
+  justify-content: center;
+}
+
+.portfolio-listing article {
+  margin: 2em 1em;
+}
+
+.portfolio-listing article a {
   display: inline-block;
 }
 
