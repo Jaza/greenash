@@ -1,0 +1,25 @@
+---
+title: "Drupal and Apache in Vista: some tips"
+date: 2008-06-05
+permalink: /thoughts/2008/06/drupal-and-apache-in-vista-some-tips/
+teaser: |-
+  I bought a new laptop at the start of this year, and since then I've experienced the <del>"privilege"</del> <em>pile of festering camel dung</em> that is being a user of Windows Vista. As with most things in Vista, installing Drupal and Apache is finickier than it used to be, back on XP. When I first went through the process, I encountered a few particularly weird little gotchas, and I scribbled them down for future reference. Here are some things to look out for, when the inevitable day comes in which you too will shine the light of Drupal upon the dark and smelly abyss of Vista:
+
+  <ol>
+    <li>Don't use the stop / start / restart Apache controls in the start menu (<em>start > programs > Apache > control</em>), as they are unreliable; use services.msc insetad (<em>start > run > "services.msc"</em>).</li>
+    <li>Don't edit httpd.conf through the filesystem &mdash; use the 'edit httpd.conf' icon in the start menu instead (<em>start > programs > Apache > configure</em>), as otherwise your saved changes may not take effect.</li>
+    <li>If you're seeing the error message <em>"http request status - fails"</em> on Drupal admin pages, then try editing your <em>'c:\windows\system32\drivers\etc\hosts'</em> file, and taking out the IPv6 mapping of localhost, as this can confuse the Windows mapping of 127.0.0.1 to localhost (restart for this to take effect).</li>
+    <li><strong>Don't use Vista!</strong> If, however, you absolutely have no choice, then refer to steps 1-3.</li>
+  </ol>
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+---
+I bought a new laptop at the start of this year, and since then I've experienced the <del>"privilege"</del> <em>pile of festering camel dung</em> that is being a user of Windows Vista. As with most things in Vista, installing Drupal and Apache is finickier than it used to be, back on XP. When I first went through the process, I encountered a few particularly weird little gotchas, and I scribbled them down for future reference. Here are some things to look out for, when the inevitable day comes in which you too will shine the light of Drupal upon the dark and smelly abyss of Vista:
+
+<ol>
+  <li>Don't use the stop / start / restart Apache controls in the start menu (<em>start > programs > Apache > control</em>), as they are unreliable; use services.msc insetad (<em>start > run > "services.msc"</em>).</li>
+  <li>Don't edit httpd.conf through the filesystem &mdash; use the 'edit httpd.conf' icon in the start menu instead (<em>start > programs > Apache > configure</em>), as otherwise your saved changes may not take effect.</li>
+  <li>If you're seeing the error message <em>"http request status - fails"</em> on Drupal admin pages, then try editing your <em>'c:\windows\system32\drivers\etc\hosts'</em> file, and taking out the IPv6 mapping of localhost, as this can confuse the Windows mapping of 127.0.0.1 to localhost (restart for this to take effect).</li>
+  <li><strong>Don't use Vista!</strong> If, however, you absolutely have no choice, then refer to steps 1-3.</li>
+</ol>

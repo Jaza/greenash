@@ -1,0 +1,179 @@
+---
+title: "Legislation and programming: two peas in a pod"
+date: 2008-08-27
+permalink: /thoughts/2008/08/legislation-and-programming-two-peas-in-a-pod/
+teaser: |-
+  The language of law and the language of computers hardly seem like the most obvious of best buddies. Legislation endeavours to be unambiguous, and yet it's infamous for being plagued with ambiguity problems, largely because it's ultimately interpreted by subjective and unpredictable humang beings. Computer code doesn't <em>try</em> to be unambiguous, it simply <em>is</em> unambiguous &mdash; by its very definition. A piece of code, when supplied with any given input, is quite literally incapable of returning inconsistent output. A few weeks ago, I finished an elective subject that I studied at university, called <a href="http://www.handbook.uts.edu.au/subjects/70120.html"><em>Legal Method and Research</em></a>. The main topic of the subject was statutory interpretation: that is, the process of interpreting the meaning of a single unit of law, and applying a given set of facts to it. After having completed this subject, one lesson that I couldn't help but take away (being a geek 'n' all) was how strikingly similar the structure of legislation is to the structure of modern programming code. This is because at the end of the day, legislation &mdash; just like code &mdash; needs to be applied to a real case, and it needs to yield a Boolean outcome.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/language
+  - thoughtstopics/law
+---
+The language of law and the language of computers hardly seem like the most obvious of best buddies. Legislation endeavours to be unambiguous, and yet it's infamous for being plagued with ambiguity problems, largely because it's ultimately interpreted by subjective and unpredictable humang beings. Computer code doesn't <em>try</em> to be unambiguous, it simply <em>is</em> unambiguous &mdash; by its very definition. A piece of code, when supplied with any given input, is quite literally incapable of returning inconsistent output. A few weeks ago, I finished an elective subject that I studied at university, called <a href="http://www.handbook.uts.edu.au/subjects/70120.html"><em>Legal Method and Research</em></a>. The main topic of the subject was statutory interpretation: that is, the process of interpreting the meaning of a single unit of law, and applying a given set of facts to it. After having completed this subject, one lesson that I couldn't help but take away (being a geek 'n' all) was how strikingly similar the structure of legislation is to the structure of modern programming code. This is because at the end of the day, legislation &mdash; just like code &mdash; needs to be applied to a real case, and it needs to yield a Boolean outcome.
+
+I'm now going to dive straight into a comparison of statutory language and programming code, by picking out a few examples of concepts that exist in both domains with differing names and differing forms, but with equivalent underlying purposes. I'm primarily using concept names from the programming domain, because that's the domain that I'm more familiar with. Hopefully, if legal jargon is more your thing, you'll still be able to follow along reasonably well.
+
+<h2>Boolean operators</h2>
+
+In the world of programming, almost everything that computers can do is founded on three simple Boolean operations: <code>AND</code>, <code>OR</code>, and <code>NOT</code>. The main use of these operators is to create a <em>compound condition</em> &mdash; i.e. a condition that can only be satisfied by meeting a combination of criteria. In legislation, Boolean operators are used just as extensively as they are in programming, and they also form the foundation of pretty much any statement in a unit of law. They even use exactly the same three English words.
+
+<strong><em>In law:</em></strong>
+
+FREEDOM OF INFORMATION ACT 1989 (NSW)
+
+Transfer of applications
+
+Section 20: Transfer of applications
+
+<ol>
+  <li>An agency to which an application has been made may transfer the application to another agency:
+    <ol type="a">
+      <li>if the document to which it relates:
+        <ol type="i">
+          <li>is <strong>not</strong> held by the firstmentioned agency <strong>but</strong> is, to the knowledge of the firstmentioned agency, held by the other agency, <strong>or</strong></li>
+          <li>is held by the firstmentioned agency but is more closely related to the functions of the other agency, <strong>and</strong></li>
+        </ol>
+      </li>
+      <li>if consent to the application being transferred is given by <strong>or</strong> on behalf of the other agency.</li>
+    </ol>
+  </li>
+</ol>
+
+<em>(from <a href="http://www.austlii.edu.au/au/legis/nsw/consol_act/foia1989222/s20.html">AustLII: NSW Consolidated Acts</a>)</em>
+
+<strong><em>In code:</em></strong>
+
+<pre class="php"><code><?php
+if (
+    (
+      ($document->owner != $first_agency->name && $document->owner == $other_agency->name)
+      ||
+      ($document->owner == $first_agency->name && $document->functions == $other_agency->functions)
+    )
+    &&
+    (
+      ($consent_giver->name == $other_agency->name)
+      ||
+      ($consent_giver->name == $representing_agency->name)
+    )
+  ) {
+  /* ... */
+}
+?></code></pre>
+
+<h2>Defined types</h2>
+
+Every unit of data (i.e. every variable, constant, etc) in a computer program has a type. The way in which a type is assigned to a variable varies between programming languages: sometimes it's done <em>explicitly</em> (e.g. in C), where the programmer declares each variable to be "of type <em>x</em>"; and sometimes it's done <em>implicitly</em> (e.g. in Python), where the computer decides at run-time (or at compile-time) what the type of each variable is, based on the data that it's given. Regardless of this issue, however, in all programming languages the types themselves are clearly and explicitly defined. Almost all languages also have <em>primitive</em> and <em>structured</em> data types. Primitive types usually include "integer", "float", "boolean" and "character" (and often "string" as well). Structured types consist of <em>attributes</em>, and each attribute is either of a primitive type, or of another structured type.
+
+Legislation follows a similar pattern of clearly specifying the "data types" for its "variables", and of including definitions for each type. Variables can be of a number of different types in legislation, however "person" (and sub-types) is easily the most common. Most Acts contain a section entitled "definitions", and it's not called that for nothing.
+
+<strong><em>In law:</em></strong>
+
+SALES TAX ASSESSMENT ACT 1992 (Cth) No. 114
+
+Section 5: General definitions
+
+In this Act, unless the contrary intention appears:
+
+...
+
+<ul>
+  <li>"eligible Australian traveller" means a person defined to be an eligible Australian traveller by regulations made for the purposes of this definition;</li>
+</ul>
+
+...
+
+<ul>
+  <li>"person" means any of the following:
+    <ol type="a">
+      <li>a company;</li>
+      <li>a partnership;</li>
+      <li>a person in a particular capacity of trustee;</li>
+      <li>a body politic;</li>
+      <li>any other person;</li>
+    </ol>
+  </li>
+</ul>
+
+<em>(from <a href="http://www.austlii.edu.au/au/legis/cth/num_act/staa1992238/s5.html">AustLII: Commonwealth Numbered Acts</a>)</em>
+
+<strong><em>In code:</em></strong>
+
+<pre class="php"><code><?php
+class Person {
+  protected PersonType personType;
+
+  /* ... */
+}
+
+class EligibleAustralianTraveller extends Person {
+  private RegulationSet regulationSet;
+
+  /* ... */
+}
+?></code></pre>
+
+Also related to defined types is the concept of <em>graphs</em>. In programming, it's very common to think of a set of variables as <em>nodes</em>, which are connected to each other with <em>lines</em> (or "edges"). The connections between nodes often makes up a significant part of the definition of a structured data type. In legislation, the equivalent of nodes is <em>people</em>, and the equivalent of connecting lines is <em>relationships</em>. In accordance with the programming world, a significant part of most definitions in legislation are concerned with the relationship that one person has to another. For example, various government officers are defined as being "responsible for" those below them, and family members are defined as being "related to" each other by means such as marriage and blood.
+
+<h2>Exception handling</h2>
+
+Many modern programming languages support the concept of "exceptions". In order for a program to run correctly, various conditions need to be met; if one of those conditions should fail, then the program is unable to function as intended, and it needs to have instructions for how to deal with the situation. Legislation is structured in a similar way. In order for the law to be adhered to, various conditions need to be met; if one of those conditions should fail, then the law has been "broken", and consequences should follow.
+
+Legislation is generally designed to "assume the worst". Law-makers assume that every requirement they dictate will fail to be met; that every prohibition they publish will be violated; and that every loophole they leave unfilled will be exploited. This is why, to many people, legislation seems to spend 90% of its time focused on "exception handling". Only a small part of the law is concerned with what you <em>should</em> do. The rest of it is concerned with what you should do when you <em>don't</em> do what you should do. Programming and legislation could certainly learn a lot from each other in this area &mdash; finding loopholes through legal grey areas is the equivalent of hackers finding backdoors into insecure systems, and legislation is as full of loopholes as programs are full of security vulnerabilities. Exception handling is also something that's not implemented particularly cleanly or maintainably in either domain.
+
+<strong><em>In law:</em></strong>
+
+HUMAN TISSUE ACT 1982 (Vic)
+
+Section 24: Blood transfusions to children without consent
+
+<ol>
+  <li>Where the consent of a parent of a child or of a person having authority to consent to the administration of a blood transfusion to a child is refused or not obtained and a blood transfusion is administered to the child by a registered medical practitioner, the registered medical practitioner, or any person acting in aid of the registered medical practitioner and under his supervision in administering the transfusion shall not incur any criminal liability by reason only that the consent of a parent of the child or a person having authority to consent to the administration of the transfusion was refused or not obtained if-
+    <ol type="a">
+      <li>in the opinion of the registered medical practitioner a blood transfusion was-
+        <ol type="i">
+          <li>a reasonable and proper treatment for the condition from which the child was suffering; and</li>
+        </ol>
+      </li>
+    </ol>
+  </li>
+</ol>
+
+...
+
+<em>(from <a href="http://www.austlii.edu.au/au/legis/vic/consol_act/hta1982160/s24.html">AustLII: Victoria Consolidated Acts</a>)</em>
+
+<strong><em>In code:</em></strong>
+
+<pre class="php"><code><?php
+class Transfusion {
+  public static void main() {
+    try {
+      this.giveBloodTransfusion();
+    }
+    catch (ConsentNotGivenException e) {
+      this.isDoctorLiable = e.isReasonableJustification;
+    }
+  }
+
+  private void giveBloodTransfusion() {
+    this.performTransfusion();
+
+    if (!this.consentGiven) {
+      throw new ConsentNotGivenException();
+    }
+  }
+}
+?></code></pre>
+
+<h2>Final thoughts</h2>
+
+The only formal academic research that I've found in this area is the paper entitled "<a href="http://www.doc.ic.ac.uk/~rak/papers/law.html">Legislation As Logic Programs</a>", written in 1992 by the British computer scientist Robert Kowalski. This was a fascinating project: it seems that Kowalski and his colleages were actually sponsored, by the British government, to develop a prototype reasoning engine capable of assisting people such as judges with the task of legal reasoning. Kowalski has one conclusion that I can't help but agree with wholeheartedly:
+
+<blockquote>The similarities between computing and law go beyond those of linguistic style.  They extend also to the problems that the two fields share of developing, maintaining and reusing large and complex bodies of linguistic texts.  Here too, it may be possible to transfer useful techniques between the two fields.</blockquote>
+
+<em>(Kowalski 1992, part 7)</em>
+
+Legislation and computer programs are two resources that are both founded on the same underlying structures of formal logic. They both attempt to represent real-life, complex human rules and problems, in a form that can be executed to yield a Boolean outcome. And they both suffer chronically with the issue of maintenance: how to avoid bloat; how to keep things neat and modular; how to re-use and share components wherever possible; how to maintain a stable and secure library; and how to keep the library completely up-to-date and on par with changes in the "real world" that it's trying to reflect. It makes sense, therefore, that law-makers and programmers (traditionally not the most chummy of friends) really should engage in collaborative efforts, and that doing so would benefit both groups tremendously.
+
+There is, of course, one very important thing that almost every law contains, and that judges must evaluate almost every day. One thing that no computer program contains, and that no CPU in the world is capable of evaluating. That thing is a single word. A word called <strong>"reasonable"</strong>. People's fate as murderers or as innocents hinges on whether or not there's "reasonable doubt" on the facts of the case. Police are required to maintain a "resonable level" of law and order. Doctors are required to exercise "reasonable care" in the treatment of their patients. The entire legal systems of all the civilised world depend on what is possibly the most ambiguous and ill-defined word in the entire English language: "reasonable". And to determine reasonableness requires reasoning &mdash; the outcome is Boolean, but the process itself (of "reasoning") is far from a simple yes or no affair. And that's why I don't expect to see a beige-coloured rectangular box sitting in the judge's chair of <em>my</em> local court any time soon.

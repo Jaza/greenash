@@ -1,0 +1,20 @@
+---
+title: Listing every possible combination of a set
+date: 2008-10-17
+teaser: |-
+  The problem is simple. Say you have a set of 12 elements. You want to find and to list every possible unique combination of those elements, irrespective of the ordering within each combination. The number of elements making up each combination can range between 1 and 12. Thanks to the demands of some university work, I've written a script that does just this (written in <a href="http://php.net/">PHP</a>). Whack it on your web server (or command-line), give it a spin, hack away at it, and use it to your heart's content.
+fileAttachments:
+  - combinations.php_.txt
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/mathematics
+---
+The problem is simple. Say you have a set of 12 elements. You want to find and to list every possible unique combination of those elements, irrespective of the ordering within each combination. The number of elements making up each combination can range between 1 and 12. Thanks to the demands of some university work, I've written a script that does just this (written in <a href="http://php.net/">PHP</a>). Whack it on your web server (or command-line), give it a spin, hack away at it, and use it to your heart's content.
+
+[thumbnail all_possible_combs.png List of all possible combinations]
+
+The most important trick with this problem was to find only the possible <em>combinations</em> (i.e. unique sets irrespective of order), rather than all possible <em>permutations</em> (i.e. unique sets where ordering matters). With my first try, I made a script that first found all possible permutations, and that then culled the list down to only the unique combinations. Since the number of possible permutations is monumentally greater than the number of combinations for a given set, this quickly proved unwieldy: the script was running out of memory with a set size of merely 7 elements (and that was after I increased PHP's memory limit to 2GB!).
+
+The current script uses a more intelligent approach in order to only target unique combinations, and (from my testing) it's able to handle a set size of up to ~15 elements. Still not particularly scalable, but it was good enough for my needs. Unfortunately, both permutations and combinations increase <em>factorially</em> in relation to the set size; and if you know anything about <a href="http://en.wikipedia.org/wiki/Big_O_notation">computational complexity</a>, then you'll know that an algorithm which runs in factorial time is about the least scalable type of algorithm that you can write.
+
+This script produces essentially equivalent output to <a href="http://www.cut-the-knot.org/Curriculum/Combinatorics/AllCombinations.shtml">this "All Combinations" applet</a>, except that it's an open-source customisable script instead of a closed-source proprietary applet. I owe some inspiration to the applet, simply for reassuring me that it can be done. I also owe a big thankyou to <a href="http://mathforum.org/dr.math/faq/faq.comb.perm.html">Dr. Math's Permutations and Combinations</a>, which is a great page explaining the difference between permutations and combinations, and providing the formulae used to calculate the totals for each of them.

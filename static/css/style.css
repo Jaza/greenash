@@ -66,6 +66,10 @@ p, figcaption, li, dt, dd, table {
   word-break: break-word;
 }
 
+li li {
+  font-size: 1em;
+}
+
 .byline {
   margin-bottom: 2em;
 }

@@ -1,0 +1,674 @@
+---
+title: A count of Unicode characters grouped by script
+date: 2008-10-14
+teaser: |-
+  We all know what <a href="http://en.wikipedia.org/wiki/Unicode">Unicode</a> is (if you don't, then read all about it and come back later). We all know that it's big. Hey, <em>of course it's big</em>: its aim is to allow for the representation of characters from every major language script in the world. That's gotta be a lot of characters, right? It's reasonably easy to find out how many unicode characters there are in total: e.g. the Wikipedia page (linked above) states that: <em>"As of Unicode 5.1 there are 100,507 graphic [assigned] characters."</em> I got a bit curious today, and &mdash; to my disappointment &mdash; after some searching, I was unable to find a nice summary of how many characters there are in each script that Unicode supports. And thus it is that I present to you my count of all assigned Unicode characters (as of v5.1), grouped by script and by category.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/language
+---
+We all know what <a href="http://en.wikipedia.org/wiki/Unicode">Unicode</a> is (if you don't, then read all about it and come back later). We all know that it's big. Hey, <em>of course it's big</em>: its aim is to allow for the representation of characters from every major language script in the world. That's gotta be a lot of characters, right? It's reasonably easy to find out how many unicode characters there are in total: e.g. the Wikipedia page (linked above) states that: <em>"As of Unicode 5.1 there are 100,507 graphic [assigned] characters."</em> I got a bit curious today, and &mdash; to my disappointment &mdash; after some searching, I was unable to find a nice summary of how many characters there are in each script that Unicode supports. And thus it is that I present to you my count of all assigned Unicode characters (as of v5.1), grouped by script and by category.
+
+<h2>The raw data</h2>
+
+<strong>Fact:</strong> Unicode's "codespace" can represent up to 1,114,112 characters in total.
+
+<strong>Fact:</strong> As of today, 100,540 of those spaces are in use by assigned characters (excluding private use characters).
+
+The Unicode people provide a plain text <a href="http://www.unicode.org/Public/UNIDATA/Scripts.txt">listing of all supported Unicode scripts</a>, and the number of assigned characters in each of them. I used this listing in order to compile a table of assigned character counts grouped by script. Most of the hard work was done for me. The table is almost identical to the one you can find on the <a href="http://en.wikipedia.org/wiki/Unicode_scripts">Wikipedia Unicode scripts page</a>, except that this one is slightly more updated (for now!).
+
+<table>
+  <tr>
+    <th>Unicode script name</th>
+    <th>Category</th>
+    <th>ISO 15924 code</th>
+    <th>Number of characters</th>
+  </tr>
+  <tr>
+    <td>Common</td>
+    <td>Miscellaneous</td>
+    <td>Zyyy</td>
+    <td>5178</td>
+  </tr>
+  <tr>
+    <td>Inherited</td>
+    <td>Miscellaneous</td>
+    <td>Qaai</td>
+    <td>496</td>
+  </tr>
+  <tr>
+    <td>Arabic</td>
+    <td>Middle Eastern</td>
+    <td>Arab</td>
+    <td>999</td>
+  </tr>
+  <tr>
+    <td>Armenian</td>
+    <td>European</td>
+    <td>Armn</td>
+    <td>90</td>
+  </tr>
+  <tr>
+    <td>Balinese</td>
+    <td>South East Asian</td>
+    <td>Bali</td>
+    <td>121</td>
+  </tr>
+  <tr>
+    <td>Bengali</td>
+    <td>Indic</td>
+    <td>Beng</td>
+    <td>91</td>
+  </tr>
+  <tr>
+    <td>Bopomofo</td>
+    <td>East Asian</td>
+    <td>Bopo</td>
+    <td>65</td>
+  </tr>
+  <tr>
+    <td>Braille</td>
+    <td>Miscellaneous</td>
+    <td>Brai</td>
+    <td>256</td>
+  </tr>
+  <tr>
+    <td>Buginese</td>
+    <td>South East Asian</td>
+    <td>Bugi</td>
+    <td>30</td>
+  </tr>
+  <tr>
+    <td>Buhid</td>
+    <td>Philippine</td>
+    <td>Buhd</td>
+    <td>20</td>
+  </tr>
+  <tr>
+    <td>Canadian Aboriginal</td>
+    <td>American</td>
+    <td>Cans</td>
+    <td>630</td>
+  </tr>
+  <tr>
+    <td>Carian</td>
+    <td>Ancient</td>
+    <td>Cari</td>
+    <td>49</td>
+  </tr>
+  <tr>
+    <td>Cham</td>
+    <td>South East Asian</td>
+    <td>Cham</td>
+    <td>83</td>
+  </tr>
+  <tr>
+    <td>Cherokee</td>
+    <td>American</td>
+    <td>Cher</td>
+    <td>85</td>
+  </tr>
+  <tr>
+    <td>Coptic</td>
+    <td>European</td>
+    <td>Copt</td>
+    <td>128</td>
+  </tr>
+  <tr>
+    <td>Cuneiform</td>
+    <td>Ancient</td>
+    <td>Xsux</td>
+    <td>982</td>
+  </tr>
+  <tr>
+    <td>Cypriot</td>
+    <td>Ancient</td>
+    <td>Cprt</td>
+    <td>55</td>
+  </tr>
+
+  <tr>
+    <td>Cyrillic</td>
+    <td>European</td>
+    <td>Cyrl</td>
+    <td>404</td>
+  </tr>
+  <tr>
+
+    <td>Deseret</td>
+    <td>American</td>
+    <td>Dsrt</td>
+    <td>80</td>
+  </tr>
+  <tr>
+    <td>Devanagari</td>
+
+    <td>Indic</td>
+    <td>Deva</td>
+    <td>107</td>
+  </tr>
+  <tr>
+    <td>Ethiopic</td>
+    <td>African</td>
+
+    <td>Ethi</td>
+    <td>461</td>
+  </tr>
+  <tr>
+    <td>Georgian</td>
+    <td>European</td>
+    <td>Geor</td>
+
+    <td>120</td>
+  </tr>
+  <tr>
+    <td>Glagolitic</td>
+    <td>Ancient</td>
+    <td>Glag</td>
+    <td>94</td>
+
+  </tr>
+  <tr>
+    <td>Gothic</td>
+    <td>Ancient</td>
+    <td>Goth</td>
+    <td>27</td>
+  </tr>
+
+  <tr>
+    <td>Greek</td>
+    <td>European</td>
+    <td>Grek</td>
+    <td>511</td>
+  </tr>
+  <tr>
+
+    <td>Gujarati</td>
+    <td>Indic</td>
+    <td>Gujr</td>
+    <td>83</td>
+  </tr>
+  <tr>
+    <td>Gurmukhi</td>
+
+    <td>Indic</td>
+    <td>Guru</td>
+    <td>79</td>
+  </tr>
+  <tr>
+    <td>Han</td>
+    <td>East Asian</td>
+
+    <td>Hani</td>
+    <td>71578</td>
+  </tr>
+  <tr>
+    <td>Hangul</td>
+    <td>East Asian</td>
+    <td>Hang</td>
+
+    <td>11620</td>
+  </tr>
+  <tr>
+    <td>Hanunoo</td>
+    <td>Philippine</td>
+    <td>Hano</td>
+    <td>21</td>
+
+  </tr>
+  <tr>
+    <td>Hebrew</td>
+    <td>Middle Eastern</td>
+    <td>Hebr</td>
+    <td>133</td>
+  </tr>
+
+  <tr>
+    <td>Hiragana</td>
+    <td>East Asian</td>
+    <td>Hira</td>
+    <td>89</td>
+  </tr>
+  <tr>
+
+    <td>Kannada</td>
+    <td>Indic</td>
+    <td>Knda</td>
+    <td>84</td>
+  </tr>
+  <tr>
+    <td>Katakana</td>
+
+    <td>East Asian</td>
+    <td>Kana</td>
+    <td>299</td>
+  </tr>
+  <tr>
+    <td>Kayah Li</td>
+    <td>South East Asian</td>
+
+    <td>Kali</td>
+    <td>48</td>
+  </tr>
+  <tr>
+    <td>Kharoshthi</td>
+    <td>Central Asian</td>
+    <td>Khar</td>
+
+    <td>65</td>
+  </tr>
+  <tr>
+    <td>Khmer</td>
+    <td>South East Asian</td>
+    <td>Khmr</td>
+    <td>146</td>
+
+  </tr>
+  <tr>
+    <td>Lao</td>
+    <td>South East Asian</td>
+    <td>Laoo</td>
+    <td>65</td>
+  </tr>
+
+  <tr>
+    <td>Latin</td>
+    <td>European</td>
+    <td>Latn</td>
+    <td>1241</td>
+  </tr>
+  <tr>
+
+    <td>Lepcha</td>
+    <td>Indic</td>
+    <td>Lepc</td>
+    <td>74</td>
+  </tr>
+  <tr>
+    <td>Limbu</td>
+
+    <td>Indic</td>
+    <td>Limb</td>
+    <td>66</td>
+  </tr>
+  <tr>
+    <td>Linear B</td>
+    <td>Ancient</td>
+
+    <td>Linb</td>
+    <td>211</td>
+  </tr>
+  <tr>
+    <td>Lycian</td>
+    <td>Ancient</td>
+    <td>Lyci</td>
+
+    <td>29</td>
+  </tr>
+  <tr>
+    <td>Lydian</td>
+    <td>Ancient</td>
+    <td>Lydi</td>
+    <td>27</td>
+
+  </tr>
+  <tr>
+    <td>Malayalam</td>
+    <td>Indic</td>
+    <td>Mlym</td>
+    <td>95</td>
+  </tr>
+
+  <tr>
+    <td>Mongolian</td>
+    <td>Central Asian</td>
+    <td>Mong</td>
+    <td>153</td>
+  </tr>
+  <tr>
+
+    <td>Myanmar</td>
+    <td>South East Asian</td>
+    <td>Mymr</td>
+    <td>156</td>
+  </tr>
+  <tr>
+    <td>N'Ko</td>
+
+    <td>African</td>
+    <td>Nkoo</td>
+    <td>59</td>
+  </tr>
+  <tr>
+    <td>New Tai Lue</td>
+    <td>South East Asian</td>
+
+    <td>Talu</td>
+    <td>80</td>
+  </tr>
+  <tr>
+    <td>Ogham</td>
+    <td>Ancient</td>
+    <td>Ogam</td>
+
+    <td>29</td>
+  </tr>
+  <tr>
+    <td>Ol Chiki</td>
+    <td>Indic</td>
+    <td>Olck</td>
+    <td>48</td>
+
+  </tr>
+  <tr>
+    <td>Old Italic</td>
+    <td>Ancient</td>
+    <td>Ital</td>
+    <td>35</td>
+  </tr>
+
+  <tr>
+    <td>Old Persian</td>
+    <td>Ancient</td>
+    <td>Xpeo</td>
+    <td>50</td>
+  </tr>
+  <tr>
+
+    <td>Oriya</td>
+    <td>Indic</td>
+    <td>Orya</td>
+    <td>84</td>
+  </tr>
+  <tr>
+    <td>Osmanya</td>
+
+    <td>African</td>
+    <td>Osma</td>
+    <td>40</td>
+  </tr>
+  <tr>
+    <td>Phags-pa</td>
+    <td>Central Asian</td>
+
+    <td>Phag</td>
+    <td>56</td>
+  </tr>
+  <tr>
+    <td>Phoenician</td>
+    <td>Ancient</td>
+    <td>Phnx</td>
+
+    <td>27</td>
+  </tr>
+  <tr>
+    <td>Rejang</td>
+    <td>South East Asian</td>
+    <td>Rjng</td>
+    <td>37</td>
+
+  </tr>
+  <tr>
+    <td>Runic</td>
+    <td>Ancient</td>
+    <td>Runr</td>
+    <td>78</td>
+  </tr>
+
+  <tr>
+    <td>Saurashtra</td>
+    <td>Indic</td>
+    <td>Saur</td>
+    <td>81</td>
+  </tr>
+  <tr>
+
+    <td>Shavian</td>
+    <td>Miscellaneous</td>
+    <td>Shaw</td>
+    <td>48</td>
+  </tr>
+  <tr>
+    <td>Sinhala</td>
+
+    <td>Indic</td>
+    <td>Sinh</td>
+    <td>80</td>
+  </tr>
+  <tr>
+    <td>Sundanese</td>
+    <td>South East Asian</td>
+
+    <td>Sund</td>
+    <td>55</td>
+  </tr>
+  <tr>
+    <td>Syloti Nagri</td>
+    <td>Indic</td>
+    <td>Sylo</td>
+
+    <td>44</td>
+  </tr>
+  <tr>
+    <td>Syriac</td>
+    <td>Middle Eastern</td>
+    <td>Syrc</td>
+    <td>77</td>
+
+  </tr>
+  <tr>
+    <td>Tagalog</td>
+    <td>Philippine</td>
+    <td>Tglg</td>
+    <td>20</td>
+  </tr>
+
+  <tr>
+    <td>Tagbanwa</td>
+    <td>Philippine</td>
+    <td>Tagb</td>
+    <td>18</td>
+  </tr>
+  <tr>
+
+    <td>Tai Le</td>
+    <td>South East Asian</td>
+    <td>Tale</td>
+    <td>35</td>
+  </tr>
+  <tr>
+    <td>Tamil</td>
+
+    <td>Indic</td>
+    <td>Taml</td>
+    <td>72</td>
+  </tr>
+  <tr>
+    <td>Telugu</td>
+    <td>Indic</td>
+
+    <td>Telu</td>
+    <td>93</td>
+  </tr>
+  <tr>
+    <td>Thaana</td>
+    <td>Middle Eastern</td>
+    <td>Thaa</td>
+    <td>50</td>
+  </tr>
+  <tr>
+    <td>Thai</td>
+    <td>South East Asian</td>
+    <td>Thai</td>
+    <td>86</td>
+  </tr>
+  <tr>
+    <td>Tibetan</td>
+    <td>Central Asian</td>
+    <td>Tibt</td>
+    <td>201</td>
+  </tr>
+  <tr>
+    <td>Tifinagh</td>
+    <td>African</td>
+    <td>Tfng</td>
+    <td>55</td>
+  </tr>
+  <tr>
+    <td>Ugaritic</td>
+    <td>Ancient</td>
+    <td>Ugar</td>
+    <td>31</td>
+  </tr>
+  <tr>
+    <td>Vai</td>
+    <td>African</td>
+    <td>Vaii</td>
+    <td>300</td>
+  </tr>
+  <tr>
+    <td>Yi</td>
+    <td>East Asian</td>
+    <td>Yiii</td>
+    <td>1220</td>
+  </tr>
+</table>
+
+<h2>Regional and other groupings</h2>
+
+The only thing that I added to the above table myself, was the data in the "Category" column. This data comes from the <a href="http://www.unicode.org/charts/">code charts</a> page of the Unicode web site. This page lists all of the scripts in the current Unicode standard, and it groups them into a number of categories, most of which describe the script's regional origin. As far as I can tell, nobody's collated these categories with the character-count data before, so I had to do it manually.
+
+Into the "Miscellaneous" category, I put the "Common" and the "Inherited" scripts, which contain numerous characters that are shared amongst multiple scripts (e.g. accents, diacritical marks), as well as a plethora of symbols from many domains (e.g. mathematics, music, mythology). "Common" also contains the characters used by the <a href="http://en.wikipedia.org/wiki/International_Phonetic_Alphabet"><abbr title="International Phonetic Alphabet">IPA</abbr></a>. Additionally, I put <a href="http://en.wikipedia.org/wiki/Braille">Braille</a> (the "alphabet of bumps" for blind people) and <a href="http://en.wikipedia.org/wiki/Shavian_alphabet">Shavian</a> (invented phonetic script) into "Miscellaneous".
+
+From the raw data, I then generated a summary table and a pie graph of the character counts for all the scripts, grouped by category:
+
+<table>
+  <tr>
+    <th>Category</th>
+    <th>No of characters</th>
+    <th>&#37; of total</th>
+  </tr>
+  <tr>
+    <td>African</td>
+    <td>915</td>
+    <td>0.91&#37;</td>
+  </tr>
+  <tr>
+    <td>American</td>
+    <td>795</td>
+    <td>0.79&#37;</td>
+  </tr>
+  <tr>
+    <td>Ancient</td>
+    <td>1724</td>
+    <td>1.71&#37;</td>
+  </tr>
+  <tr>
+    <td>Central Asian</td>
+    <td>478</td>
+    <td>0.48&#37;</td>
+  </tr>
+  <tr>
+    <td>East Asian</td>
+    <td>84735</td>
+    <td>84.28&#37;</td>
+  </tr>
+  <tr>
+    <td>European</td>
+    <td>2455</td>
+    <td>2.44&#37;</td>
+  </tr>
+  <tr>
+    <td>Indic</td>
+    <td>1185</td>
+    <td>1.18&#37;</td>
+  </tr>
+  <tr>
+    <td>Middle Eastern</td>
+    <td>1254</td>
+    <td>1.25&#37;</td>
+  </tr>
+  <tr>
+    <td>Miscellaneous</td>
+    <td>5978</td>
+    <td>5.95&#37;</td>
+  </tr>
+  <tr>
+    <td>Philippine</td>
+    <td>79</td>
+    <td>0.08&#37;</td>
+  </tr>
+  <tr>
+    <td>South East Asian</td>
+    <td>942</td>
+    <td>0.94&#37;</td>
+  </tr>
+</table>
+
+[thumbnail character_count_by_category.png Unicode character count by category]
+
+<h2>Attack of the Han</h2>
+
+Looking at this data, I can't help but gape at the enormous size of the East Asian character grouping. <strong>84.3&#37;</strong> of the characters in Unicode are East Asian; and of those, the majority belong to the Han script. <strong>Over 70&#37;</strong> of Unicode's assigned codespace is occupied by a single script &mdash; Han! I always knew that Chinese contained thousands upon thousands of symbols; but who would have guessed that their quantity is great enough to comprise 70&#37; of all language symbols in known linguistic history? That's quite an achievement.
+
+And what's more, this is a <em>highly reduced</em> subset of all possible Han symbols, due mainly to the <a href="http://en.wikipedia.org/wiki/Han_unification">Han unification</a> effort that Unicode imposed on the script. Han unification has resulted in all the variants of Han &mdash; the notable ones being Chinese, Japanese, and Korean &mdash; getting represented in a single character set. Imagine the size of Han, were its Chinese / Japanese / Korean variants represented separately &mdash; no wonder (despite the controversy and the backlash) they went ahead with the unification!
+
+<h2>Broader groupings</h2>
+
+Due to its radically disproportionate size, the East Asian script category squashes away virtually all the other Unicode script categories into obscurity. The "Miscellaneous" category is also unusually large (although still nowhere near the size of East Asian). As such, I decided to make a new data table, but this time with these two extra-large categories excluded. This allows the size of the remaining categories to be studied a bit more meaningfully.
+
+For the remaining categories, I also decided to do some additional grouping, to further reduce disproportionate sizes. These additional groupings are my own creation, and I acknowledge that some of them are likely to be inaccurate and not popular with everyone. Anyway, take 'em or leave 'em: there's nothing official about them, they're just my opinion:
+
+<ul>
+  <li>I grouped the "African" and the "American" categories into a broader "Native" grouping: I know that this word reeks of arrogant European colonial connotations, but nevertheless, I feel that it's a reasonable name for the grouping. If you are an African or a Native American, then please treat the name academically, not personally.</li>
+  <li>I also brought the "Indic", "Central Asian", and "Philippine" categories together into an "Indic" grouping. I did this because, after doing some research, it seems that the key Central Asian scripts (e.g. Mongolian, Tibetan) and the pre-European Philippine scripts (e.g. Tagalog) both have clear Indic roots.</li>
+  <li>I left the "Ancient", "South-East Asian", "European" and "Middle Eastern" groupings un-merged, as they don't fit well with any other group, and as they're reasonably well-proportioned on their own.</li>
+</ul>
+
+Here's the data for the broader groupings:
+
+<table>
+  <tr>
+    <th>Grouping</th>
+    <th>No of characters</th>
+    <th>&#37; of total</th>
+  </tr>
+  <tr>
+    <td>Ancient</td>
+    <td>1724</td>
+    <td>17.54&#37;</td>
+  </tr>
+  <tr>
+    <td>Indic</td>
+    <td>1742</td>
+    <td>17.73&#37;</td>
+  </tr>
+  <tr>
+    <td>Native</td>
+    <td>1710</td>
+    <td>17.40&#37;</td>
+  </tr>
+  <tr>
+    <td>European</td>
+    <td>2455</td>
+    <td>24.98&#37;</td>
+  </tr>
+  <tr>
+    <td>Middle Eastern</td>
+    <td>1254</td>
+    <td>12.76&#37;</td>
+  </tr>
+  <tr>
+    <td>South-Eastern</td>
+    <td>942</td>
+    <td>9.59&#37;</td>
+  </tr>
+</table>
+
+[thumbnail character_count_by_grouping_0.png Unicode character count by grouping]
+
+And there you have it: a breakdown of the number of characters in the main written scripts of the world, as they're represented in Unicode. European takes the lead here, with the Latin script being the largest in the European group by far (mainly due to the numerous variants of the Latin alphabet, with accents and other symbols used to denote regional languages). All up, a relatively even spread.
+
+I hope you find this interesting &mdash; and perhaps even useful &mdash; as a visualisation of the number of characters that the world's main written scripts employ today (and throughout history). If you ever had any doubts about the sheer volume of symbols used in East Asian scripts (but remember that the vast majority of them are purely historic and are used only by academics), then those doubts should now be well and truly dispelled.
+
+It will also be interesting to see how this data changes, over the next few versions of Unicode into the future. I imagine that only the more esoteric categories will grow: for example, ever more obscure scripts will no doubt be encoded and will join the "Ancient" category; and my guess is that ever more bizarre sets of symbols will join the "Miscellaneous" category. There may possibly be more additions to the "Native" category, although the discovery of indigenous writing systems is far less frequent than the discovery of indigenous oral languages. As for the known scripts of the modern world, I'd say they're well and truly covered already.
