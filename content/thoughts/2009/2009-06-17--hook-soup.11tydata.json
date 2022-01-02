@@ -1,0 +1,37 @@
+{
+  "comments": [
+    {
+      "date": "2009-06-17T21:32:24Z",
+      "name": "ksenzee",
+      "comment": "That was a lot of work! Thanks for putting it together, and bringing up the (very valid) question.\n\nMy instinct is that lots of hooks don't hurt anything except performance. In my perfect world, there's a hook for just about everything. I don't need to know all of them -- I can just assume they're there. And they're all named so well they're no trouble to find in the API anyway. For that matter, after all the work you've done here, I'll just bookmark this page for my hook documentation needs. :)"
+    },
+    {
+      "date": "2009-06-1801:13:54Z",
+      "name": "catch",
+      "comment": "Nice work on the statistics, really interesting to read and a fun post.\n\nHave to disagree on it being a bad thing though. In terms of DX, splitting the <code>$ops</code> out of hooks makes things a lot easier. Very few people need to worry about <code>hook_node_search_index()</code>, whereas you couldn't avoid reading about it if looking at the docs for <code>hook_nodeapi()</code>. Hooks don't really affect performance at all either - if a hook isn't implemented, the <code>module_invoke_all()</code> only needs to check if a module implements the hook, and when it finds it doesn't, job done. Modules can do nasty things in hooks of course, but they can do that anywhere else too.\n\nSimilarly adding hooks in different places also allows for performance improvements - letting modules interact earlier or later in processes to swap in their own implementation or make small alterations can reduce the need to use bigger sledgehammers (you can use <code>hook_menu_alter()</code> to completely replace a page callback with your own version, but why do that when you can use <code>hook_form_FORM_ID_alter()</code> just to set a checkbox to required)."
+    },
+    {
+      "date": "2009-06-18T01:26:33Z",
+      "name": "Kieran Lal",
+      "url": "http://acquia.com",
+      "comment": "Hi, thanks for that summary. Very interesting insight. Small APIs are certainly more immediately attractive to developers. Hopefully, as catch indicates, these APIs are simpler to learn.\n\nIt would certainly be interesting to compare to other Web Application Frameworks.\n\nKieran"
+    },
+    {
+      "date": "2009-06-18T02:12:36Z",
+      "name": "Benjamin Melançon",
+      "url": "http://agaric.com/",
+      "comment": "I add my thanks for the breakdown and analysis, but have to say very strongly that this apparent increase in hooks is very much a good thing. While you mentioned \"de-opping\" as a source, I think it is the dominant source, and having seven clearly defined hooks rather than one giant switch-statement style hook (nodeapi) is a major developer usability win.\n\nOn the broader philosophy, I can just say I have never experienced a hook I wished weren't in core, and frequently when developing run into situations where I did want a hook.\n\nbenjamin, Agaric Design Collective"
+    },
+    {
+      "date": "2009-06-18T03:10:19Z",
+      "name": "moshe weitzman",
+      "url": "http://drupal.org/moshe",
+      "comment": "You missed a key difference for D7 - there is a code registry which tracks which modules implement which hooks so adding a hook has zero performance impact. Freed from performance concerns, we have added hooks that let developers freely do their thing. If you don't know about a hook or don't use it, you are no worse off than you were before the hook was added.\n\nThe upgrade docs are very carefully maintained these days. I assure you that all new hooks are documented there shortly after their birth. Folks who skim the upgrade docs or skip them are naturally unaware of new hooks. Thats fine, they'll stumble on them when they need them.\n\nAdding a hook is typically a single line of code, and a bunch of lines of documentation. I am all for <a href=\"http://search.twitter.com/search?q=%23smallcore\">#smallcore</a>, but hooks do not cause code bloat.\n\nThere is nothing \"unchecked\" about core drupal development. Every line gets strip searched before commit. Every hook gets interrogated about its life purpose.\n\nIf you are going to say \"surely this is a concern\", you ought to name 5 hooks which should not exist."
+    },
+    {
+      "date": "2009-06-18T19:04:45Z",
+      "isAuthorReply": true,
+      "comment": "Perfectly valid point, Moshe (and the other folks who commented similarly). Hooks do indeed have zero performance impact in D7. And that's great.\n\nHowever, my main concern is not with the performance impact of hooks, but with the DX impact of them. I'm aware of the high standards and the up-to-date-ness of the upgrade docs and the API docs. But good documentation doesn't mitigate the fact that there are simply too many hooks for the average developer to easily get acquainted with. At the end of the day, anyone can see that the number of hooks in core has more than doubled between D6 and D7, and that fact is going to scare people no matter how good our docs are (and they ARE good!).\n\nMy biggest gripe would have to be with the <code>alter</code> hooks. If you want me to name 5 hooks which should not exist, I could pick almost any 5 of the <code>alter</code> hooks in D7 core that have been added more recently. Here are 5 such ones:\n\n<ul>\n<li>hook_action_info_alter</li>\n<li>hook_block_list_alter</li>\n<li>hook_system_info_alter</li>\n<li>hook_theme_registry_alter</li>\n<li>hook_update_projects_alter</li>\n</ul>\n\n(No doubt people will reply with valid reasons why each of these SHOULD be, and IS in core &mdash; go ahead, I'm not stopping you).\n\nThe original one was <code>hook_form_alter</code>, and then we added a few more sorely-needed ones, such as <code>hook_link_alter</code>, <code>hook_mail_alter</code> and <code>hook_menu_(link_)alter</code>. Now, the trend seems to be that any info-style hook should have an accompanying alter-style hook, and I find that ridiculous. There simply isn't a valid use case for adding that many <code>alter</code> hooks. It caters for some very small edge cases, at the cost of bloating both the code and the API docs. I'm also inclined to agree with Walkah's argument that he presented in \"<a href=\"http://dc2009.drupalcon.org/session/why-i-hate-drupal\">Why I Hate Drupal</a>\" at the DC conference &mdash; that the entire philosophy of <code>alter</code> hooks is bad, and that they're a poor substitute for more mainstream alternatives such as object-based inheritance.\n\nThe new field API hooks also make up over a quarter of the hooks in HEAD right now (49 / 183). The field API alone, therefore, has almost as many hooks as all of D5 core (which has 53). That makes me strongly suspect that the present field API is over-engineered. Hopefully, we'll be able to remove some of these hooks as the field API matures."
+    }
+  ]
+}

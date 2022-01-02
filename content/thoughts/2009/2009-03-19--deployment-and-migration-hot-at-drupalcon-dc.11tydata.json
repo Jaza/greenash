@@ -1,0 +1,14 @@
+{
+  "comments": [
+    {
+      "date": "2009-03-20T01:33:01Z",
+      "name": "heyrocker",
+      "comment": "Thanks for the kind words. You'll be happy to know that a preview of Deploy will be released within the next couple days, possibly even later today. The code is actually checked in to CVS but I have to write some install instructions and test them. The installation process is not exactly easy.\n\nOn the last day of Drupalcon, a group of about a dozen people (including most of the people mentioned above) got together and had a BOF around these issues. One of the things to come out of that was a new group on g.d.o. - <a href=\"http://groups.drupal.org/packaging-deployment\">Packaging and Deployment</a>. I encourage yourself and anyone else interested in these issues to join and get involved. We're currently focused on both short and long-term ideas for what can be improved in core to enable a variety of solutions. \n\nThanks again!"
+    },
+    {
+      "date": "2009-04-04T03:21:23Z",
+      "name": "jpetso",
+      "comment": "Unfortunately I didn't manage to put <a href=\"http://drupal.org/project/transformations\">Transformations</a> in time, but it's essentially a new shot at the generic approach that you tried to do with Import/Export API. It's less tied to underlying Drupal features (those will go into the <a href=\"http://drupal.org/project/transformations_drupal\">Drupal extension</a>) and massively object oriented, so even with being a complex code base it should be pretty maintainable.\n\nThe most fundamental difference from your previous approach is that Import/Export API assumes that all \"backends\" are able to store all data, which might not be the case. Transformations doesn't assume any data format at all, and instead relies on what the available operations can do - with a number of operation inputs/outputs along with schema definitions for those.\n\nI think it might well be the next best thing in Drupal land, but that also depends on how much development effort goes into that. I'll push it further until Summer, but then my company has to take over because I'm going for a non-Drupal job. Let's see how it works out."
+    }
+  ]
+}

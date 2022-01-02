@@ -1,0 +1,14 @@
+{
+  "comments": [
+    {
+      "date": "2009-04-16T04:52:53Z",
+      "name": "Pasqualle",
+      "comment": "<a href=\"http://technet.microsoft.com/en-us/sysinternals/bb896768.aspx\">Junction</a>"
+    },
+    {
+      "date": "2009-04-16T09:38:00Z",
+      "isAuthorReply": true,
+      "comment": "Yeah, I know about Junctions in WinXP. IIRC, though, I tried using them for Drupal multisite purposes, and they didn't work. That is, Apache didn't seem to handle them properly, in the way that it handles Unix symlinks (and Vista symlinks) transparently."
+    }
+  ]
+}
