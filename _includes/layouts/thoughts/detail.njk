@@ -15,7 +15,7 @@ layout: layouts/base.njk
   {%- set items = tags | getTopicsForThought(collections.thoughtstopics) %}
   {% include 'components/thoughts/topics.njk' %}
 
-  {{ content | inlineThumbnails | autop | safe }}
+  {{ content | autop | inlineThumbnails | safe }}
 
   {% if fileAttachments %}
   <h2>File attachments</h2>

@@ -13,6 +13,6 @@
   {% include 'components/thoughts/topics.njk' %}
 
   {% if item.data.teaser %}
-  {{ item.data.teaser | inlineThumbnails | autop | safe }}
+  {{ item.data.teaser | autop | inlineThumbnails | safe }}
   {% endif %}
 </article>

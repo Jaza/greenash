@@ -1,0 +1,89 @@
+---
+title: An inline image Django template filter
+date: 2010-06-06
+teaser: |-
+  Adding image fields to a Django model is easy, thanks to the built-in ImageField class. Auto-resizing uploaded images is also a breeze, courtesy of <a href="http://code.google.com/p/sorl-thumbnail/">sorl-thumbnail</a> and its forks/variants. But what about embedding resized images inline within text content? This is a very common use case for bloggers, and it's a final step that seems to be missing in Django at the moment.
+
+  Having recently migrated this site over from Drupal, my old blog posts had inline images embedded using <a href="http://drupal.org/project/img_assist">image assist</a>. Images could be inserted into an arbitrary spot within a text field by entering a token, with a syntax of <code>[img_assist nid=123 ... ]</code>. I wanted to be able to continue embedding images in roughly the same fashion, using a syntax as closely matching the old one as possible.
+
+  So, I've written a simple template filter that parses a text block for tokens with a syntax of <code>&lsqb;thumbnail image-identifier&rsqb;</code>, and that replaces every such token with the image matching the given identifier, resized according to a pre-determined width and height (by sorl-thumbnail), and formatted as an image tag with a caption underneath. The code for the filter is below.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/django
+  - thoughtstopics/python
+  - thoughtstopics/web-design
+---
+Adding image fields to a Django model is easy, thanks to the built-in ImageField class. Auto-resizing uploaded images is also a breeze, courtesy of <a href="http://code.google.com/p/sorl-thumbnail/">sorl-thumbnail</a> and its forks/variants. But what about embedding resized images inline within text content? This is a very common use case for bloggers, and it's a final step that seems to be missing in Django at the moment.
+
+Having recently migrated this site over from Drupal, my old blog posts had inline images embedded using <a href="http://drupal.org/project/img_assist">image assist</a>. Images could be inserted into an arbitrary spot within a text field by entering a token, with a syntax of <code>[img_assist nid=123 ... ]</code>. I wanted to be able to continue embedding images in roughly the same fashion, using a syntax as closely matching the old one as possible.
+
+So, I've written a simple template filter that parses a text block for tokens with a syntax of <code>&lsqb;thumbnail image-identifier&rsqb;</code>, and that replaces every such token with the image matching the given identifier, resized according to a pre-determined width and height (by sorl-thumbnail), and formatted as an image tag with a caption underneath. The code for the filter is below.
+
+<pre class="python"><code>import re
+
+from django import template
+from django.template.defaultfilters import stringfilter
+
+from sorl.thumbnail.main import DjangoThumbnail
+
+from models import InlineImage
+
+register = template.Library()
+
+regex = re.compile(r'\[thumbnail (?P<identifier>[\-\w]+)\]')
+
+
+@register.filter
+@stringfilter
+def inline_thumbnails(value):
+    new_value = value
+    it = regex.finditer(value)
+    for m in it:
+        try:
+            image = InlineImage.objects.get(identifier=identifier)
+            thumbnail = DjangoThumbnail(image.image, (500, 500))
+            new_value = new_value.replace(m.group(), '<img src="%s%s" width="%d" height="%d" alt="%s" /><p><em>%s</em></p>' % ('http://mysite.com', thumbnail.absolute_url, thumbnail.width(), thumbnail.height(), image.title, image.title))
+        except InlineImage.DoesNotExist:
+            pass
+    return new_value
+</code></pre>
+
+This code belongs in a file such as <code>appname/templatetags/inline_thumbnails.py</code> within your Django project directory. It also assumes that you have an <code>InlineImage</code> model that looks something like this (in your app's <code>models.py</code> file):
+
+<pre class="python"><code>from django.db import models
+
+class InlineImage(models.Model):
+    created         = models.DateTimeField(auto_now_add=True)
+    modified        = models.DateTimeField(auto_now=True)
+
+    title           = models.CharField(max_length=100)
+
+    image           = models.ImageField(upload_to='uploads/images')
+    identifier      = models.SlugField(unique=True)
+
+    def __unicode__(self):
+        return self.title
+        ordering = ('-created',)
+</code></pre>
+
+Say you have a model for your site's blog posts, called <code>Entry</code>. The main body text field for this model is <code>content</code>. You could upload an <code>InlineImage</code> with identifier <code>hokey-pokey</code>. You'd then embed the image into the body text of a blog post like so:
+
+<pre class="html"><code><p>You put your left foot in,
+You put your left foot out,
+You put your left foot in,
+And you shake it all about.</p>
+
+[thumbnail hokey-pokey]
+
+<p>You do the Hokey Pokey and you turn around,
+That's what it's all about.</p>
+</code></pre>
+
+To render the blog post content with the thumbnail tokens converted into actual images, simply filter the variable in your template, like so:
+
+<pre class="django"><code>&lcub;% load inline_thumbnails %&rcub;
+
+&lcub;&lcub; entry.content|inline_thumbnails|safe &rcub;&rcub;
+</code></pre>
+
+The code here is just a simple example &mdash; if you copy it and adapt it to your own needs, you'll probably want to add a bit more functionality to it. For example, the token could be extended to support specifying image alignment (left/right), width/height per image, caption override, etc. But I didn't particularly need any of these things, and I wanted to keep my code simple, so I've omitted those features from my filter.

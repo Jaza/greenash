@@ -1,0 +1,57 @@
+---
+title: Introducing GreenAsh 4
+date: 2010-05-25
+teaser: |-
+  It's that time again. GreenAsh makeover time!
+
+  What can I say? It's <a href="/thoughts/2006/10/greenash-3-0-how-did-they-do-it/">been a while</a>. I was bored. The old site and the old server were getting crusty. And my technology preferences have shifted rather dramatically of late. Hence, it is with great pride that I present to you the splendiferously jaw-dropping 4<sup>th</sup> edition of GreenAsh, my personal and professional web site all rolled into one (oh yes, I love to mix business and pleasure).
+tags:
+  - thoughtstopics/web-design
+---
+It's that time again. GreenAsh makeover time!
+
+What can I say? It's <a href="/thoughts/2006/10/greenash-3-0-how-did-they-do-it/">been a while</a>. I was bored. The old site and the old server were getting crusty. And my technology preferences have shifted rather dramatically of late. Hence, it is with great pride that I present to you the splendiferously jaw-dropping 4<sup>th</sup> edition of GreenAsh, my personal and professional web site all rolled into one (oh yes, I love to mix business and pleasure).
+
+<h2>New design</h2>
+
+The latest incarnation of GreenAsh sports a design with plenty of fresh goodness. I've always gone for quite a minimalist look with GreenAsh (mainly because my design prowess is modest to say the least). The new design is, in my opinion, even more minimalist than its predecessors. For example, I've gotten rid of the CSS background images that previously sat on the home page, and the new background header image is a far smaller and less conspicuous alternative than the giant fluoro-green monstrosity before it.
+
+[thumbnail greenash_4_screenshot.png Front page of the new GreenAsh 4]
+
+Elements such as dates submitted, tags, and authors are some of the finer details that have been tuned up visually for this edition. I've also added some very narrow sidebars, which are being used for these elements among other things. The thoughts index page now has a tag cloud.
+
+I've tried to focus on the details rather than the devil. After all, that old devil likes to hang out in the details anyway. For example, the portfolio section has received a pretty extensive visual overhaul. Portfolio entries can now be browsed from a single page, using a funky jQuery-powered filtering interface. The experience degrades nicely without JavaScript, of course. The site's static informational pages &mdash; the <a href="/services/">services</a>, <a href="/about/">about</a>, and <a href="/contact/">contact</a> pages &mdash; have also had their details spruced up. These pages now have distinctively styled subtitles, stand-out text blocks, and call-to-action buttons.
+
+I'd like to think of this edition as more of a <a href="http://www.alistapart.com/articles/redesignrealign/">realign</a> than a redesign. I've maintained the main page area width of 740px, which existing content is already optimised for. However, the addition of the narrow sidebars has upped the overall width to 960px, and I'm now making use of the excellent <a href="http://960.gs/">960 grid system</a> for the overall layout. Thoughts are still fresh (on the front page). Colours haven't changed too radically. The new header is not all that dissimilar to the one before it. And so it goes on.
+
+<h2>Crusty content purge</h2>
+
+It's not just the design that's been cleaned up this time. I've also taken the liberty of getting rid of quite a lot of content (and functionality relating to that content), as part of this spring-clean.
+
+In particular, the old GreenAsh resources library is no more. It was a key component of GreenAsh back in the day. Back in 2004, I'd just finished high school, I had a lot of fresh and useful study notes to share with the world, and I was working part-time as a tutor. But much has changed since then. I never ended up transferring all my notes into soft copy (although I did get through a surprising number of them). I've long retired from the tutoring business. My notes are out-of-date and of little use to anyone. Plus, I was sick of maintaining the convoluted registration and access-control system I'd set up for the resource library, and I was sick of whinging school-kids e-mailing me and complaining that they couldn't view the notes.
+
+Speaking of registration, that's completely gone too. The only reason anyone registered was in order to access the resource library, so there's no point maintaining user accounts here anymore. All comments from registered users have been transformed into anonymous comments (with the author's name recorded in plain text).
+
+The news archive is also history. I hardly ever posted news items. It was designed for announcing site news and such, but the truth is that most changes to the site aren't worth announcing, and/or aren't things that anyone besides myself would care about. Having scrapped the news section once and for all, I was also able to scrap the 'posts' section (which originally contained 'deals', 'thoughts', and 'news'), and to finally make <a href="/thoughts/">thoughts</a> a top-level section.
+
+Some other crusty old bits of content, such as polls, image galleries, and a few random menu callbacks, are now also gone forever. I know the polls were kinda fun, but seriously &mdash; GreenAsh has grown up since its infancy, and pure gimmickry such as polls no longer has a place here.
+
+<h2>The switch to Django</h2>
+
+After being powered by <a href="http://drupal.org/">Drupal</a> for over 5 years, I made the big decision to re-develop GreenAsh in <a href="http://wwww.djangoproject.com/">Django</a> for this edition. The decision to switch was not an easy one, but it was one that I felt I had to make. Over the past year or so, I've been doing my professional coding work increasingly in Python/Django rather than in PHP/Drupal. On a personal level (related but separate), I've also been feeling increasingly disillusioned with PHP/Drupal; and increasingly excited by, and impressed with, Python/Django. In short, Drupal is no fun for me anymore, and Django feels like a breath of fresh air in a musty cellar.
+
+This version of GreenAsh, therefore, is the first ever version that hasn't been built with PHP. GreenAsh is now powered by Django. The thoughts archive and the portfolio archive were migrated over from Drupal using a custom import script. Standard Django apps &mdash; e.g. comments, syndication, taggit, thumbnail &mdash; are being used behind the scenes (particularly to power the thoughts section). All is now being handled with Django models, views, and templates &mdash; not that much to talk about, really, as the back-end is by-and-large pretty simple for Django to handle. Although there are a few cool bits 'n' pieces at work, and I'll be blogging about them here as time permits.
+
+<a href="http://jazasworld.greenash.net.au/">Jaza's World</a>, the <a href="http://category.greenash.net.au/">Category Module web site</a>, and <a href="http://worldtrip.greenash.net.au/">Jaza's World Trip</a> remain Drupal-powered as always. I have no plans to migrate them away from Drupal at this stage.
+
+<h2>New server</h2>
+
+The switch to Django also necessitated migrating GreenAsh to a new hosting solution. After 6 years on the same shared hosting account, GreenAsh has now (finally) moved to a <abbr title="Virtual Private Server">VPS</abbr>. All requests are now being served by Nginx as the first port of call, and most are then being proxied through to Apache. Having a VPS is pretty cool in general, because it means I have total control over the server, so I get to install whatever I want.
+
+<h2>Loose ends</h2>
+
+As always, this launch has seen the bulk of the changes on my to-do list done, but there are still plenty of loose ends to tie up. The thoughts index page needs a 'browse by year' block. Thought detail pages could use 'previous (newer) thought' and 'next (older) thought' links. The portfolio JavaScript browsing interface could use a few rough edges cleaned up, such as accordion opening-closing for each facet (year, type, paid), and fading instead of hiding/showing for transitions. The static informational pages should be editable as content blocks on the back-end (currently hard-coded in templates). The <code>sitemap.xml</code> and <code>robots.txt</code> files need to be restored. Some global redirection (e.g. from www to non-www) needs to take place. I need a smarter linebreak filter (one that's aware of big code blocks).
+
+The new content could also still use work in some places. In particular, my portfolio is horrendously out-of-date, and I'll be updating it with my newer work as soon as I can. The 'about' page and the other static pages could still use a bit more work.
+
+I hope you like the new GreenAsh. Relax, enjoy, and happy perusing.

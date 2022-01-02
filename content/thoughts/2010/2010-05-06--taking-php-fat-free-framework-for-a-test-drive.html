@@ -1,0 +1,110 @@
+---
+title: Taking PHP Fat-Free Framework for a test drive
+date: 2010-05-06
+teaser: |-
+  <a href="http://fatfree.sourceforge.net/">Fat-Free</a> is a brand-new PHP framework, and it's one of the coolest PHP projects I've seen in quite a long time. In stark contrast to the PHP tool that I use most often (<a href="http://drupal.org/">Drupal</a>), Fat-Free is truly miniscule, and it has no plans to get bigger. It also requires PHP 5.3, which is one version ahead of what most folks are currently running (PHP 5.3 is also required by <a href="http://flow3.typo3.org/">FLOW3</a>, another framework on my test-drive to-do list). A couple of weeks back, I decided to take Fat-Free for a quick spin and to have a look under its hood. I wanted to see how good its architecture is, how well it performs, and (most of all) whether it offers enough to actually be of use to a developer in getting a real-life project out the door.
+
+  I'm going to be comparing Fat-Free mainly with <a href="http://www.djangoproject.com/">Django</a> and Drupal, because they're the two frameworks / CMSes that I use the most these days. The comparison may at many times feel like comparing a cockroach to an elephant. But like Django and Drupal, Fat-Free claims to be a complete foundation for building a dynamic web site. It wants to compete with the big boys. So, I say, let's bring it on.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/web-design
+---
+<a href="http://fatfree.sourceforge.net/">Fat-Free</a> is a brand-new PHP framework, and it's one of the coolest PHP projects I've seen in quite a long time. In stark contrast to the PHP tool that I use most often (<a href="http://drupal.org/">Drupal</a>), Fat-Free is truly miniscule, and it has no plans to get bigger. It also requires PHP 5.3, which is one version ahead of what most folks are currently running (PHP 5.3 is also required by <a href="http://flow3.typo3.org/">FLOW3</a>, another framework on my test-drive to-do list). A couple of weeks back, I decided to take Fat-Free for a quick spin and to have a look under its hood. I wanted to see how good its architecture is, how well it performs, and (most of all) whether it offers enough to actually be of use to a developer in getting a real-life project out the door.
+
+I'm going to be comparing Fat-Free mainly with <a href="http://www.djangoproject.com/">Django</a> and Drupal, because they're the two frameworks / CMSes that I use the most these days. The comparison may at many times feel like comparing a cockroach to an elephant. But like Django and Drupal, Fat-Free claims to be a complete foundation for building a dynamic web site. It wants to compete with the big boys. So, I say, let's bring it on.
+
+<h2>Installation</h2>
+
+Even if you're a full-time PHP developer, chances are that you don't have PHP 5.3 installed. On Windows, latest stable 5.3 is <a href="http://windows.php.net/download/">available to download</a> as an auto-installer (just like latest stable 5.2, which is also still available). On Mac, 5.3 is bundled with Snow Leopard (OS 10.6), but only 5.2 is bundled with Leopard (10.5). As I've <a href="/posts/thoughts/installing-the-uploadprogress-pecl-extension-on-leopard">written about before</a>, PHP on Mac has a lot of installation issues and annoyances in general. If possible, avoid anything remotely out-of-the-ordinary with PHP on Mac. On Ubuntu, PHP is not bundled, but can be installed with a one-line <code>apt-get</code> command. In Karmic (9.10) and earlier recent versions, the <code>php5</code> apt package links to 5.2, and the <code>php5-devel</code> apt package links to 5.3 (either way, it's just a quick <code>apt-get</code> to install). In the brand-new Lucid (10.04), the <code>php5</code> apt package now links to 5.3. Why do I know about installing PHP on all three of these different systems? Let's just say that if you previously used Windows for coding at home, but you've now switched to Ubuntu for coding at home, and you use Mac for coding at work, then <em>you too</em> would be a fruit-loop schizophrenic.
+
+Upgrading from 5.2 to 5.3 shouldn't be a big hurdle for you. Unfortunately, I happened to be in pretty much the worst possible situation. I wanted to install 5.3 on Mac OS 10.5, and I wanted to keep 5.2 installed and running as my default version of PHP (because the bulk of my PHP work is in Drupal, and Drupal 6 <a href="http://drupal.org/node/360605">isn't 100% compatible</a> with PHP 5.3). This proved to be possible, but only just &mdash; it was a nightmare. Please, don't try and do what I did. Totally not worth it.
+
+After I got PHP 5.3 up and running, installing Fat-Free itself proved to be pretty trivial. However, I encountered terrible performance when trying out a simple "Hello, World" demo, off the bat with Fat-Free (page loads of 10+ seconds). This was a disheartening start. Nevertheless, it didn't put me off &mdash; I tracked down the source of the crazy lag to a <a href="http://sourceforge.net/tracker/?func=detail&aid=2990457&group_id=288268&atid=1220992">bug with Fat-Free's blacklist system</a>, which I reported and submitted a patch for. A fix was committed the next day. How refreshing! Also felt pretty cool to be trying out a project where it's so new and experimental, you have to fix a bug before you can take it for a test drive.
+
+<h2>Routing</h2>
+
+As with every web framework, the page routing system is Fat-Free's absolute core functionality. Fat-Free makes excellent use of PHP 5.3's new JavaScript-like support for functions as first-class objects in its routing system (including anonymous functions). In a very Django-esque style, you can pass anonymous functions (along with regular functions and class methods) directly to Fat-Free's <code>route()</code> method (or you can specify callbacks with strings).
+
+Wildcard and token support in routes is comparable to that of the Drupal 6 menu callback system, although routes in Fat-Free are not full-fledged regular expressions, and hence aren't quite as flexible as Django's URL routing system. There's also the ability to specify multiple callbacks/handlers for a single route. When you do this, <em>all</em> the handlers for that route get executed (in the order they're defined in the callback). This is an interesting feature, and it's actually one that I can think of several uses for in Django (in particular).
+
+In the interests of <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer"><abbr title="REpresentational State Transfer">REST</abbr></a>ful-ness, Fat-Free has decided that HTTP request methods (<code>GET</code>, <code>POST</code>, etc) must be explicitly specified for every route definition. E.g. to define a simple <code>GET</code> route, you must write:
+
+<pre class="php"><code><?php
+F3::route('GET /','home');
+?></code></pre>
+
+I think that <code>GET</code> should be the default request method, and that you shouldn't have to explicitly specify it for every route in your site. Or (in following Django's "configuration over convention" rule, which Fat-Free also espouses), at least have a setting variable called <code>DEFAULT_REQUEST_METHOD</code>, which itself defaults to <code>GET</code>. There's also much more to RESTful-ness than just properly using HTTP request methods, including many aspects of the response &mdash; HTTP response codes, MIME types, and XML/JSON response formats spring to mind as the obvious ones. And Fat-Free offers no help for these aspects, <em>per se</em> (although PHP does, for all of them, so Fat-Free doesn't really need to).
+
+<h2>Templates</h2>
+
+Can't say that Fat-Free's template engine has me over the moon. Variable passing and outputting is simple enough, and the syntax (while a bit verbose) is passable. The other key elements (described below) would have to be one of Fat-Free's weaker points.
+
+Much like Django (and in stark contrast to Drupal), Fat-Free has its own template parser built-in, and you cannot execute arbitrary PHP within a template. In my opinion, this is a good approach (and <a href="http://drupal.geek.nz/blog/tplphps-are-not-templates">Drupal's approach is a mess</a>). However, you <em>can</em> more-or-less directly execute a configurable subset of PHP core functions, with Fat-Free's <code>allow()</code> method. You can, for example, allow all date and pcre functions to be called within templates, but nothing else. This strikes me as an ugly compromise: a template engine should either allow direct code execution, or it shouldn't (and I'd say that it always shouldn't). Seems like a poor substitute for a proper, Django-style custom filter system (which Fat-Free is lacking). Of course, <a href="http://lucumr.pocoo.org/2008/9/16/why-jinja-is-not-django-and-why-django-should-have-a-look-at-it">Django's template system isn't perfect</a>, either.
+
+Fat-Free's template "directives" (include, exclude, check, and repeat) have an ugly, XML-style syntax. Reminds me of the bad old <a href="http://www.phpxtemplate.org/HomePage">XTemplate</a> days in Drupal theming. This is more a matter of taste, but nevertheless, I feel that the reasoning behinnd XML-style template directives is flawed (allows template markup to be easily edited in tools like Dreamweaver &hellip; *shudder*), and that the reasoning behind custom-style template directives is valid (allows template directives to be clearly distinguished from markup in <a href="http://notepad-plus.sourceforge.net/">most</a> <a href="http://macromates.com/">good</a> <a href="http://www.geany.org/">text</a> editors). What's more, the four directives are hard-coded into Fat-Free's <code>serve()</code> function &mdash; no chance whatsoever of having custom directives. Much like the function-calling in templates, this seems like a poor substitue for a proper, Django-style custom tag system.
+
+<h2><abbr title="Object-Relational Mapper">ORM</abbr></h2>
+
+Straight off the bat, my biggest and most obvious criticism of Axon, the Fat-Free ORM, is that it has no model classes as such, and that it has no database table generation based on model classes. All that Axon does is generate a model class that corresponds to a simple database table (which it analyses on-the-fly). You <em>can</em> subclass <code>Axon</code>, and explicitly define model classes that way &mdash; although with no field types as such, there's little to be gained. This is very much Axon's greatest strength (so simple! no cruft attached!) and its greatest weakness (makes it so bare-bones, it only just meets the <a href="http://en.wikipedia.org/wiki/Object-relational_mapping">definition of an ORM</a>). Axon also makes no attempt to support relationships, and the front-page docs justify this pretty clearly:
+
+<blockquote>Axon is designed to be a record-centric ORM and does not pretend to be more than that &hellip; By design, the Axon ORM does not provide methods for directly connecting Axons to each other, i.e. SQL joins &ndash; because this opens up a can of worms.</blockquote>
+
+Axon pretty much does nothing but let you <abbr title="Create Read Update Delete">CRUD</abbr> a single table. It can be wrangled into doing some fancier things &mdash; e.g. the docs have an example of creating simple pagination using a few lines of Axon code &mdash; but not a great deal. If you need more than that, <abbr title="Structured Query Language">SQL</abbr> is your friend. Personally, I agree with the justification, and I think it's a charming and well-designed micro-ORM.
+
+<h2>Bells and whistles</h2>
+
+<ul>
+  <li><strong>Page cache:</strong> Good. Just specify a cache period, in seconds, as an argument to <code>route()</code>. Pages get cached to a file server-side (by default &mdash; using stream wrappers, you could specify pretty much any "file" as a cache source). Page expiry also gets set as an HTTP response header.</li>
+  <li><strong>Query cache:</strong> Good. Just specify a cache period, in seconds, when calling <code>sql()</code>. Query only gets executed once in that time frame.</li>
+  <li><strong>JS and CSS compressor:</strong> Good. Minifies all files you pass to it. Drupal-style.</li>
+  <li><strong>GZip:</strong> all responses are GZipped using PHP's built-in capabilities, whenever possible. Also Drupal-style.</li>
+  <li><strong>XML sitemap:</strong> Good. Super-light sitemap generator. Incredible that in such a lightweight framework, this comes bundled (not bundled with Drupal, although it is with Django). But, considering that <em>every</em> site should have one of these, this is very welcome indeed.</li>
+  <li><strong>Image resizing:</strong> Good. Drupal 7 will finally bundle this (still an add-on in Django). This is one thing, more than perhaps anything else, that gets left out of web frameworks when it shouldn't be. In Fat-Free, <code>thumb()</code> is your friend.</li>
+  <li><strong>HTTP request utility:</strong> Good. Analogous to <code>drupal_http_request()</code>, and similar stuff can be done in Django with Python's httplib/urllib. Server-side requests, remote service calls, here we come.</li>
+  <li><strong>Static file handler:</strong> Good. Similar to Drupal's private file download mode, and (potentially) Django's static media serving. Not something you particularly want to worry about as a developer.</li>
+  <li><strong>Benchmarking:</strong> Good. <code>profile()</code> is your friend. Hopefully, your Fat-Free apps will be so light, that all this will ever do is confirm that everything's lightning-fast.</li>
+  <li><strong>Throttle:</strong> Good. This was removed from Drupal core, and it's absent entirely from Django. Another one of those things that you wouldn't be thinking about for every lil web project, but that could come in pretty handy for your next DDoS incident.</li>
+  <li><strong>Unit testing:</strong> Good. This framework is tiny, but it still has pretty decent unit test support. In contrast to the Drupal 6 to 7 bloat, this just goes to show that unit testing support doesn't have to double your framework's codebase.</li>
+  <li><strong>Debug / production modes:</strong> Good. For hiding those all-too-revealing error messages, mainly.</li>
+  <li><strong>Error handling:</strong> Good. Default 404 / etc callback, can be customised.</li>
+  <li><strong>Autoload:</strong> OK. Very thin wrapper around PHP 5.3's autoloading system. Not particularly needed, since autoload is so quick and easy anyway.</li>
+  <li><strong>Form handler:</strong> OK. Basic validation system, value passing system, and sanitation / XSS protection system. Nice that it's light, but I can't help but yearn for a proper API, like what Drupal or Django has.</li>
+  <li><strong>Captcha:</strong> OK. But considering that the usefulness and suitability of captchas is being increasingly questioned these days, seems a strange choice to include this in such a lightweight framework. Not bundled with Drupal or Django.</li>
+  <li><strong>Spammer blacklisting:</strong> Seems a bit excessive, having it built-in to the core framework that all requests are by default checked against a third-party spam blacklist database. Plus, wasn't until my patch that the <code>EXEMPT</code> setting was added for 127.0.0.1. Nevertheless, this is probably more of a Good Idea&trade; than it is anything bad.</li>
+  <li><strong>Fake images:</strong> Gimmick, in my opinion. Useful, sure. But really, creating a div with fixed dimensions, specifying fixed dimensions for an existing image, or even just creating real images manually &mdash; these are just some of your other layout testing options available. Also, you'll want to create your own custom 'no image specified' image for most sites anyway.</li>
+  <li><strong>Identicons:</strong> Total gimmick. I've never built a site with these (actually, I've never even heard the word 'identicon' before). Total waste of 134 lines of code (but hey, at least it's only 134 &mdash; after all, this is Fat-Free).</li>
+</ul>
+
+<h2>What's missing?</h2>
+
+Apart from the issues that I've already mentioned about various aspects of Fat-Free (e.g. with the template engine, with the form handler, with the ORM), the following things are completely absent from Fat-Free, and they're present in both Drupal and Django, and in my opinion they're sorely missed:
+
+<ul>
+  <li>Authentication</li>
+  <li>Session management</li>
+  <li>E-mail sending utility</li>
+  <li>File upload / storage utility</li>
+  <li>Link / base URL / route reverse utility</li>
+  <li><abbr title="Cross-Site Request Forgery">CSRF</abbr> protection</li>
+  <li>Locales / <abbr title="internationalization">i18n</abbr></li>
+  <li>Admin interface</li>
+  <li>RSS / Atom</li>
+</ul>
+
+<h2>The verdict</h2>
+
+Would I use it for a real project? <strong>Probably not.</strong>
+
+I love that it's so small and simple. I love that it assists with so many useful tasks in such a straightforward way.
+
+<strong>But.</strong>
+
+It's missing too many things that I consider essential. Lack of authentication and session management is a showstopper for me. Sure, there are some projects where these things aren't needed at all. But if I do need them, there's no way I'm going to build them myself. Not when 10,000 other frameworks have already built them for me. Same with e-mail sending. No way that any web developer, in the year 2010, should be expected to concern his or her self with MIME header, line ending, or encoding issues.
+
+It's not flexible or extensible enough. A template engine that supports 4 tags, and that has no way of supporting more, is really unacceptable. An ORM that guesses my table structure, and that has no way of being corrected if its guess is wrong, is unacceptable.
+
+It includes some things that are just stupid. I'm sorry, but I'd find it very hard to use a framework that had built-in identicon generation, and to still walk out my front door every day and hold my head up proudly as a mature and responsible developer. OK, maybe I'm dramatising a bit there. But, seriously &hellip; do I not have a point?
+
+Its coding style bothers me. In particular, I've already mentioned my qualms re: the XML-style templating. The general PHP 5.3 syntax doesn't particularly appeal to me, either. I've been uninspired for some time by the C++-style <code>::</code> OO syntax that was introduced in PHP 5.0. Now, the use of the backslash character as a namespace delimiter is the icing on the cake. Yuck! Ever heard of the dot character, PHP? They're used for namespaces / packages in every other programming language in the 'hood. Oh, that's right, you can't use the dot, because it's your string concatenation operator (gee, wasn't that a smart move?). And failing the dot, why the backslash? Could you not have at least used the forward slash instead? Or do you prefer specifying your paths MS-DOS style? Plus the backslash is the universal escaping operator within string literals.
+
+I'm a big fan of the new features in PHP 5.3. However, that doesn't change the fact that those features have already existed for years in other languages, and with much more elegant syntax. I've been getting much more into Python of late, and having become fairly accustomed by now with that elusive, almost metaphysical ideal of "Pythonic code", what I've observed with PHP 5.3 in Fat-Free is really not impressing me.

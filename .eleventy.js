@@ -76,10 +76,13 @@ module.exports = function(eleventyConfig) {
   const escapeHtml = unsafe => {
     return unsafe
       .replace(/&/g, "&amp;")
+      .replace(/\\/g, "&bsol;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+      .replace(/'/g, "&#039;")
+      .replace(/\[/g, "&lsqb;")
+      .replace(/\]/g, "&rsqb;");
   };
 
   // Convert line breaks into <p> and <br> in an intelligent fashion.
@@ -157,6 +160,7 @@ module.exports = function(eleventyConfig) {
         }
 
         newChunk = newChunk.replace(/<\\\/pre>/g, "</pre>");
+        newChunk = newChunk.replace(/&lcub;/g, "{").replace(/&rcub;/g, "}");
         newChunk = escapeHtml(newChunk);
 
         if (codeStart) {
