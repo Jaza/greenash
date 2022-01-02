@@ -1,0 +1,463 @@
+---
+title: Hook soup
+date: 2009-06-17
+teaser: |-
+  Of late, I seem to keep stumbling upon Drupal hooks that I've never heard of before. For example, I was just reading a blog post about <a href="http://civicactions.com/blog/2009/jun/11/cant_add_css_js_rss_icon_or_set_title_or_messages_preprocess_page">what you can't modify in a <code>_preprocess()</code> function</a>, when I saw mention of <code>hook_theme_registry_alter()</code>. What a mouthful. I ain't seen that one 'til now. Is it just me, or are new hooks popping up every second day in Drupal land? This got me wondering: exactly how many hooks are there in Drupal core right now? And by how much has this number changed over the past few Drupal versions? Since this information is conveniently available in the function lists on <a href="http://api.drupal.org/">api.drupal.org</a>, I decided to find out for myself. I counted the number of documented <code>hook_foo()</code> functions for Drupal core versions 4.7, 5, 6 and 7 (HEAD), and this is what I came up with (in pretty graph form):
+
+  [thumbnail hook_soup.png Drupal hooks by core version]
+
+  And those numbers again (in plain text form):
+
+  <ul>
+    <li><strong>Drupal 4.7:</strong> 41</li>
+    <li><strong>Drupal 5:</strong> 53</li>
+    <li><strong>Drupal 6:</strong> 72</li>
+    <li><strong>Drupal 7:</strong> 183</li>
+  </ul>
+
+  <strong>Aaaagggghhhh!!!</strong> Talk about an explosion &mdash; what we've got on our hands is nothing less than hook soup. The rate of growth of Drupal hooks is out of control. And that's not counting themable functions (and templates) and template preprocessor functions, which are the other "magically called" functions whose mechanics developers need to understand. And as for hooks defined by contrib modules &mdash; even were we only counting the "big players", such as Views &mdash; well, let's not even go there; it's really too massive to contemplate.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+---
+Of late, I seem to keep stumbling upon Drupal hooks that I've never heard of before. For example, I was just reading a blog post about <a href="http://civicactions.com/blog/2009/jun/11/cant_add_css_js_rss_icon_or_set_title_or_messages_preprocess_page">what you can't modify in a <code>_preprocess()</code> function</a>, when I saw mention of <code>hook_theme_registry_alter()</code>. What a mouthful. I ain't seen that one 'til now. Is it just me, or are new hooks popping up every second day in Drupal land? This got me wondering: exactly how many hooks are there in Drupal core right now? And by how much has this number changed over the past few Drupal versions? Since this information is conveniently available in the function lists on <a href="http://api.drupal.org/">api.drupal.org</a>, I decided to find out for myself. I counted the number of documented <code>hook_foo()</code> functions for Drupal core versions 4.7, 5, 6 and 7 (HEAD), and this is what I came up with (in pretty graph form):
+
+[thumbnail hook_soup.png Drupal hooks by core version]
+
+And those numbers again (in plain text form):
+
+<ul>
+  <li><strong>Drupal 4.7:</strong> 41</li>
+  <li><strong>Drupal 5:</strong> 53</li>
+  <li><strong>Drupal 6:</strong> 72</li>
+  <li><strong>Drupal 7:</strong> 183</li>
+</ul>
+
+<strong>Aaaagggghhhh!!!</strong> Talk about an explosion &mdash; what we've got on our hands is nothing less than hook soup. The rate of growth of Drupal hooks is out of control. And that's not counting themable functions (and templates) and template preprocessor functions, which are the other "magically called" functions whose mechanics developers need to understand. And as for hooks defined by contrib modules &mdash; even were we only counting the "big players", such as Views &mdash; well, let's not even go there; it's really too massive to contemplate.
+
+In fairness, there are a number of good reasons why the amount of hooks has gone up so dramatically in Drupal 7:
+
+<ul>
+  <li>Splitting various "combo" hooks into a separate hook for each old <code>$op</code> parameter, the biggest of these being the death of <code>hook_nodeapi()</code></li>
+  <li>The rise and rise of the <code>_alter()</code> hooks</li>
+  <li>Birth of fields in core</li>
+  <li>Birth of file API in core</li>
+</ul>
+
+Nevertheless, despite all these good reasons, the number of core hooks in HEAD right now is surely cause for concern. More hooks means a higher learning curve for people new to Drupal, and a lot of time wasted in looking up API references even for experienced developers. More hooks also means a bigger core codebase, which goes against our philosophy of striving to keep core lean, mean and super-small.
+
+In order to get a better understanding of why D7 core has so many hooks, I decided to do a breakdown of the hooks based on their type. I came up with the "types" more-or-less arbitrarily, based on the naming conventions of the hooks, and also based on the purpose and the input/output format of each hook. The full list of hooks and types can be found further down. Here's the summary (in pretty graph form):
+
+[thumbnail hook_soup_breakdown.png Hook breakdown by type]
+
+And those numbers again (in plain text form):
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>No. of hooks</th>
+    </tr>
+  </thead>
+  <tfoot></tfoot>
+  <tbody>
+    <tr><td>misc action</td><td style="text-align: right">44</td></tr>
+    <tr><td>info</td><td style="text-align: right">30</td></tr>
+    <tr><td>alter</td><td style="text-align: right">27</td></tr>
+    <tr><td>delete</td><td style="text-align: right">20</td></tr>
+    <tr><td>insert</td><td style="text-align: right">13</td></tr>
+    <tr><td>load</td><td style="text-align: right">12</td></tr>
+    <tr><td>update</td><td style="text-align: right">10</td></tr>
+    <tr><td>validate</td><td style="text-align: right">6</td></tr>
+    <tr><td>form</td><td style="text-align: right">4</td></tr>
+    <tr><td>misc combo</td><td style="text-align: right">4</td></tr>
+    <tr><td>prepare</td><td style="text-align: right">4</td></tr>
+    <tr><td>view</td><td style="text-align: right">4</td></tr>
+    <tr><td>presave</td><td style="text-align: right">3</td></tr>
+    <tr><td>check</td><td style="text-align: right">2</td></tr>
+  </tbody>
+</table>
+
+As you can see, most of the hooks in core are "misc action" hooks, i.e. they allow modules to execute arbitrary (or not-so-arbitrary) code in response to some sort of action, and that action isn't covered by the other hook types that I used for classification. For the most part, the misc action hooks all serve an important purpose; however, we should be taking a good look at them, and seeing if we really need a hook for that many different events. <abbr title="Developer Experience">DX</abbr> is a balancing act between flexibility-slash-extensibility, and flexibility-slash-extensibility overload. Drupal has a tendency to lean towards the latter, if left unchecked. Also prominent in core are the "info" and "alter" hooks which, whether they end in the respective <code>_info</code> or <code>_alter</code> suffixes or not, return (for info) or modify (for alter) a more-or-less non-dynamic structured array of definitions. The DX balancing act applies to these hooks just as strongly: do we really need to allow developers to define and to change that many structured arrays, or are some of those hooks never likely to be implemented outside of core?
+
+I leave further discussion on this topic to the rest of the community. This article is really just to present the numbers. If you haven't seen enough numbers or lists yet, you can find some more of them below. Otherwise, glad I could inform you.
+
+<h2><a href="http://api.drupal.org/api/functions/4.7">Hooks in Drupal 4.7 core</a></h2>
+
+<ol>
+  <li><a href="http://api.drupal.org/api/function/hook_access/4.7">hook_access</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_auth/4.7">hook_auth</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_block/4.7">hook_block</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_comment/4.7">hook_comment</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_cron/4.7">hook_cron</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_db_rewrite_sql/4.7">hook_db_rewrite_sql</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_delete/4.7">hook_delete</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_elements/4.7">hook_elements</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_exit/4.7">hook_exit</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_file_download/4.7">hook_file_download</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_filter/4.7">hook_filter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_filter_tips/4.7">hook_filter_tips</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_footer/4.7">hook_footer</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_form/4.7">hook_form</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_form_alter/4.7">hook_form_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_help/4.7">hook_help</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_info/4.7">hook_info</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_init/4.7">hook_init</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_insert/4.7">hook_insert</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_install/4.7">hook_install</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_link/4.7">hook_link</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_load/4.7">hook_load</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_menu/4.7">hook_menu</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_nodeapi/4.7">hook_nodeapi</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_node_grants/4.7">hook_node_grants</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_node_info/4.7">hook_node_info</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_perm/4.7">hook_perm</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_ping/4.7">hook_ping</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_prepare/4.7">hook_prepare</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_search/4.7">hook_search</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_search_preprocess/4.7">hook_search_preprocess</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_settings/4.7">hook_settings</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_submit/4.7">hook_submit</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_taxonomy/4.7">hook_taxonomy</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_update/4.7">hook_update</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_update_index/4.7">hook_update_index</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_update_N/4.7">hook_update_N</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_user/4.7">hook_user</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_validate/4.7">hook_validate</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_view/4.7">hook_view</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_xmlrpc/4.7">hook_xmlrpc</a></li>
+</ol>
+
+<h2><a href="http://api.drupal.org/api/functions/5">Hooks in Drupal 5 core</a></h2>
+
+<ol>
+  <li><a href="http://api.drupal.org/api/function/hook_access/5">hook_access</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_auth/5">hook_auth</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_block/5">hook_block</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_comment/5">hook_comment</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_cron/5">hook_cron</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_db_rewrite_sql/5">hook_db_rewrite_sql</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_delete/5">hook_delete</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_disable/5">hook_disable</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_elements/5">hook_elements</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_enable/5">hook_enable</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_exit/5">hook_exit</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_file_download/5">hook_file_download</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_filter/5">hook_filter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_filter_tips/5">hook_filter_tips</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_footer/5">hook_footer</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_form/5">hook_form</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_forms/5">hook_forms</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_form_alter/5">hook_form_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_help/5">hook_help</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_info/5">hook_info</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_init/5">hook_init</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_insert/5">hook_insert</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_install/5">hook_install</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_link/5">hook_link</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_link_alter/5">hook_link_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_load/5">hook_load</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_mail_alter/5">hook_mail_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_menu/5">hook_menu</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_nodeapi/5">hook_nodeapi</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_node_access_records/5">hook_node_access_records</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_node_grants/5">hook_node_grants</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_node_info/5">hook_node_info</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_node_operations/5">hook_node_operations</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_node_type/5">hook_node_type</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_perm/5">hook_perm</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_ping/5">hook_ping</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_prepare/5">hook_prepare</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_profile_alter/5">hook_profile_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_requirements/5">hook_requirements</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_search/5">hook_search</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_search_preprocess/5">hook_search_preprocess</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_submit/5">hook_submit</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_taxonomy/5">hook_taxonomy</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_uninstall/5">hook_uninstall</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_update/5">hook_update</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_update_index/5">hook_update_index</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_update_last_removed/5">hook_update_last_removed</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_update_N/5">hook_update_N</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_user/5">hook_user</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_user_operations/5">hook_user_operations</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_validate/5">hook_validate</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_view/5">hook_view</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_xmlrpc/5">hook_xmlrpc</a></li>
+</ol>
+
+<h2><a href="http://api.drupal.org/api/functions/6">Hooks in Drupal 6 core</a></h2>
+
+<ol>
+  <li><a href="http://api.drupal.org/api/function/hook_access/6">hook_access</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_actions_delete/6">hook_actions_delete</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_action_info/6">hook_action_info</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_action_info_alter/6">hook_action_info_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_block/6">hook_block</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_boot/6">hook_boot</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_comment/6">hook_comment</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_cron/6">hook_cron</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_db_rewrite_sql/6">hook_db_rewrite_sql</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_delete/6">hook_delete</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_disable/6">hook_disable</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_elements/6">hook_elements</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_enable/6">hook_enable</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_exit/6">hook_exit</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_file_download/6">hook_file_download</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_filter/6">hook_filter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_filter_tips/6">hook_filter_tips</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_flush_caches/6">hook_flush_caches</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_footer/6">hook_footer</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_form/6">hook_form</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_forms/6">hook_forms</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_form_alter/6">hook_form_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_form_FORM_ID_alter/6">hook_form_FORM_ID_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_help/6">hook_help</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_hook_info/6">hook_hook_info</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_init/6">hook_init</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_insert/6">hook_insert</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_install/6">hook_install</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_link/6">hook_link</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_link_alter/6">hook_link_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_load/6">hook_load</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_locale/6">hook_locale</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_mail/6">hook_mail</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_mail_alter/6">hook_mail_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_menu/6">hook_menu</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_menu_alter/6">hook_menu_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_menu_link_alter/6">hook_menu_link_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_nodeapi/6">hook_nodeapi</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_node_access_records/6">hook_node_access_records</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_node_grants/6">hook_node_grants</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_node_info/6">hook_node_info</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_node_operations/6">hook_node_operations</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_node_type/6">hook_node_type</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_perm/6">hook_perm</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_ping/6">hook_ping</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_prepare/6">hook_prepare</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_profile_alter/6">hook_profile_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_requirements/6">hook_requirements</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_schema/6">hook_schema</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_schema_alter/6">hook_schema_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_search/6">hook_search</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_search_preprocess/6">hook_search_preprocess</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_system_info_alter/6">hook_system_info_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_taxonomy/6">hook_taxonomy</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_term_path/6">hook_term_path</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_theme/6">hook_theme</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_theme_registry_alter/6">hook_theme_registry_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_translated_menu_link_alter/6">hook_translated_menu_link_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_translation_link_alter/6">hook_translation_link_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_uninstall/6">hook_uninstall</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_update/6">hook_update</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_update_index/6">hook_update_index</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_update_last_removed/6">hook_update_last_removed</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_update_N/6">hook_update_N</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_update_projects_alter/6">hook_update_projects_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_update_status_alter/6">hook_update_status_alter</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_user/6">hook_user</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_user_operations/6">hook_user_operations</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_validate/6">hook_validate</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_view/6">hook_view</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_watchdog/6">hook_watchdog</a></li>
+  <li><a href="http://api.drupal.org/api/function/hook_xmlrpc/6">hook_xmlrpc</a></li>
+</ol>
+
+<h2><a href="http://api.drupal.org/api/functions/7">Hooks in Drupal 7 core</a></h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Hook</th>
+      <th>Type</th>
+    </tr>
+  </thead>
+  <tfoot></tfoot>
+  <tbody>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_access/7">hook_access</a></td><td>check</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_actions_delete/7">hook_actions_delete</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_action_info/7">hook_action_info</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_action_info_alter/7">hook_action_info_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_aggregator_fetch/7">hook_aggregator_fetch</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_aggregator_fetch_info/7">hook_aggregator_fetch_info</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_aggregator_parse/7">hook_aggregator_parse</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_aggregator_parse_info/7">hook_aggregator_parse_info</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_aggregator_process/7">hook_aggregator_process</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_aggregator_process_info/7">hook_aggregator_process_info</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_aggregator_remove/7">hook_aggregator_remove</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_block_configure/7">hook_block_configure</a></td><td>form</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_block_list/7">hook_block_list</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_block_list_alter/7">hook_block_list_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_block_save/7">hook_block_save</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_block_view/7">hook_block_view</a></td><td>view</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_boot/7">hook_boot</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_comment_delete/7">hook_comment_delete</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_comment_insert/7">hook_comment_insert</a></td><td>insert</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_comment_publish/7">hook_comment_publish</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_comment_unpublish/7">hook_comment_unpublish</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_comment_update/7">hook_comment_update</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_comment_validate/7">hook_comment_validate</a></td><td>validate</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_comment_view/7">hook_comment_view</a></td><td>view</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_cron/7">hook_cron</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_db_rewrite_sql/7">hook_db_rewrite_sql</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_delete/7">hook_delete</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_disable/7">hook_disable</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_elements/7">hook_elements</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_enable/7">hook_enable</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_exit/7">hook_exit</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_fieldable_info/7">hook_fieldable_info</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_access/7">hook_field_access</a></td><td>check</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_create_bundle/7">hook_field_attach_create_bundle</a></td><td>insert</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_delete/7">hook_field_attach_delete</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_delete_bundle/7">hook_field_attach_delete_bundle</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_delete_revision/7">hook_field_attach_delete_revision</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_form/7">hook_field_attach_form</a></td><td>form</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_load/7">hook_field_attach_load</a></td><td>load</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_presave/7">hook_field_attach_presave</a></td><td>presave</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_pre_insert/7">hook_field_attach_pre_insert</a></td><td>insert</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_pre_load/7">hook_field_attach_pre_load</a></td><td>load</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_pre_query/7">hook_field_attach_pre_query</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_pre_update/7">hook_field_attach_pre_update</a></td><td>update</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_submit/7">hook_field_attach_submit</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_validate/7">hook_field_attach_validate</a></td><td>validate</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_attach_view_alter/7">hook_field_attach_view_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_build_modes/7">hook_field_build_modes</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_create_field/7">hook_field_create_field</a></td><td>insert</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_create_instance/7">hook_field_create_instance</a></td><td>insert</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_delete/7">hook_field_delete</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_delete_field/7">hook_field_delete_field</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_delete_instance/7">hook_field_delete_instance</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_delete_revision/7">hook_field_delete_revision</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_info/7">hook_field_info</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_insert/7">hook_field_insert</a></td><td>insert</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_load/7">hook_field_load</a></td><td>load</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_prepare_translation/7">hook_field_prepare_translation</a></td><td>prepare</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_presave/7">hook_field_presave</a></td><td>presave</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_read_field/7">hook_field_read_field</a></td><td>load</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_read_instance/7">hook_field_read_instance</a></td><td>load</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_rename_bundle/7">hook_field_rename_bundle</a></td><td>update</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_sanitize/7">hook_field_sanitize</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_schema/7">hook_field_schema</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_storage_create_bundle/7">hook_field_storage_create_bundle</a></td><td>insert</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_storage_create_field/7">hook_field_storage_create_field</a></td><td>insert</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_storage_delete/7">hook_field_storage_delete</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_storage_delete_field/7">hook_field_storage_delete_field</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_storage_delete_instance/7">hook_field_storage_delete_instance</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_storage_delete_revision/7">hook_field_storage_delete_revision</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_storage_load/7">hook_field_storage_load</a></td><td>load</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_storage_query/7">hook_field_storage_query</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_storage_rename_bundle/7">hook_field_storage_rename_bundle</a></td><td>update</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_storage_write/7">hook_field_storage_write</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_update/7">hook_field_update</a></td><td>update</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_update_instance/7">hook_field_update_instance</a></td><td>update</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_validate/7">hook_field_validate</a></td><td>validate</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_widget/7">hook_field_widget</a></td><td>form</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_widget_error/7">hook_field_widget_error</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_field_widget_info/7">hook_field_widget_info</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_file_copy/7">hook_file_copy</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_file_delete/7">hook_file_delete</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_file_download/7">hook_file_download</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_file_insert/7">hook_file_insert</a></td><td>insert</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_file_load/7">hook_file_load</a></td><td>load</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_file_move/7">hook_file_move</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_file_references/7">hook_file_references</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_file_update/7">hook_file_update</a></td><td>update</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_file_validate/7">hook_file_validate</a></td><td>validate</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_filter/7">hook_filter</a></td><td>misc combo</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_filter_tips/7">hook_filter_tips</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_flush_caches/7">hook_flush_caches</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_footer/7">hook_footer</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_form/7">hook_form</a></td><td>form</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_forms/7">hook_forms</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_form_alter/7">hook_form_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_form_FORM_ID_alter/7">hook_form_FORM_ID_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_help/7">hook_help</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_hook_info/7">hook_hook_info</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_image_toolkits/7">hook_image_toolkits</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_init/7">hook_init</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_insert/7">hook_insert</a></td><td>insert</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_install/7">hook_install</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_js_alter/7">hook_js_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_link/7">hook_link</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_link_alter/7">hook_link_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_load/7">hook_load</a></td><td>load</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_locale/7">hook_locale</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_mail/7">hook_mail</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_mail_alter/7">hook_mail_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_menu/7">hook_menu</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_menu_alter/7">hook_menu_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_menu_link_alter/7">hook_menu_link_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_modules_disabled/7">hook_modules_disabled</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_modules_enabled/7">hook_modules_enabled</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_modules_installed/7">hook_modules_installed</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_modules_uninstalled/7">hook_modules_uninstalled</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_access_records/7">hook_node_access_records</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_access_records_alter/7">hook_node_access_records_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_build_alter/7">hook_node_build_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_delete/7">hook_node_delete</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_delete_revision/7">hook_node_delete_revision</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_grants/7">hook_node_grants</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_grants_alter/7">hook_node_grants_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_info/7">hook_node_info</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_insert/7">hook_node_insert</a></td><td>insert</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_load/7">hook_node_load</a></td><td>load</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_operations/7">hook_node_operations</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_prepare/7">hook_node_prepare</a></td><td>prepare</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_prepare_translation/7">hook_node_prepare_translation</a></td><td>prepare</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_presave/7">hook_node_presave</a></td><td>presave</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_search_result/7">hook_node_search_result</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_type/7">hook_node_type</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_update/7">hook_node_update</a></td><td>update</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_update_index/7">hook_node_update_index</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_validate/7">hook_node_validate</a></td><td>validate</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_node_view/7">hook_node_view</a></td><td>view</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_openid/7">hook_openid</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_page_alter/7">hook_page_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_perm/7">hook_perm</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_prepare/7">hook_prepare</a></td><td>prepare</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_profile_alter/7">hook_profile_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_query_alter/7">hook_query_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_query_TAG_alter/7">hook_query_TAG_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_registry_files_alter/7">hook_registry_files_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_requirements/7">hook_requirements</a></td><td>misc combo</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_schema/7">hook_schema</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_schema_alter/7">hook_schema_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_search/7">hook_search</a></td><td>misc combo</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_search_preprocess/7">hook_search_preprocess</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_system_info_alter/7">hook_system_info_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_taxonomy_term_delete/7">hook_taxonomy_term_delete</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_taxonomy_term_insert/7">hook_taxonomy_term_insert</a></td><td>insert</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_taxonomy_term_load/7">hook_taxonomy_term_load</a></td><td>load</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_taxonomy_term_update/7">hook_taxonomy_term_update</a></td><td>update</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_taxonomy_vocabulary_delete/7">hook_taxonomy_vocabulary_delete</a></td><td>delete</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_taxonomy_vocabulary_insert/7">hook_taxonomy_vocabulary_insert</a></td><td>insert</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_taxonomy_vocabulary_load/7">hook_taxonomy_vocabulary_load</a></td><td>load</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_taxonomy_vocabulary_update/7">hook_taxonomy_vocabulary_update</a></td><td>update</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_test_finished/7">hook_test_finished</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_test_group_finished/7">hook_test_group_finished</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_test_group_started/7">hook_test_group_started</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_theme/7">hook_theme</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_theme_registry_alter/7">hook_theme_registry_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_translated_menu_link_alter/7">hook_translated_menu_link_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_translation_link_alter/7">hook_translation_link_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_uninstall/7">hook_uninstall</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_update/7">hook_update</a></td><td>update</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_update_index/7">hook_update_index</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_update_last_removed/7">hook_update_last_removed</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_update_N/7">hook_update_N</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_update_projects_alter/7">hook_update_projects_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_update_status_alter/7">hook_update_status_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_user/7">hook_user</a></td><td>misc combo</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_user_cancel/7">hook_user_cancel</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_user_cancel_methods_alter/7">hook_user_cancel_methods_alter</a></td><td>alter</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_user_categories/7">hook_user_categories</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_user_load/7">hook_user_load</a></td><td>load</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_user_operations/7">hook_user_operations</a></td><td>info</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_validate/7">hook_validate</a></td><td>validate</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_view/7">hook_view</a></td><td>view</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_watchdog/7">hook_watchdog</a></td><td>misc action</td></tr>
+  <tr><td><a href="http://api.drupal.org/api/function/hook_xmlrpc/7">hook_xmlrpc</a></td><td>info</td></tr>
+  </tbody>
+</table>
+
+<em>(D7 list accurate as of 17 Jun 2009; type breakdown for D7 list added arbitrarily by yours truly)</em>

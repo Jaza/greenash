@@ -1,0 +1,40 @@
+---
+title: jQuery text separator plugin
+date: 2009-07-10
+teaser: |-
+  For my premiere debút into the world of jQuery plugin development, I've written a little plugin called <a href="http://plugins.jquery.com/project/textseparator">text separator</a>. As I wrote on its jQuery project page, this plugin:
+
+  <blockquote>Lets you separate a text field into two parts, by dragging a slider to the spot at which you want to split the text. This plugin creates a horizontal slider above a text field. The handle on that slider is as long as its corresponding text field, and its handle 'snaps' to the delimiters in that text field (which are spaces, by default). With JS disabled, your markup should degrade gracefully to two separate text fields.
+
+  This was designed for allowing users to enter their 'full name' in one input box. The user enters their full name, and then simply drags the slider in order to mark the split betwen their first and last names. While typing, the slider automatically drags itself to the first delimiter in the input box.</blockquote>
+
+  Want to take it for a spin? <a href="/jquery-text-separator/">Try a demo</a>. You'll see something like this:
+
+  [thumbnail text-separator-screenshot.png Text separator screenshot]
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/jquery
+---
+For my premiere debút into the world of jQuery plugin development, I've written a little plugin called <a href="http://plugins.jquery.com/project/textseparator">text separator</a>. As I wrote on its jQuery project page, this plugin:
+
+<blockquote>Lets you separate a text field into two parts, by dragging a slider to the spot at which you want to split the text. This plugin creates a horizontal slider above a text field. The handle on that slider is as long as its corresponding text field, and its handle 'snaps' to the delimiters in that text field (which are spaces, by default). With JS disabled, your markup should degrade gracefully to two separate text fields.
+
+This was designed for allowing users to enter their 'full name' in one input box. The user enters their full name, and then simply drags the slider in order to mark the split betwen their first and last names. While typing, the slider automatically drags itself to the first delimiter in the input box.</blockquote>
+
+Want to take it for a spin? <a href="/jquery-text-separator/">Try a demo</a>. You'll see something like this:
+
+[thumbnail text-separator-screenshot.png Text separator screenshot]
+
+This plugin isn't being used on any live site just yet, although I do have a project in the pipeline that I hope to use it with (more details on that at some unspecified future time). As far as I know, there's nothing else out there that does quite what this plugin lets you do. But please, don't hesitate to let me know if I'm mistaken in that regard.
+
+The way it works is a little unusual, but simple enough once you get your head around it. The text that you type into the box is split (by delimiter) into "chunks". A hidden span is then created for each chunk, and also for each delimiter found. These hidden spans have all their font attributes set to match those of the input box, thus ensuring that each span is exactly the same size as its corresponding input box text. The spans are absolutely positioned beneath the input box. This is the only way (that I could find) of calculating the width in pixels of all or part of the text typed into an input box.
+
+The max range value for the slider is set to the width of the input box (minus any padding it may have). Then, it's simply a matter of catching / triggering the slider handle's "change" event, and of working out the delimiter whose position is nearest to the position that the handle was moved to. Once that's done, the handle is "snapped" to that delimiter, and the index of the delimiter in question is recorded.
+
+Text separator is designed to be applied to a div with two form <code>&lt;input type="text" /&gt;</code> elements inside it. It transforms these two elements into a single input box with a slider above it. It converts the original input boxes into hidden fields. It also copies the split values back into those hidden fields whenever you type into the box (or move the slider). This means that when you submit the form, you get the same two separate values that you'd expect were the plugin not present. Which reminds me that I should also say: without JS, the page degrades to the two separate input boxes that are coded into the HTML. Try it out for yourself on the demo page (e.g. using the "disable all JavaScript" feature of the Firefox Web Developer addon).
+
+This first version of text separator still has a few rough edges. I really haven't tested how flexible it is just yet, in terms of either styling or behaviour &mdash; it probably needs more things pulled out of their hard-coded state, and moved into config options. It still isn't working perfectly on Internet Explorer (surprise!): the hidden spans don't seem to be getting the right font size, and so the position that the slider snaps to isn't actually corresponding to the position of the delimiters. Also a bit of an issue with the colour of the input box in Safari. Feedback and patches are welcome, preferably on the plugin's jQuery project page.
+
+In terms of what text separator can do for the user experience and the usability of a web form, I'd also appreciate your feedback. Personally, I really find that it's a pain to have to enter your first and last names into separate text fields, on the registration forms of many sites. I know that personally, I would prefer to enter my full name into a text separator-enabled form. Am I on the right track? Will a widget like this enhance or worsen something like a registration form? Would you use it on such forms for your own sites? And I'd also love to hear your ideas about what other bits of data this plugin might be useful for, apart from separating first and last names.
+
+I hope that you find this plugin useful. Play on.

@@ -1,0 +1,41 @@
+---
+title: Installing the uploadprogress PECL extension on Leopard
+date: 2009-05-28
+teaser: |-
+  The <a href="http://pecl.php.net/package/uploadprogress">uploadprogress PECL extension</a> is a PHP add-on that allows cool AJAX uploading like never before. Version 3 of Drupal's <a href="http://drupal.org/project/filefield">FileField</a> module is designed to work best with uploadprogress enabled. As such, I found myself installing a PECL extension for the first time. No doubt, many other Drupal developers will soon be finding themselves in the same boat.
+
+  Unfortunately, for those of us on Mac OS X 10.5 (Leopard), installing uploadprogress ain't all smooth sailing. The problem is that the extension must be compiled from source in order to be installed; and on Leopard machines, which all run on a 64-bit processor, it must be compiled as a 64-bit binary. However, the gods of Mac (in their infinite wisdom) decided to include with Leopard (after Xcode is installed) a C compiler that still behaves in the old-school way, and that by default does its compilation in 32-bit mode. This is a right pain in the a$$, and if you're unfamiliar with the consequences of it, you'll likely see a message like this coming up in your Apache error log when you try to install uploadprogress and restart your server:
+
+  <pre class="no-highlight"><code>PHP Warning:  PHP Startup: Unable to load dynamic library '/usr/local/php5/lib/php/extensions/no-debug-non-zts-20060613/uploadprogress.so' - (null) in Unknown on line 0</code></pre>
+
+  Hmmm&hellip; <code>(null) in Unknown on line 0</code>. WTF is that supposed to mean? (You ask). Well, it means that the extension was compiled for the wrong environment; and when Leopard tries to execute it, a low-level error called a <em>segmentation fault</em> occurs. In short, it means that your binary is $#%&amp;ed.
+
+  But fear not, Leopard PHP developers! Read on for some instructions for how to install uploadprogress by compiling it as a 64-bit binary.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+  - thoughtstopics/words-of-wisdom
+---
+The <a href="http://pecl.php.net/package/uploadprogress">uploadprogress PECL extension</a> is a PHP add-on that allows cool AJAX uploading like never before. Version 3 of Drupal's <a href="http://drupal.org/project/filefield">FileField</a> module is designed to work best with uploadprogress enabled. As such, I found myself installing a PECL extension for the first time. No doubt, many other Drupal developers will soon be finding themselves in the same boat.
+
+Unfortunately, for those of us on Mac OS X 10.5 (Leopard), installing uploadprogress ain't all smooth sailing. The problem is that the extension must be compiled from source in order to be installed; and on Leopard machines, which all run on a 64-bit processor, it must be compiled as a 64-bit binary. However, the gods of Mac (in their infinite wisdom) decided to include with Leopard (after Xcode is installed) a C compiler that still behaves in the old-school way, and that by default does its compilation in 32-bit mode. This is a right pain in the a$$, and if you're unfamiliar with the consequences of it, you'll likely see a message like this coming up in your Apache error log when you try to install uploadprogress and restart your server:
+
+<pre class="no-highlight"><code>PHP Warning:  PHP Startup: Unable to load dynamic library '/usr/local/php5/lib/php/extensions/no-debug-non-zts-20060613/uploadprogress.so' - (null) in Unknown on line 0</code></pre>
+
+Hmmm&hellip; <code>(null) in Unknown on line 0</code>. WTF is that supposed to mean? (You ask). Well, it means that the extension was compiled for the wrong environment; and when Leopard tries to execute it, a low-level error called a <em>segmentation fault</em> occurs. In short, it means that your binary is $#%&amp;ed.
+
+But fear not, Leopard PHP developers! Here are some instructions for how to install uploadprogress by compiling it as a 64-bit binary:
+
+<ol>
+  <li>Download and extract the <a href="http://pecl.php.net/get/uploadprogress">latest tarball</a> of the source code for uploadprogress.</li>
+  <li>If using the <a href="http://www.entropy.ch/software/macosx/php/">Entropy PHP package</a> (which I would highly recommend for all Leopard users), follow the advice from <a href="http://www.entropy.ch/phpbb2/viewtopic.php?t=2877">this forum thread</a> (2<sup>nd</sup> comment, by Taracque), and change all your php binaries in <code>/usr/bin</code> to be symlinks to the proper versions in <code>/usr/local/php5/bin</code>.</li>
+  <li><code>&#99;&#100;</code> to the directory containing the extracted tarball that you downloaded, e.g.<br><code>&#99;&#100; &#47;download&#47;uploadprogress-1.0.0</code></li>
+  <li>Type:<br><code>sudo phpize</code></li>
+  <li>Analogous to <a href="http://www.pagebakers.nl/2008/12/17/installing-php-soap-extension-on-leopard-10-5-5/">these instructions on SOAP</a>, type:<br><code>MACOSX_DEPLOYMENT_TARGET=10.5 CFLAGS="-arch x86_64 -g -Os -pipe -no-cpp-precomp" CCFLAGS="-arch x86_64 -g -Os -pipe" CXXFLAGS="-arch x86_64 -g -Os -pipe" LDFLAGS="-arch x86_64 -bind_at_load" ./configure</code><br>This is the most important step, so make sure you type it in correctly! (If you get any sort of "permission denied" errors with this, then type <code>sudo su</code> before running it, and type <code>exit</code> after running it).</li>
+  <li>Type:<br><code>sudo make</code></li>
+  <li>Type:<br><code>sudo make install</code></li>
+  <li>Add the line <code>extension=uploadprogress.so</code> to your <code>php.ini</code> file (for Entropy users, this can be found at <code>/usr/local/php5/lib/php.ini </code>)</li>
+  <li>Restart apache by typing:<br><code>sudo apachectl restart</code></li>
+</ol>
+
+If all is well, then a <code>phpinfo()</code> check should output an <code>uploadprogress</code> section, with a listing for the config variables <code>uploadprogress.file.contents_template</code>, <code>uploadprogress.file.filename_template</code>, and <code>uploadprogress.get_contents</code>. Your Drupal status report should be happy, too. And, of course, FileField will totally rock.

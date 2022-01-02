@@ -1,0 +1,85 @@
+---
+title: "Deployment and migration: hot at DrupalCon DC"
+date: 2009-03-19
+permalink: /thoughts/2009/03/deployment-and-migration-hot-at-drupalcon-dc/
+teaser: |-
+  There was no shortage of kick-a$$ sessions at the recent <a href="http://dc2009.drupalcon.org/">DrupalCon DC</a>. The ones that really did it for me, however, were those that dealt with the thorny topic of <em>deployment and migration</em>. This is something that I've been thinking about for quite a long time, and it's great to see that a lot of other Drupal people have been doing likewise.
+
+  The thorniness of the topic is not unique to Drupal. It's a tough issue for any system that stores a lot of data in a relational database. Deploying files is easy: because files can be managed by <a href="http://git-scm.com/" title="Git">any</a> <a href="http://subversion.tigris.org/" title="Subversion">number</a> of <a href="http://bazaar-vcs.org/" title="Bazaar">modern</a> <abbr title="Version Control System">VCS</abbr>es, it's a snap to version, to compare, to merge and to deploy them. But none of this is easily available when dealing with databases. The deployment problem is similar for all of the popular open source <abbr title="Content Management System">CMS</abbr>es. There are also solutions available for many systems, but they tend to vary widely in their approach and in their effectiveness. In Drupal's case, the problem is exacerbated by the fact that a range of different types of data are stored together in the database (e.g. content, users, config settings, logs). What's more, different use cases call for different strategies regarding what to stage, and what to "edit live".
+
+  Read on to find out about:
+
+  <ul>
+    <li>Context, Spaces and Exportables</li>
+    <li>Deploy module</li>
+    <li>Other solutions presented</li>
+    <li>How we've come a long way</li>
+  </ul>
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+---
+There was no shortage of kick-a$$ sessions at the recent <a href="http://dc2009.drupalcon.org/">DrupalCon DC</a>. The ones that really did it for me, however, were those that dealt with the thorny topic of <em>deployment and migration</em>. This is something that I've been thinking about for quite a long time, and it's great to see that a lot of other Drupal people have been doing likewise.
+
+The thorniness of the topic is not unique to Drupal. It's a tough issue for any system that stores a lot of data in a relational database. Deploying files is easy: because files can be managed by <a href="http://git-scm.com/" title="Git">any</a> <a href="http://subversion.tigris.org/" title="Subversion">number</a> of <a href="http://bazaar-vcs.org/" title="Bazaar">modern</a> <abbr title="Version Control System">VCS</abbr>es, it's a snap to version, to compare, to merge and to deploy them. But none of this is easily available when dealing with databases. The deployment problem is similar for all of the popular open source <abbr title="Content Management System">CMS</abbr>es. There are also solutions available for many systems, but they tend to vary widely in their approach and in their effectiveness. In Drupal's case, the problem is exacerbated by the fact that a range of different types of data are stored together in the database (e.g. content, users, config settings, logs). What's more, different use cases call for different strategies regarding what to stage, and what to "edit live".<!--break-->
+
+<h2>Context, Spaces and Exportables</h2>
+
+The fine folks from <a href="http://www.developmentseed.org/">Development Seed</a> gave a talk entitled: "<a href="http://dc2009.drupalcon.org/session/paradigm-reusable-drupal-features">A Paradigm for Reusable Drupal Features</a>". I understand that they first presented the <a href="http://drupal.org/project/context">Context</a> and <a href="http://drupal.org/project/spaces">Spaces</a> modules about six months ago, back in <a href="http://szeged2008.drupalcon.org/">Szeged</a>. At the time, these modules generated quite a buzz in the community. Sadly, I wasn't able to make it to Szeged; just as well, then, that I finally managed to hear about them in DC.
+
+Context and Spaces alone don't strike me as particularly revolutionary tools. The functionality that they offer is certainly cool, and it will certainly change the way we make Drupal sites, but I heard several people at the conference describe them as <em>"just an alternative to <a href="http://drupal.org/project/panels">Panels</a>"</em>, and I think that pretty well sums it up. These modules won't rock your world.
+
+<strong>Exportables</strong>, however, will.
+
+The concept of <em>exportables</em> is simply the idea that any piece of data that gets stored in a Drupal database, by any module, should be able to be exported as a chunk of executable PHP code. Just think of the built-in "export" feature in <a href="http://drupal.org/project/views">Views</a>. Now think of export (and import) being as easy as that for any Drupal data &mdash; e.g. nodes, users, terms, even configuration variables. Exportables isn't an essential part of the Context and Spaces system, but it has been made an <em>integral</em> part of it, because Context and Spaces allows for most data entities in core to be exported (and imported) as exportables, and because Context and Spaces wants all other modules to similarly allow for their data entities to be handled as exportables.
+
+The "exportables" approach to deployment has these features:
+
+<ul>
+  <li>The export code can be parsed by PHP, and can then be passed directly to Drupal's standard <code>foo_save()</code> functions on import. This means minimal overhead in parsing or transforming the data, because the exported code is (literally) exactly what Drupal needs in order to programmatically restore the data to the database.</li>
+  <li>Raw PHP code is easier for Drupal developers to read and to play with than YetAnotherXMLFormat or MyStrangeCustomTextFormat.</li>
+  <li>Exportables aren't tied directly to Drupal's database structure &mdash; instead, they're tied to the accepted input of its standard <abbr title="Application Programming Interface">API</abbr> functions. This makes the exported data less fragile between Drupal versions and Drupal instances, especially compared to e.g. raw <abbr title="Structured Query Language">SQL</abbr> export/import.</li>
+  <li>Exportables generally rely on data entities that have a unique <strong>string</strong> identifier. This makes them difficult to apply, because most entities in Drupal's database currently only have numeric IDs. Numeric, auto-incrementing IDs are hard for exportables to deal with, because they cause conflict when deploying data from one site to another (numeric IDs are not unique between Drupal instances). The solution to this is to encourage the wider use of string-based, globally unique IDs in Drupal.</li>
+  <li>Exportables can be exported to files, which can then be managed using a super-cool VCS, just like any other files.</li>
+</ul>
+
+Using exportables as a deployment and migration strategy for Drupal strikes me as ingenious in its simplicity. It's one of those solutions that it's easy to look at, and say: <em>"naaaaahhhh&hellip; that's too simple, it's not powerful enough"</em>; whereas we should instead be looking at it, and saying: <em>"woooaaahhh&hellip; that's so simple, yet so powerful!"</em> I have high hopes for Context + Spaces + Exportables becoming the tool of choice for moving database changes from one Drupal site to another.
+
+<h2>Deploy module</h2>
+
+<a href="http://heyrocker.com/">Greg Dunlap</a> was one of the people who hosted the DC/DC <a href="http://dc2009.drupalcon.org/session/staging-and-deployment-panel-discussion">Staging and Deployment Panel Discussion</a>. In this session, he presented the <a href="http://drupal.org/project/deploy">Deploy module</a>. Deploy really blew me away. The funny thing was, I'd had an idea forming in my head for a few days prior to the conference, and it had gone something like this:
+
+<blockquote>"Gee, wouldn't it be great if there was a module that just let you select a bunch of data items [on a staging Drupal site], through a nice easy UI, and that deployed those items to your live site, using web services or something?"</blockquote>
+
+Well, that's exactly what Deploy does! It can handle most of the database-stored entities in Drupal core, and it can push your data from one Drupal instance to another, using nothing but a bit of XML-RPC magic, along with Drupal's (un)standard <code>foo_get()</code> and <code>foo_save()</code> functions. Greg (aka <a href="http://drupal.org/user/128537">heyrocker</a>) gave a live demo during the session, and it was basically a wet dream for anyone who's ever dealt with ongoing deployment and change management on a Drupal site.
+
+Deploy is very cool, and it's very accessible. It makes database change deployment as easy as a point-and-click operation, which is great, because it means that anyone can now manage a complex Drupal environment that has more than just a single production instance. However, it lacks most of the advantages of exportables; particularly, it doesn't allow exporting to files, so you miss out on the opportunity to version and to compare the contents of your database. Perhaps the ultimate tool would be to have a Deploy-like front-end built on top of an Exportables framework? Anyway, Deploy is a great piece of work, and it's possible that it will become part of the standard toolbox for maintainers of small- and medium-sized Drupal sites.
+
+<h2>Other solutions</h2>
+
+The other solutions presented at the <em>Staging and Deployment Panel Discussion</em> were:
+
+<ul>
+  <li><a href="http://sachachua.com/wp/">Sacha Chua</a> from <a href="http://www.ibm.com/">IBM</a> gave an overview of her "approach" to deployment, which is basically a manual one. Sacha keeps careful track of all the database changes that she makes on a staging site, and she then writes a code version of <em>all</em> those changes in a <code>.install</code> file script. Her only rule is: "define everything in code, don't have anything solely in the database". This is a great rule in theory, but in practice it's currently a lot of manual work to rigorously implement. She exports whatever she can as raw PHP (e.g. views and CCK types are pretty easy), and she has a bunch of PHP helper scripts to automate exporting the rest (and she has promised to share these&hellip;), but basically this approach still needs a lot of work before it's efficient enough that we can expect most developers to adopt it.</li>
+  <li><a href="http://ceardach.com/">Kathleen Murtagh</a> presented the <a href="http://drupal.org/project/dbscripts">DBScripts</a> module, which is her system of dealing with the deployment problem. The DBScripts approach is basically to deploy database changes by dumping, syncing and merging at the MySQL / filesystem level. This is hardly an ideal approach: dealing with raw SQL dumps can get messy at the best of times. However, DBScripts is apparently stable and can perform its job effectively, so I guess that Kathleen knows how to wade through that mess, and come out clean on the other side. DBScripts will probably be superseded by alternative solutions in the future; but for now, it's one of the better options out there that actually works.</li>
+  <li><a href="http://drupal.org/user/81357">Shaun Haber</a> from <a href="http://warnerbrosrecords.com/">Warner Bros Records</a> talked about the scripts that he uses for deployment, which are (I think?) XML-based, and which attempt to manually merge data where there may potentially be conflicting numeric IDs between Drupal instances. These scripts were not demo'ed, and they sound kinda nasty &mdash; there was a lot of talk about "pushing up" IDs in one instance, in order to merge in data from another instance, and other similarly dangerous operations. The Warner Records solution is custom and hacky, but it does work, and it's a reflection of the measures that people are prepared to take in order to get a viable deployment solution, for lack of an accepted standard one as yet.</li>
+</ul>
+
+There were also other presentations given at DC/DC, that dealt with the deployment and migration topic:
+
+<ul>
+  <li><a href="http://www.tejasa.com/">Moshe Weitzman</a> and <a href="http://mikeryan.name/">Mike Ryan</a> (from <a href="http://cyrve.com/">Cyrve</a>) gave the talk "<a href="http://dc2009.drupalcon.org/session/migration-not-just-birds">Migration: not just for the birds</a>", where they demo'ed the cool new <a href="http://drupal.org/project/tw">Table Wizard module</a>, a generic tool that they developed to assist with large-scale data migration from any legacy CMS into Drupal. Once you've got the legacy data into MySQL, Table Wizard takes care of pretty much everything else for you: it analyses the legacy data and suggests migration paths; it lets you map legacy fields to Drupal fields through a UI; and it can test, perform, and re-perform the actual migration incrementally as a cron task. Very useful tool, especially for these guys, who are now specialising in data migration full-time.</li>
+  <li>I unfortunately missed this one, but <a href="http://graviteklabs.com/">Chris Bryant</a> gave the talk "<a href="http://dc2009.drupalcon.org/session/drupal-patterns-managing-and-automating-site-configurations">Drupal Patterns &mdash; Managing and Automating Site Configurations</a>". Along with Context and Spaces, the <a href="http://drupal.org/project/patterns">Patterns module</a> is getting a lot of buzz as one of the latest-and-greatest tools that's going to change the way we do Drupal. Sounds like Patterns is taking a similar approach to Context and Spaces, except that it's centred around configuration import / export rather than "feature" definitions, and that it uses YAML/XML rather than raw PHP Exportables. I'll have to keep my eye on this one as well.</li>
+</ul>
+
+<h2>Come a long way</h2>
+
+I have quite a long history with the issue of deployment and migration in Drupal. Back in 2006, I wrote the <a href="http://drupal.org/project/importexportapi">Import / Export API module</a>, whose purpose was primarily to help in tackling the problem once and for all. Naturally, it didn't tackle anything once and for all. The Import / Export API was an attempt to solve the issue in as general a way as possible. It tried to be a full-blown Data API for Drupal, long before Drupal even had a Data API (in fact, Drupal <em>still</em> doesn't have a proper Data API!). In the original version (for Drupal 4.7), the Schema API wasn't even available.
+
+The Import / Export API works in XML by default (although the engine is pluggable, and CSV is also supported). It bypasses all of Drupal's standard <code>foo_load()</code> and <code>foo_save()</code> functions, and deals directly with the database &mdash; which, at the end of the day, has more disadvantages than advantages. It makes an ambitious attempt to deal with non-unique numeric IDs across multiple instances, allowing data items with conflicting IDs to be overwritten, modified, ignored, etc &mdash; inevitably, this is an overly complex and rather fragile part of the module. However, when it works, it does allow any data between any two Drupal sites to be merged in any shape or form you could imagine &mdash; quite cool, really. It was, at the end of the day, one hell of a learning experience. I'm confident that we've come forward since then, and that the new solutions being worked on are a step ahead of what I fleshed out in my work back in '06.
+
+In my new role as a full-time developer at <a href="http://digitaleskimo.net/">Digital Eskimo</a>, and particularly in my work on <a href="http://www.livelocal.org.au/">live local</a>, I've been exposed to the ongoing deployment challenge more than ever before. Sacha Chua said in DC that (paraphrased):
+
+<blockquote>"Manually re-doing your database changes through the UI of the production site is currently the most common deployment strategy for Drupal site maintainers."</blockquote>
+
+And, sad as that statement sounds, I can believe it. I feel the pain. We need to sort out this problem once and for all. We need a clearer separation between content and configuration in Drupal, and site developers need to be able to easily define where to draw that line on a per-site basis. We need a proper Data API so that we really can easily and consistently migrate <em>any</em> data, managed by <em>any</em> old module, between Drupal instances. And we need more globally unique IDs for Drupal data entities, to avoid the nightmare of merging data where non-unique numeric IDs are in conflict. When all of that happens, we can start to build some deployment tools for Drupal that seriously rock.

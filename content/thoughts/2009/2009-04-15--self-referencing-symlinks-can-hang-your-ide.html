@@ -1,0 +1,41 @@
+---
+title: Self-referencing symlinks can hang your IDE
+date: 2009-04-15
+teaser: |-
+  One of my current Drupal projects has been giving me a headache lately, due to a small but very annoying problem. My PHP development tools of choice, at the moment, are <a href="http://www.eclipse.org/pdt/">Eclipse PDT</a> and <a href="http://macromates.com/">TextMate</a>. Both of these generally work great for me. I prefer TextMate if I have the choice (better config options + much more usable), but I switch to Eclipse whenever I need a good debugger (or a bit of contextual help / autocomplete). However, they haven't been working well for me in this case. Every time I try to load in the source code for this one particular project, the IDE either hangs indefinitely (in Eclipse), or it slows down to a crawl (in TextMate). I've been tearing my hair out, trying to work out the cause of this problem, which has forced me to edit individual files for several weeks, and which has meant that I can't have a debugger or an IDE workspace for this project. Finally, I've nailed it: self-referencing symlinks are the culprit.
+
+  The project is a Drupal multisite setup, and like most multisite setups, it uses a bunch of symlinks in order for multiple subdomains to share a single codebase. For each subdomain, I create a symlink that points to the directory in which it resides; in effect, each symlink points to itself. When Apache comes along, it treats a symlink as the "directory" for a subdomain, and it follows it. By the time Drupal is invoked, we're in the root of the Drupal codebase shared by all the subdomains. Everything works great. All our favourite friends throw a party. Champagne bottles pop.
+
+  The bash command to create the symlinks is pretty simple &mdash; for each symlink, it looks something like this:
+
+  <pre class="no-highlight"><code>ln -s . subdomain</code></pre>
+
+  Unfortunately, a symlink like this does not play well with certain IDEs that try to walk your filesystem. When they hit such a symlink, they get stuck infinitely recursing (or at least, they keep recursing for a long time before they give up). The solution? Simple: delete such symlinks from your development environment. If this is what's been dragging your system down, then removing them will instantly cure all your woes. For each symlink, deleting it is as simple as:
+
+  <pre class="no-highlight"><code>rm subdomain</code></pre>
+
+  (Don't worry, deleting a symlink doesn't also delete the thing that it's pointing at).
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+  - thoughtstopics/words-of-wisdom
+---
+One of my current Drupal projects (<a href="http://www.livelocal.org.au/">live local</a>) has been giving me a headache lately, due to a small but very annoying problem. My PHP development tools of choice, at the moment, are <a href="http://www.eclipse.org/pdt/">Eclipse PDT</a> and <a href="http://macromates.com/">TextMate</a>. Both of these generally work great for me. I prefer TextMate if I have the choice (better config options + much more usable), but I switch to Eclipse whenever I need a good debugger (or a bit of contextual help / autocomplete). However, they haven't been working well for me in this case. Every time I try to load in the source code for this one particular project, the IDE either hangs indefinitely (in Eclipse), or it slows down to a crawl (in TextMate). I've been tearing my hair out, trying to work out the cause of this problem, which has forced me to edit individual files for several weeks, and which has meant that I can't have a debugger or an IDE workspace for this project. Finally, I've nailed it: self-referencing symlinks are the culprit.
+
+The project is a Drupal <a href="http://drupal.org/node/281574">multisite setup</a>, and like most multisite setups, it uses a bunch of symlinks in order for multiple subdomains to share a single codebase. For each subdomain, I create a symlink that points to the directory in which it resides; in effect, each symlink points to itself. When Apache comes along, it treats a symlink as the "directory" for a subdomain, and it follows it. By the time Drupal is invoked, we're in the root of the Drupal codebase shared by all the subdomains. Everything works great. All our favourite friends throw a party. Champagne bottles pop.
+
+The bash command to create the symlinks is pretty simple &mdash; for each symlink, it looks something like this:
+
+<pre class="no-highlight"><code>ln -s . subdomain</code></pre>
+
+Unfortunately, a symlink like this does not play well with certain IDEs that try to walk your filesystem. When they hit such a symlink, they get stuck infinitely recursing (or at least, they keep recursing for a long time before they give up). The solution? Simple: delete such symlinks from your development environment. If this is what's been dragging your system down, then removing them will instantly cure all your woes. For each symlink, deleting it is as simple as:
+
+<pre class="no-highlight"><code>rm subdomain</code></pre>
+
+(Don't worry, deleting a symlink doesn't also delete the thing that it's pointing at).
+
+It seems obvious, now that I've worked it out; but this annoying "slow-down" of Eclipse and TextMate had me stumped for quite a while until today. I've only recently switched to Mac, and I've only made the switch because I'm working at <a href="http://digitaleskimo.net/">Digital Eskimo</a>, which is an all-out Mac shop. I'm a Windows user most of the time (God help me), and Eclipse on Windows never gave me this problem. I use the new <a href="http://www.howtogeek.com/howto/windows-vista/using-symlinks-in-windows-vista/">Vista symbolic links</a> functionality, which actually works great for me (and which is possibly the only good reason to upgrade from XP to Vista). Eclipse on Windows apparently doesn't try to follow Vista symlinks. This is probably why it took me so long so figure it out (that, and <a href="http://en.wikipedia.org/wiki/Murphy%27s_law">Murphy's Law</a>) &mdash; I already had the symlinks when I started the project on Windows, and Eclipse wasn't hanging on me then.
+
+I originally thought that the cause of the problem was <a href="http://git-scm.org/">Git</a>. Live local is the first project that I've managed with Git, and I know that Git has a lot of metadata, as well as compressed binary files for all the non-checked-out branches and tags of a repository. These seemed likely candidates for making Eclipse and TextMate crash, especially since neither of these tools have built-in support for Git. But I tried importing the project without any Git metadata, and it was still hanging forever. I also thought maybe it was some of the compressed JavaScript in the project that was to blame (e.g. jQuery, TinyMCE). Same story: removing the compressed JS files and importing the directory was still ridiculoualy slow.
+
+IDEs should really be smart enough to detect self-referencing or cyclic symlinks, and to stop themselves from recursing infinitely over them. There is actually a <a href="http://ticket.macromates.com/show?ticket_id=63D71CFD">bug filed for TextMate</a> already, so maybe this will be fixed in future versions of TextMate. Couldn't find a similar bug report for Eclipse. Anyway, for now, you'll just have to be careful when using symlinks in your (Drupal or other) development environment. If you have symlinks, and if your IDE is crashing, then try taking out the symlinks, and see if all becomes merry again. Also, I'd love to hear if other IDEs handle this better (e.g. Komodo, PHPEdit), or if they crash just as dismally when faced with symlinks that point to themselves.
