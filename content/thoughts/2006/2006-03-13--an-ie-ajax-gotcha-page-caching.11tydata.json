@@ -115,6 +115,37 @@
       "date": "2008-09-25T16:47:31Z",
       "name": "Anil",
       "comment": "Thanks your suggestion is very helpfull to me\n\nYes\n\nGod is great!"
+    },
+    {
+      "date": "2010-03-30T11:50:38Z",
+      "name": "Jolly Dutchman",
+      "comment": "AT 2.46AM local time I come accross this and it kills my problem i've been having for about a month.\n\nHere's an Add On, for those of you who also ran into the need for making a unique url for the Ajax call to fetch, when you call your JavaScript:\n\n<pre class=\"javascript\"><code>var d=new Date();\najaxcall.open(\"GET\",pagename+\"&currtime=\"+d.getTime(),true);</code></pre>\n\nMore detail <a href=\"http://www.w3schools.com/jsref/jsref_getTime.asp\">on that cute <code>getTime</code> func</a>.\n\nTHANKS ^10241024000999192992810982 ok?"
+    },
+    {
+      "date": "2010-03-30T13:50:41Z",
+      "name": "FreeLiveNet",
+      "comment": "There is a quick but effective solution to this, which you can use a random number at the end of ajax url. you can use something like ....php? <code>Math.rand()</code>\n\nthis will force IE to load from the server."
+    },
+    {
+      "date": "2010-04-01T20:58:49Z",
+      "name": "Stuart",
+      "comment": "I'm coding in java and add the following into my serlvet:\n\n<pre class=\"java\"><code>response.addHeader(\"Cache-Control\", \"no-store, no-cache, must-revalidate\");</code></pre>\n\nand it worked! <em>Thank you!</em>"
+    },
+    {
+      "date": "2010-04-09T06:31:21Z",
+      "name": "Anonymous",
+      "comment": "I employ the same method when working with callbacks from php pages... It keeps it from using any cached pages... The resolution of the random number should make it damn near impossible for the sid to repeat\n\n<pre class=\"javascript\"><code>var url=\"phpPage.php\";\nurl=url+\"?value1=\"+value1;\nurl=url+\"&sid=\"+Math.random();</code></pre>"
+    },
+    {
+      "date": "2010-04-23T18:16:36Z",
+      "name": "Balaji",
+      "comment": "Hi,\n\nExcellent\n\n<p>Thanks,<br>P.Balaji</p>"
+    },
+    {
+      "date": "2010-04-27T19:09:44Z",
+      "name": "nsfzor",
+      "url": "http://www.nsftele.com",
+      "comment": "after adding the headers\n\n<pre class=\"php\"><code>header(\"Expires: Tue, 03 Jul 2001 06:00:00 GMT\");\nheader(\"Last-Modified: \" . gmdate(\"D, d M Y H:i:s\") . \" GMT\");\nheader(\"Cache-Control: no-store, no-cache, must-revalidate, max-age=0\");\nheader(\"Cache-Control: post-check=0, pre-check=0\", false);\nheader(\"Pragma: no-cache\");</code></pre>\n\nIE still refused to work . But adding the <code>'&count=' + ++count;</code> to the end of the calling URL, IE finally started obeying Ajax.\n\n<strong>1000 thanks to you DarkFrog !!!</strong>"
     }
   ]
 }

@@ -1,0 +1,16 @@
+{
+  "comments": [
+    {
+      "date": "2010-03-19T19:25:30Z",
+      "name": "jp.fox",
+      "url": "http://www.befox.fr/",
+      "comment": "Your solution seems to be great but I wouldn't try it on a production application : probability to have a duplicate id is small but exists :-(\n\nCould you tell me how many records you store in your biggest table ?\n\nHowever, a more secured solution would be more complicated to install and would reduce performance :\n\n<ul>\n<li>create a new table with the same string unique index than your original table and an auto-increment id</li>\n<li>insert all your primary key into this table, this generates unique id</li>\n<li>each time you need to refresh your data, \"insert ignore\" again your primary key to generate missing unique id. Never empty this table.</li>\n<li>join both table to have a result set containing original data and unique key. (Or create an id field into your original table that you populate with unique id.)</li>\n</ul>\n\nsome code :\n\n<pre class=\"sql\"><code>CREATE TABLE people_uid (name VARCHAR(100) NOT NULL, city VARCHAR(100) NOT NULL, id BIGINT AUTO_INCREMENT, PRIMARY KEY(id), UNIQUE INDEX(name, city));\nINSERT IGNORE INTO people_uid (name,city) SELECT name, city FROM people;\nSELECT people_uid.id, people.* FROM people LEFT JOIN people_uid ON (people_uid.name=people.name AND people_uid.city=people.city)</code></pre>\n\nThat's what I'd do ;-)"
+    },
+    {
+      "date": "2010-08-18T01:07:49Z",
+      "name": "ScottSM",
+      "url": "http://scott.sherrillmix.com/blog/",
+      "comment": "I think hash collision is an example of the birthday paradox. Wikipedia has a nice probability table of the <a href=\"http://en.wikipedia.org/wiki/Birthday_paradox#Probability_table\">probability of a collision</a>. Looks like you're probably pretty safe up to a few million records with a 64-bit hash."
+    }
+  ]
+}

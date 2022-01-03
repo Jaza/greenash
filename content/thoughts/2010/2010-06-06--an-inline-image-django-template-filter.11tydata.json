@@ -1,0 +1,10 @@
+{
+  "comments": [
+    {
+      "date": "2010-07-28T11:52:04Z",
+      "name": "Martin Fitzpatrick",
+      "url": "http://smrtr.org/",
+      "comment": "I was looking for something similar to this so thankyou for posting the article.\n\nIt occurred to me that (depending on the control you have over the blog app) you might also want to consider using Django's templating system internally.\n\nFor example you could create a template tag <code>{% inline_thumnail id %}</code> and then preprocess during save to convert it - copying it in the process to a pre-rendered <code>body_html</code> field in the database. Also has the advantage of saving reprocessing the content during views.\n\nHave a look at how <code>django-forum</code> works with markdown ( <code>django-forum/forum/models.py</code> line 223 )."
+    }
+  ]
+}

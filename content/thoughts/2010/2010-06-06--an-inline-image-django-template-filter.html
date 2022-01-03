@@ -81,9 +81,9 @@ That's what it's all about.</p>
 
 To render the blog post content with the thumbnail tokens converted into actual images, simply filter the variable in your template, like so:
 
-<pre class="django"><code>&lcub;% load inline_thumbnails %&rcub;
+<pre class="django"><code>LEFTCURLYBRACKET% load inline_thumbnails %RIGHTCURLYBRACKET
 
-&lcub;&lcub; entry.content|inline_thumbnails|safe &rcub;&rcub;
+LEFTCURLYBRACKETLEFTCURLYBRACKET entry.content|inline_thumbnails|safe RIGHTCURLYBRACKETRIGHTCURLYBRACKET
 </code></pre>
 
 The code here is just a simple example &mdash; if you copy it and adapt it to your own needs, you'll probably want to add a bit more functionality to it. For example, the token could be extended to support specifying image alignment (left/right), width/height per image, caption override, etc. But I didn't particularly need any of these things, and I wanted to keep my code simple, so I've omitted those features from my filter.

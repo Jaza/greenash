@@ -1,0 +1,9 @@
+{
+  "comments": [
+    {
+      "date": "2010-03-06T00:39:44Z",
+      "name": "Riblet71",
+      "comment": "I was having the same error when checking to see if the extension was installed, i.e. that the binary of uploadprogress.so got screwed up. This was still happening even after trying the above solution. What I didn't realize is that the unpacked tarball itself gets altered when you perform the first 32-bit installation attempt. If you try the above solution again with this screwed up source, you'll just get the same errors. Basically, if you've already done your first failed attempt, trash the last unpacked tarball, then re-unpack the one you first downloaded. Then try the above solution, and voila, it'll work just right."
+    }
+  ]
+}

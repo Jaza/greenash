@@ -160,7 +160,7 @@ module.exports = function(eleventyConfig) {
         }
 
         newChunk = newChunk.replace(/<\\\/pre>/g, "</pre>");
-        newChunk = newChunk.replace(/&lcub;/g, "{").replace(/&rcub;/g, "}");
+        newChunk = newChunk.replace(/LEFTCURLYBRACKET/g, "{").replace(/RIGHTCURLYBRACKET/g, "}");
         newChunk = escapeHtml(newChunk);
 
         if (codeStart) {

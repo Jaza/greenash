@@ -1,0 +1,26 @@
+{
+  "comments": [
+    {
+      "date": "2010-05-12T02:22:25Z",
+      "name": "Evan",
+      "comment": "I've been using Fat-Free for over a month now, and like you I've been tinkering with Drupal in the past. There are some inaccuracies in this post. Session management in F3 is automatic. There's an Auth plugin. E-mail and RSS are just like HTML templates, and the framework simply passes data to them. i18n is not part of the core, but it's a template extension invoked automatically when you use the <code>&lt;i18n:locale/&gt;</code> tags in your template (which also shows that user-defined directives/extensions are possible). I agree with you though that the file upload feature is nice to have. But I don't think it's critical considering I can manage it from inside form handlers.\n\nAn admin interface is overboard for me. Drupal is a CMS, masquerading as a framework. And it isn't even object-oriented. On the other hand, Fat-Free is a framework. So you might be looking for the wrong things. But IMHO, your rants about PHP 5.3 are clouding your judgment of the framework."
+    },
+    {
+      "date": "2010-05-12T10:29:33Z",
+      "isAuthorReply": true,
+      "comment": "Re: automatic session management. Sure, F3 takes care of session data getting stored persistently. But there's no bundled support for session backends other than PHP's default \"files\" one. Drupal ships with its own database-centric session backend. Django ships with several session backend alternatives. Granted, it's easy enough to write your own session backend and to use it with F3.\n\nRe: auth plugin. Where is it? I haven't found one.\n\nRe: e-mail and RSS. Sure, these can be built easily enough with simple templates. But for e-mail, a utility to handle MIME headers, SMTP vs sendmail, etc. would be good - then you could just pass rendered templates to that utility.\n\nRe: my rants about PHP 5.3. Hmm... perhaps you're right, perhaps this is clouding my judgement of the framework. But since F3 is the first 5.3 app I've looked at in detail, that's kind of inevitable. And anyway, most of my review was about F3's features and F3's architecture specifically, not about its use of PHP 5.3."
+    },
+    {
+      "date": "2010-07-13T06:41:02Z",
+      "name": "Bill",
+      "url": "http://rap-extras.com/extrakick/securedl2go/",
+      "comment": "Would be extremely interested in your opinion of Lithium (RAD) Framework... thanks for the nice writeup... was looking to sink my teeth into a framework recently - and this was a good honest, straight up comparison (to what I think you like is Django... which I've personally never tried).\n\nthanks - for taking the time, and very interested currrently in Lithium."
+    },
+    {
+      "date": "2010-10-13T23:27:47Z",
+      "name": "Steve Clay",
+      "url": "http://mrclay.org/",
+      "comment": "Seems like a fair assessment. At the very least F3 seems to introduces no globals (unlike other frameworks in its league), so you can use it in concert with ZF or other component classes. I've been looking at lots of these microframeworks and as soon as your app hits a certain complexity/size, there's a discomfort that sets in. The pain of getting used to ZF was well worth overcoming IMO."
+    }
+  ]
+}
