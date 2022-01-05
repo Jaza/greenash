@@ -1,0 +1,102 @@
+---
+title: "FotoJazz: A tool for cleaning up your photo collection"
+date: 2011-06-29
+permalink: /thoughts/2011/06/fotojazz-a-tool-for-cleaning-up-your-photo-collection/
+teaser: |-
+  I am at times quite a prolific photographer. Particularly when I'm travelling, I tend to accumulate quite a quantity of digital snaps (although am still working on the quality of said snaps). I'm also a reasonably organised and systematic person: as such, I've developed a workflow for fixing up, naming and archiving my soft-copy photos; and I've also come to depend on a variety of scripts and little apps, that perform various steps of the workflow for me.
+
+  Sadly, my system <del>has</del> had some disadvantages. Most importantly, there are too many separate scripts / apps involved, and with too many different interfaces (mix of manual point-and-click, drap-and-drop, and command-line). Ideally, I'd like all the functionality unified in one app, with one streamlined graphical interface (and also everything with equivalent shell access). Also, my various tools are platform-dependent, with most of them being Windows-based, and one being *nix-based. I'd like everything to be platform-independent, and in particular, I'd like everything to run best on Linux &mdash; as I'm trying to do as much as possible on Ubuntu these days.
+
+  Plus, I felt in the mood for getting my hands dirty coding up the photo-management app of my dreams. Hence, it is with pleasure that I present <a href="https://github.com/Jaza/fotojazz">FotoJazz</a>, a browser-based (plus shell-accessible) tool built with Python and <a href="http://flask.pocoo.org/">Flask</a>.
+tags:
+  - thoughtstopics/flask
+  - thoughtstopics/photography
+  - thoughtstopics/python
+---
+I am at times quite a prolific photographer. Particularly when I'm travelling, I tend to accumulate quite a quantity of digital snaps (although am still working on the quality of said snaps). I'm also a reasonably organised and systematic person: as such, I've developed a workflow for fixing up, naming and archiving my soft-copy photos; and I've also come to depend on a variety of scripts and little apps, that perform various steps of the workflow for me.
+
+Sadly, my system <del>has</del> had some disadvantages. Most importantly, there are too many separate scripts / apps involved, and with too many different interfaces (mix of manual point-and-click, drap-and-drop, and command-line). Ideally, I'd like all the functionality unified in one app, with one streamlined graphical interface (and also everything with equivalent shell access). Also, my various tools are platform-dependent, with most of them being Windows-based, and one being *nix-based. I'd like everything to be platform-independent, and in particular, I'd like everything to run best on Linux &mdash; as I'm trying to do as much as possible on Ubuntu these days.
+
+Plus, I felt in the mood for getting my hands dirty coding up the photo-management app of my dreams. Hence, it is with pleasure that I present <a href="https://github.com/Jaza/fotojazz">FotoJazz</a>, a browser-based (plus shell-accessible) tool built with Python and <a href="http://flask.pocoo.org/">Flask</a>.
+
+[thumbnail fotojazz_screenshot.jpg The FotoJazz web browser interface in action.]
+
+FotoJazz is a simple app, that performs a few common tasks involved in cleaning up photos copied off a digital camera. It does the following:
+
+<h2>Orientation</h2>
+
+FotoJazz rotates an image to its correct orientation, per its Exif metadata. This is done via the <a href="http://linux.die.net/man/1/exiftran">exiftran</a> utility. Some people don't bother to rotate their photos, as many modern apps pay attention to the Exif orientation metadata anyway, when displaying a photo. However, not all apps do (in particular, the Windows XP / Vista / 7 default photo viewer does not). I like to be on the safe side, and to rotate the actual image myself.
+
+I was previously doing this manually, using the 'rotate left / right' buttons in the Windows photo viewer. Hardly ideal. Discovering exiftran was a very pleasant surprise for me &mdash; I thought I'd at least have to code an auto-orientation script myself, but turns out all I had to do was <a href="http://en.wikipedia.org/wiki/Standing_on_the_shoulders_of_giants">build on the shoulders of giants</a>. After doing this task manually for so long, I can't say I 100% trust the Exif orientation tags in my digital photos. But that's OK &mdash; while I wait for my trust to develop, FotoJazz lets me review Exiftran's handiwork as part of the process.
+
+<h2>Date / time shifting</h2>
+
+FotoJazz shifts the Exif 'date taken' value of an image backwards or forwards by a specified time interval. This is handy in two situations that I find myself facing quite often. First, the clock on my camera has been set wrongly, usually if I recently travelled to a new time zone and forgot to adjust it (or if daylight savings has recently begun or ended). And secondly, if I copy photos from a friend's camera (to add to my own photo collection), and the clock on my friend's camera has been set wrongly (this is particularly bad, because I'll usually then be wanting to merge my friend's photos with my own, and to sort the combined set of photos by date / time). In both cases, the result is a batch of photos whose 'date taken' values are off by a particular time interval.
+
+FotoJazz lets you specify a time interval in the format:
+
+<code>[-][Xhr][Xm][Xs]</code>
+
+For example, to shift dates forward by 3 hours and 30 seconds, enter:
+
+<code>3hr30s</code>
+
+Or to shift dates back by 23 minutes, enter:
+
+<code>-23m</code>
+
+I was previously doing this using <a href="http://www.relliksoftware.com/exifdatechanger/">Exif Date Changer</a>, a small freeware Windows app. Exif Date Changer works quite well, and it has a nice enough interface; but it is Windows-only. It also has a fairly robust batch rename feature, which unfortunately doesn't support my preferred renaming scheme (which I'll be discussing next).
+
+<h2>Batch rename</h2>
+
+FotoJazz renames a batch of images per a specified prefix, and with a unique integer ID. For example, say you specify this prefix:
+
+<code>new_york_trip_may2008</code>
+
+And say you have 11 photos in your set. The photos would then be renamed to:
+
+<pre class="no-highlight"><code>new_york_trip_may2008_01.jpg
+new_york_trip_may2008_02.jpg
+new_york_trip_may2008_03.jpg
+new_york_trip_may2008_04.jpg
+new_york_trip_may2008_05.jpg
+new_york_trip_may2008_06.jpg
+new_york_trip_may2008_07.jpg
+new_york_trip_may2008_08.jpg
+new_york_trip_may2008_09.jpg
+new_york_trip_may2008_10.jpg
+new_york_trip_may2008_11.jpg</code></pre>
+
+As you can see, the unique ID added to the filenames is padded with leading zeros, as needed per the batch. This is important for sorting the photos by filename in most systems / apps.
+
+I was previously using <a href="http://www.icewalkers.com/Linux/Software/520460/mvb.html">mvb</a> for this. Mvb ("batch mv") is a bash script that renames files according to the same scheme &mdash; i.e. you specify a prefix, and it renames the files with the prefix, plus a unique incremented ID padded with zeros. Unfortunately, mvb always worked extremely slowly for me (probably because I ran it through <a href="http://www.cygwin.com/">cygwin</a>, hardly ideal).
+
+<h2>Date modified</h2>
+
+FotoJazz updates the 'date modified' metadata of an image to match its 'take taken' value. It will also fix the date accessed, and the Exif 'PhotoDate' value (which might be different to the Exif 'PhotoDateOriginal' value, which is the authoritative 'date taken' field). This is very important for the many systems / apps that sort photos by their 'date modified' file metadata, rather than by their 'date taken' Exif metadata.
+
+I was previously using <a href="http://www.codeproject.com/KB/applications/JPGDateChanger.aspx">JpgDateChanger</a> for this task. I had no problems with JpgDateChanger &mdash; it has a great drag-n-drop interface, and it's very fast. However, it is Windows-based, and it is one more app that I have to open as part of my workflow.
+
+<h2>Shell interface</h2>
+
+[thumbnail fotojazz_cmd_screenshot.jpg The FotoJazz command-line interface.]
+
+All of the functionality of FotoJazz can also be accessed via the command-line. This is great if you want to use one or more FotoJazz features as part of another script, or if you just don't like using GUIs. For example, to do some date shifting on the command line, just enter a command like this:
+
+<code>./project/fotojazz/shiftdate.py /path/to/photos/ 3hr30s</code>
+
+More information on shell usage is available in the README file.
+
+<h2>Technical side</h2>
+
+I've been getting into Python a lot lately, and FotoJazz was a good excuse to do some solid Python hacking, I don't deny it. I've also been working with Django a lot, but I haven't before used a Python microframework. FotoJazz was a good excuse to dive into one for the first time, and the microframework that I chose was Flask (and Flask ships with the <a href="http://jinja.pocoo.org/">Jinja</a> template engine, something I was also overdue on playing with).
+
+From my point of view, FotoJazz's coolest code feature is its handling of the batch photo tasks as threads. This is mainly encapsulated in the <code>FotoJazzProcess</code> Python class in the code. The architecture allows the tasks to run asynchronously, and for either the command-line or the browser-based (slash AJAX-based) interface to easily provide feedback on the progress of the thread. I'll be discussing this in more detail, in a separate article &mdash; stay tuned.
+
+<strong>Update (30 Jun 2011):</strong> said separate article on <a href="http://greenash.net.au/thoughts/2011/06/thread-progress-monitoring-in-python/">thread progress monitoring in Python</a> is now published.
+
+FotoJazz makes heavy use of <a href="http://tilloy.net/dev/pyexiv2/">pyexiv2</a> for its reading / writing of Jpg Exif metadata within a Python environment. Also, as mentioned earlier, it uses exiftran for the photo auto-orientation task; exiftran is called directly on the command-line, and its stream output is captured, monitored, and transformed into progress feedback on the Python end.
+
+<h2>Get the code</h2>
+
+All the code is <a href="https://github.com/Jaza/fotojazz">availble on GitHub</a>. Use it as you will: hack, fork, play.

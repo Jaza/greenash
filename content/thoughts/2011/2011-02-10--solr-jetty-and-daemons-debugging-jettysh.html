@@ -1,0 +1,148 @@
+---
+title: "Solr, Jetty, and daemons: debugging jetty.sh"
+date: 2011-02-10
+permalink: /thoughts/2011/02/solr-jetty-and-daemons-debugging-jettysh/
+teaser: |-
+  I recently added a <a href="http://lucene.apache.org/solr/">Solr</a>-powered search feature to this site (using <a href="http://haystacksearch.org/">django-haystack</a>). Rather than go to the trouble (and server resources drain) of deploying Solr via Tomcat, I decided instead to deploy it via Jetty. There's a wiki page with detailed instructions for <a href="http://wiki.apache.org/solr/SolrJetty">deploying Solr with Jetty</a>, and the wiki page also includes a link to the <code>jetty.sh</code> startup script.
+
+  The instructions seem simple enough. However, I ran into some serious problems when trying to get the startup script to work. The standard <code>java -jar start.jar</code> was working fine for me. But after following the instructions to the letter, and after double-checking everything, a call to:
+
+  <pre class="bash"><code>sudo /etc/init.d/jetty start</code></pre>
+
+  still resulted in my getting the (incredibly unhelpful) error message:
+
+  <pre class="no-highlight"><code>Starting Jetty: FAILED</code></pre>
+
+  My server is running Ubuntu Jaunty (9.04), and from my experience, the <code>start-stop-daemon</code> command in <code>jetty.sh</code> doesn't work on that platform. Let me know if you've experienced the same or similar issues on other *nix flavours or on other Ubuntu versions. Your mileage may vary.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/debugging
+  - thoughtstopics/django
+---
+I recently added a <a href="http://lucene.apache.org/solr/">Solr</a>-powered search feature to this site (using <a href="http://haystacksearch.org/">django-haystack</a>). Rather than go to the trouble (and server resources drain) of deploying Solr via Tomcat, I decided instead to deploy it via Jetty. There's a wiki page with detailed instructions for <a href="http://wiki.apache.org/solr/SolrJetty">deploying Solr with Jetty</a>, and the wiki page also includes a link to the <code>jetty.sh</code> startup script.
+
+The instructions seem simple enough. However, I ran into some serious problems when trying to get the startup script to work. The standard <code>java -jar start.jar</code> was working fine for me. But after following the instructions to the letter, and after double-checking everything, a call to:
+
+<pre class="bash"><code>sudo /etc/init.d/jetty start
+</code></pre>
+
+still resulted in my getting the (incredibly unhelpful) error message:
+
+<pre class="no-highlight"><code>Starting Jetty: FAILED</code></pre>
+
+My server is running Ubuntu Jaunty (9.04), and from my experience, the <code>start-stop-daemon</code> command in <code>jetty.sh</code> doesn't work on that platform. Let me know if you've experienced the same or similar issues on other *nix flavours or on other Ubuntu versions. Your mileage may vary.
+
+When Jetty fails to start, it doesn't log the details of the failure anywhere. So, in attempting to nail down the problem, I had no choice but to open up the <code>jetty.sh</code> script, and to get my hands dirty with some old-skool debugging. It didn't take me too long to figure out which part of the script I should be concentrating my efforts on, it's the lines of code from 397-425:
+
+<pre class="bash"><code>##################################################
+# Do the action
+##################################################
+case "$ACTION" in
+  start)
+    echo -n "Starting Jetty: "
+
+    if (( NO_START )); then
+      echo "Not starting jetty - NO_START=1";
+      exit
+    fi
+
+    if type start-stop-daemon > /dev/null 2>&1
+    then
+      unset CH_USER
+      if [ -n "$JETTY_USER" ]
+      then
+        CH_USER="-c$JETTY_USER"
+      fi
+      if start-stop-daemon -S -p"$JETTY_PID" $CH_USER -d"$JETTY_HOME" -b -m -a "$JAVA" -- "${RUN_ARGS[@]}" --daemon
+      then
+        sleep 1
+        if running "$JETTY_PID"
+        then
+          echo "OK"
+        else
+          echo "FAILED"
+        fi
+      fi
+</code></pre>
+
+To be specific, the line with <code>if start-stop-daemon &hellip;</code> (line 416) was clearly where the problem lay for me. So, I decided to see exactly what this command looks like (after all the variables have been substituted), by adding a line to the script that <code>echo</code>'es it:
+
+<pre class="bash"><code>echo start-stop-daemon -S -p"$JETTY_PID" $CH_USER -d"$JETTY_HOME" -b -m -a "$JAVA" -- "${RUN_ARGS[@]}" --daemon
+</code></pre>
+
+And the result of that debugging statement looked something like:
+
+<pre class="bash"><code>start-stop-daemon -S -p/var/run/jetty.pid -cjetty -d/path/to/solr -b -m -a /usr/bin/java -- -Dsolr.solr.home=/path/to/solr/solr -Djetty.logs=/path/to/solr/logs -Djetty.home=/path/to/solr -Djava.io.tmpdir=/tmp -jar /path/to/solr/start.jar --daemon</code></pre>
+
+That's a good start. Now, I have a command that I can try to run manually myself, as a debugging test. So, I took the above statement, pasted it into my terminal, and whacked a <code>sudo</code> in front of it:
+
+<pre class="bash"><code>sudo start-stop-daemon -S -p/var/run/jetty.pid -cjetty -d/path/to/solr -b -m -a /usr/bin/java -- -Dsolr.solr.home=/path/to/solr/solr -Djetty.logs=/path/to/solr/logs -Djetty.home=/path/to/solr -Djava.io.tmpdir=/tmp -jar /path/to/solr/start.jar --daemon</code></pre>
+
+Well, that didn't give me any error messages; but then again, no positive feedback, either. To see if this command was successful in launching the Jetty daemon, I tried:
+
+<pre class="bash"><code>ps aux | grep java</code></pre>
+
+But all that resulted in was:
+
+<pre class="no-highlight"><code>myuser      3710  0.0  0.0   3048   796 pts/0    S+   19:35   0:00 grep java</code></pre>
+
+That is, the command failed to launch the daemon.
+
+Next, I decided to investigate the <code>man</code> page for the <code>start-stop-daemon</code> command. I'm no sysadmin or Unix guru &mdash; I've never dealt with this command before, and I have no idea what its options are.
+
+When I have a Unix command that doesn't work, and that doesn't output or log any useful information about the failure, the first thing I look for is a "verbose" option. And it just so turns out that <code>start-stop-daemon</code> has a <code>-v</code> option. So, next step for me was to add that option and try again:
+
+<pre class="bash"><code>sudo start-stop-daemon -S -p/var/run/jetty.pid -cjetty -d/path/to/solr -v -b -m -a /usr/bin/java -- -Dsolr.solr.home=/path/to/solr/solr -Djetty.logs=/path/to/solr/logs -Djetty.home=/path/to/solr -Djava.io.tmpdir=/tmp -jar /path/to/solr/start.jar --daemon</code></pre>
+
+Unfortunately, no cigar; the result of running that was exactly the same. Still absolutely no output (so much for verbose mode!), and <code>ps aux</code> showed the daemon had not launched.
+
+Next, I decided to read up (in the <code>man</code> page) on the various options that the script was using with the <code>start-stop-daemon</code> command. Turns out that the <code>-b</code> option is rather a problematic one &mdash; as the manual says:
+
+<blockquote>Typically used with programs that don't detach on their own. This option will force start-stop-daemon to fork before starting the process, and force it into the background. WARNING: start-stop-daemon cannot check the exit status if the process fails to execute for any reason. This is a last resort, and is only meant for programs that either make no sense forking on their own, or where it's not feasible to add the code for them to do this themselves.</blockquote>
+
+Ouch &mdash; that sounds suspicious. Ergo, next step: remove that option, and try again:
+
+<pre class="bash"><code>sudo start-stop-daemon -S -p/var/run/jetty.pid -cjetty -d/path/to/solr -v -m -a /usr/bin/java -- -Dsolr.solr.home=/path/to/solr/solr -Djetty.logs=/path/to/solr/logs -Djetty.home=/path/to/solr -Djava.io.tmpdir=/tmp -jar /path/to/solr/start.jar --daemon</code></pre>
+
+Running that command resulted in me seeing a fairly long Java exception report, the main line of which was:
+
+<pre class="no-highlight"><code>java.io.FileNotFoundException: /path/to/solr/--daemon (No such file or directory)</code></pre>
+
+Great &mdash; removing the <code>-b</code> option meant that I was finally able to see the error that was occurring. And&hellip; seems like the error is that it's trying to add the <code>--daemon</code> option to the solr filepath.
+
+I decided that this might be a good time to read up on what exactly the <code>--daemon</code> option is. And as it turns out, the <code>start-stop-daemon</code> command has no such option. No wonder it wasn't working! (No such option in the <code>java</code> command-line app, either, or in any other standard *nix util that I was able to find).
+
+I have no idea what this option is doing in the <code>jetty.sh</code> script. Perhaps it's available on some other *nix variants? Anyway, doesn't seem to be recognised at all on Ubuntu. Any info that may shed some light on this mystery would be greatly appreciated, if there are any <code>start-stop-daemon</code> experts out there.
+
+Next step: remove the <code>--daemon</code> option, re-add the <code>-b</code> option, remove the <code>-v</code> option, and try again:
+
+<pre class="bash"><code>sudo start-stop-daemon -S -p/var/run/jetty.pid -cjetty -d/path/to/solr -b -m -a /usr/bin/java -- -Dsolr.solr.home=/path/to/solr/solr -Djetty.logs=/path/to/solr/logs -Djetty.home=/path/to/solr -Djava.io.tmpdir=/tmp -jar /path/to/solr/start.jar</code></pre>
+
+And&hellip; success! Running that command resulted in no output; and when I tried a quick <code>ps aux | grep java</code>, I could see the daemon running:
+
+<pre class="no-highlight"><code>myuser      3801 75.7  1.9 1069776 68980 ?       Sl   19:57   0:03 /usr/bin/java -Dsolr.solr.home=/path/to/solr/solr -Djetty.logs=/path/to/solr/logs -Djetty.home=/path/to/solr -Djava.io.tmpdir=/tmp -jar /path/to/solr/start.jar
+myuser      3828  0.0  0.0   3048   796 pts/0    S+   19:57   0:00 grep java</code></pre>
+
+Now that I'd successfully managed to launch the daemon with a manual terminal command, all that remained was to modify the <code>jetty.sh</code> script, and to do some integration testing. So, I removed the <code>--daemon</code> option from the relevant line of the script (line 416), and I tried:
+
+<pre class="bash"><code>sudo /etc/init.d/jetty start</code></pre>
+
+And it worked. That command gave me the output:
+
+<pre class="no-highlight"><code>Starting Jetty: OK</code></pre>
+
+And a call to <code>ps aux | grep java</code> was also able to verify that the daemon was running.
+
+Just one final step left in testing: restart the server (assuming that the Jetty startup script was added to Ubuntu's startup list at some point, manually or using <code>update-rc.d</code>), and see if Jetty is running. So, I restarted (<code>sudo reboot</code>), and&hellip; <em>bup-bummmmm</em>. No good. A call to <code>ps aux | grep java</code> showed that Jetty had not launched automatically after restart.
+
+I remembered the discovery I'd made earlier, that the <code>-b</code> option is "dangerous". So, I removed this option from the relevant line of the script (line 416), and restarted the server again.
+
+And, at long last, it worked! After restarting, a call to <code>ps aux | grep java</code> verified that the daemon was running. Apparently, Ubuntu doesn't like its startup daemons forking as background processes, this seems to result in things not working.
+
+However, there is one lingering caveat. With this final solution &mdash; i.e. both the <code>--daemon</code> and the <code>-b</code> options removed from the <code>start-stop-daemon</code> call in the script &mdash; the daemon launches just fine after restarting the server. However, with this solution, if the daemon stops for some reason, and you need to manually invoke:
+
+<pre class="no-highlight"><code>sudo /etc/init.d/jetty start</code></pre>
+
+Then the daemon will effectively be running as a terminal process, not as a daemon process. This means that if you close your terminal session, or if you push CTRL+C, the process will end. Not exactly what <code>init.d</code> scripts are designed for! So, if you do need to manually start Jetty for some reason, you'll have to use another version of the script that maintains the <code>-b</code> option (adding an ampersand &mdash; i.e. the <code>&</code> symbol &mdash; to the end of the command should also do the trick, although that's not 100% reliable).
+
+So, that's the long and winding story of my recent trials and tribulations with Solr, Jetty, and <code>start-stop-daemon</code>. If you're experiencing similar problems, hope this explanation is of use to you.

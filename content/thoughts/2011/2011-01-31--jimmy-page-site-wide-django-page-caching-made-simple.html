@@ -1,0 +1,34 @@
+---
+title: "Jimmy Page: site-wide Django page caching made simple"
+date: 2011-01-31
+permalink: /thoughts/2011/01/jimmy-page-site-wide-django-page-caching-made-simple/
+teaser: |-
+  For some time, I've been using <a href="http://docs.djangoproject.com/en/dev/topics/cache/#the-per-site-cache">the per-site cache</a> feature that comes included with Django. This site's caching needs are very modest: small personal site, updated infrequently, with two simple blog-like sections and a handful of static pages. Plus, it runs fast enough even without any caching. A simple "brute force" solution like Django's per-site cache is more than adequate.
+
+  However, I grew tired of the fact that whenever I published new content, nothing was invalidated in the cache. I began to develop a routine of first writing and publishing the content in the Django admin, and then SSHing in to my box and restarting memcached. Not a good regime! But then again, I also couldn't bring myself to make the effort of writing custom invalidation routines for my cached pages. Considering my modest needs, it just wasn't worth it. What I needed was a solution that takes the same "brute force" page caching approach that Django's per-site cache already provided for me, but that also includes a similarly "brute force" approach to invalidation. Enter <a href="https://github.com/yourcelf/django-jimmypage">Jimmy Page</a>.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/django
+  - thoughtstopics/performance
+  - thoughtstopics/python
+---
+For some time, I've been using <a href="http://docs.djangoproject.com/en/dev/topics/cache/#the-per-site-cache">the per-site cache</a> feature that comes included with Django. This site's caching needs are very modest: small personal site, updated infrequently, with two simple blog-like sections and a handful of static pages. Plus, it runs fast enough even without any caching. A simple "brute force" solution like Django's per-site cache is more than adequate.
+
+However, I grew tired of the fact that whenever I published new content, nothing was invalidated in the cache. I began to develop a routine of first writing and publishing the content in the Django admin, and then SSHing in to my box and restarting memcached. Not a good regime! But then again, I also couldn't bring myself to make the effort of writing custom invalidation routines for my cached pages. Considering my modest needs, it just wasn't worth it. What I needed was a solution that takes the same "brute force" page caching approach that Django's per-site cache already provided for me, but that also includes a similarly "brute force" approach to invalidation. Enter <a href="https://github.com/yourcelf/django-jimmypage">Jimmy Page</a>.
+
+Jimmy Page is the world's simplest generational page cache. It essentially functions on just two principles:
+
+<ol>
+  <li>It caches the output of all pages on your site (for which you use its <code>@cache_view</code> decorator).</li>
+  <li>It invalidates* the cache for all pages, whenever any model instance is saved or deleted (apart from those models in the "whitelist", which is a configurable setting).</li>
+</ol>
+
+<em><strong>*</strong> Technically, generational caches never invalidate anything, they just increment the generation number of the cache key, and store a new version of the cached content. But if you ask me, it's easiest to think of this simply as "invalidation".</em>
+
+<strong>That's it.</strong> No custom invalidation routines needed. No stale cache content, ever. And no excuse for not applying caching to the majority of pages on your site.
+
+If you ask me, the biggest advantage to using Jimmy Page, is that you simply don't have to worry about which model content you've got showing on which views. For example, it's perfectly possible to write routines for <a href="http://stackoverflow.com/questions/1995126/invalidating-a-path-from-the-django-cache-recursively">manually invalidating specific pages</a> in your Django per-site cache. This is done using <a href="http://docs.djangoproject.com/en/dev/topics/cache/#the-low-level-cache-api">Django's low-level cache API</a>. But if you do this, you're left with the constant headache of having to keep track of which views need invalidating when which model content changes.
+
+With Jimmy Page, on the other hand, if your latest blog post shows on five different places on your site &mdash; on its own detail page, on the blog index page, in the monthly archive, in the tag listing, and on the front page &mdash; then don't worry! When you publish a new post, the cache for all those pages will be re-generated, without you having to configure anything. And when you decide, in six months' time, that you also want your latest blog post showing in a sixth place &mdash; e.g. on the "about" page &mdash; you have to do precisely <em>diddly-squat</em>, because the cache for the "about" page will already be getting re-generated too, <em>sans</em> config.
+
+Of course, Jimmy Page is only going to help you if you're running a simple lil' site, with infrequently-updated content and precious few bells 'n' whistles. As the author states: <em>"This technique is not likely to be effective in sites that have a high ratio of database writes to reads."</em> That is, if you're running a Twitter clone in Django, then Jimmy Page probably ain't gonna help you (and it will very probably harm you). But if you ask me, Jimmy Page is the way to go for all your blog-slash-brochureware Django site caching needs.

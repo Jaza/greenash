@@ -1,0 +1,344 @@
+---
+title: Thread progress monitoring in Python
+date: 2011-06-30
+teaser: |-
+  My recent hobby hack-together, my <a href="http://greenash.net.au/thoughts/2011/06/fotojazz-a-tool-for-cleaning-up-your-photo-collection/">photo cleanup tool FotoJazz</a>, required me getting my hands dirty with threads for the first time (in Python or otherwise). Threads allow you to run a task in the background, and to continue doing whatever else you want your program to do, while you wait for the (usually long-running) task to finish (that's one definition / use of threads, anyway &mdash; a much less complex one than usual, I dare say).
+
+  However, if your program hasn't got much else to do in the meantime (as was the case for me), threads are still very useful, because they allow you to report on the progress of a long-running task at the UI level, which is better than your task simply <a href="http://en.wikipedia.org/wiki/Non-blocking_algorithm">blocking execution</a>, leaving the UI hanging, and providing no feedback.
+
+  As part of coding up FotoJazz, I developed a re-usable architecture for running batch processing tasks in a thread, and for reporting on the thread's progress in both a web-based (AJAX-based) UI, and in a shell UI. This article is a tour of what I've developed, in the hope that it helps others with their thread progress monitoring needs in Python or in other languages.
+tags:
+  - thoughtstopics/flask
+  - thoughtstopics/programming
+  - thoughtstopics/python
+---
+My recent hobby hack-together, my <a href="http://greenash.net.au/thoughts/2011/06/fotojazz-a-tool-for-cleaning-up-your-photo-collection/">photo cleanup tool FotoJazz</a>, required me getting my hands dirty with threads for the first time (in Python or otherwise). Threads allow you to run a task in the background, and to continue doing whatever else you want your program to do, while you wait for the (usually long-running) task to finish (that's one definition / use of threads, anyway &mdash; a much less complex one than usual, I dare say).
+
+However, if your program hasn't got much else to do in the meantime (as was the case for me), threads are still very useful, because they allow you to report on the progress of a long-running task at the UI level, which is better than your task simply <a href="http://en.wikipedia.org/wiki/Non-blocking_algorithm">blocking execution</a>, leaving the UI hanging, and providing no feedback.
+
+As part of coding up FotoJazz, I developed a re-usable architecture for running batch processing tasks in a thread, and for reporting on the thread's progress in both a web-based (AJAX-based) UI, and in a shell UI. This article is a tour of what I've developed, in the hope that it helps others with their thread progress monitoring needs in Python or in other languages.
+
+<h2>The FotoJazzProcess base class</h2>
+
+The foundation of the system is a Python class called <code>FotoJazzProcess</code>, which is in the <code>project/fotojazz/fotojazzprocess.py</code> file in the source code. This is a base class, designed to be sub-classed for actual implementations of batch tasks; although the base class itself also contains a "dummy" batch task, which can be run and monitored for testing / example purposes. All the dummy task does, is sleep for 100ms, for each file in the directory path provided:
+
+<pre class="python"><code>#!/usr/bin/env python
+
+# ...
+
+from threading import Thread
+from time import sleep
+
+class FotoJazzProcess(Thread):
+    """Parent / example class for running threaded FotoJazz processes.
+    You should use this as a base class if you want to process a
+    directory full of files, in batch, within a thread, and you want to
+    report on the progress of the thread."""
+
+    # ...
+
+    filenames = []
+    total_file_count = 0
+
+    # This number is updated continuously as the thread runs.
+    # Check the value of this number to determine the current progress
+    # of FotoJazzProcess (if it equals 0, progress is 0%; if it equals
+    # total_file_count, progress is 100%).
+    files_processed_count = 0
+
+    def __init__(self, *args, **kwargs):
+        """When initialising this class, you can pass in either a list
+        of filenames (first param), or a string of space-delimited
+        filenames (second param). No need to pass in both."""
+        Thread.__init__(self)
+
+        # ...
+
+    def run(self):
+        """Iterates through the files in the specified directory. This
+        example implementation just sleeps on each file - in subclass
+        implementations, you should do some real processing on each
+        file (e.g. re-orient the image, change date modified). You
+        should also generally call self.prepare_filenames() at the
+        start, and increment self.files_processed_count, in subclass
+        implementations."""
+        self.prepare_filenames()
+
+        for filename in self.filenames:
+            sleep(0.1)
+            self.files_processed_count += 1</code></pre>
+
+You could monitor the thread's progress, simply by checking <code>obj.files_processed_count</code> from your calling code. However, the base class also provides some convenience methods, for getting the progress value in a more refined form &mdash; i.e. as a percentage value, or as a formatted string:
+
+<pre class="python"><code>    # ...
+
+    def percent_done(self):
+        """Gets the current percent done for the thread."""
+        return float(self.files_processed_count) / \
+                     float(self.total_file_count) \
+               * 100.0
+
+    def get_progress(self):
+        """Can be called at any time before, during or after thread
+        execution, to get current progress."""
+        return '%d files (%.2f%%)' % (self.files_processed_count,
+                                      self.percent_done())</code></pre>
+
+<h2>The FotoJazzProcessShellRun command-line progress class</h2>
+
+<code>FotoJazzProcessShellRun</code> contains all the code needed to report on a thread's progress via the command-line. All you have to do is instantiate it, and pass it a class (as an object) that inherits from <code>FotoJazzProcess</code> (or, if no class is provided, it uses the <code>FotoJazzProcess</code> base class). Then, execute the instantiated object &mdash; it takes care of the rest for you:
+
+<pre class="python"><code>class FotoJazzProcessShellRun(object):
+    """Runs an instance of the thread with shell output / feedback."""
+
+    def __init__(self, init_class=FotoJazzProcess):
+        self.init_class = init_class
+
+    def __call__(self, *args, **kwargs):
+        # ...
+
+        fjp = self.init_class(*args, **kwargs)
+
+        print '%s threaded process beginning.' % fjp.__class__.__name__
+        print '%d files will be processed. ' % fjp.total_file_count + \
+              'Now beginning progress output.'
+        print fjp.get_progress()
+
+        fjp.start()
+
+        while fjp.is_alive() and \
+              fjp.files_processed_count < fjp.total_file_count:
+            sleep(1)
+            if fjp.files_processed_count < fjp.total_file_count:
+                print fjp.get_progress()
+
+        print fjp.get_progress()
+        print '%s threaded process complete. Now exiting.' \
+              % fjp.__class__.__name__
+
+
+if __name__ == '__main__':
+    FotoJazzProcessShellRun()()</code></pre>
+
+At this point, we're able to see the progress feedback in action already, through the command-line interface. This is just running the dummy batch task, but the feedback looks the same regardless of what process is running:
+
+[thumbnail thread_progress_cli.jpg Thread progress output on the command-line.]
+
+The way this command-line progress system is implemented, it provides feedback once per second (timing handled with a simple <code>sleep()</code> call), and outputs feedback in terms of both number of files and percentage done. These details, of course, merely form an example for the purposes of this article &mdash; when implementing your own command-line progress feedback, you would change these details per your own tastes and needs.
+
+<h2>The web front-end: HTML</h2>
+
+Cool, we've now got a framework for running batch tasks within a thread, and for monitoring the progress of the thread; and we've built a simple interface for printing the thread's progress via command-line execution.
+
+That was the easy part! Now, let's build an AJAX-powered web front-end on top of all that.
+
+To start off, let's look at the basic HTML we'd need, for allowing the user to initiate a batch task (e.g. by pushing a submit button), and to see the latest progress of that task (e.g. with a JavaScript progress bar widget):
+
+<pre class="html"><code>  <div class="operation">
+    <h2>Run dummy task</h2>
+    <div class="operation-progress" id="operation-dummy-progress"></div>
+    <input type="submit" value="Run dummy task" id="operation-dummy" />
+  </div><!-- /#operation --></code></pre>
+
+Close your eyes for a second, and pretend we've also just coded up some gorgeous, orgasmic CSS styling for this markup (and don't worry about the class / id names for now, either &mdash; they're needed for the JavaScript, which we'll get to shortly). Now, open your eyes, and behold! A glorious little web-based dialog for our dummy task:
+
+[thumbnail thread-progress-dummy.jpg Web-based dialog for initiating and monitoring our dummy task.]
+
+<h2>The web front-end: JavaScript</h2>
+
+That's a lovely little interface we've just built. Now, let's begin to actually make it do something. Let's write some JavaScript that hooks into our new submit button and progress indicator (with the help of <a href="http://jquery.com/">jQuery</a>, and the <a href="http://docs.jquery.com/UI/Progressbar">jQuery UI progress bar</a> &mdash; this code can be found in the <code>static/js/fotojazz.js</code> file in the source code):
+
+<pre class="javascript"><code>fotojazz.operations = function() {
+    function process_start(process_css_name,
+                           process_class_name,
+                           extra_args) {
+
+        // ...
+
+        $('#operation-' + process_css_name).click(function() {
+            // ...
+
+            $.getJSON(SCRIPT_ROOT + '/process/start/' +
+                      process_class_name + '/',
+            args,
+            function(data) {
+                $('#operation-' + process_css_name).attr('disabled',
+                                                         'disabled');
+                $('#operation-' + process_css_name + '-progress')
+                .progressbar('option', 'disabled', false);
+                $('#operation-' + process_css_name + '-progress')
+                .progressbar('option', 'value', data.percent);
+                setTimeout(function() {
+                    process_progress(process_css_name,
+                                     process_class_name,
+                                     data.key);
+                }, 100);
+            });
+            return false;
+        });
+    }
+
+    function process_progress(process_css_name,
+                              process_class_name,
+                              key) {
+        $.getJSON(SCRIPT_ROOT + '/process/progress/' +
+                  process_class_name + '/',
+        {
+            'key': key
+        }, function(data) {
+            $('#operation-' + process_css_name + '-progress')
+            .progressbar('option', 'value', data.percent);
+            if (!data.done) {
+                setTimeout(function() {
+                    process_progress(process_css_name,
+                                     process_class_name,
+                                     data.key);
+                }, 100);
+            }
+            else {
+                $('#operation-' + process_css_name)
+                .removeAttr('disabled');
+                $('#operation-' + process_css_name + '-progress')
+                .progressbar('option', 'value', 0);
+                $('#operation-' + process_css_name + '-progress')
+                .progressbar('option', 'disabled', true);
+
+                // ...
+            }
+        });
+    }
+
+    // ...
+
+    return {
+        init: function() {
+            $('.operation-progress').progressbar({'disabled': true});
+
+            // ...
+
+            process_start('dummy', 'FotoJazzProcess');
+
+            // ...
+        }
+    }
+}();
+
+
+$(function() {
+    fotojazz.operations.init();
+});</code></pre>
+
+This code is best read by starting at the bottom. First off, we call <code>fotojazz.operations.init()</code>. If you look up just a few lines, you'll see that function defined (it's the <code>init: function()</code> one). In the <code>init()</code> function, the first thing we do is initialise a (disabled) jQuery progress bar widget, on our <code>div</code> with class <code>operation-progress</code>. Then, we call <code>process_start()</code>, passing in a <code>process_css_name</code> of <code>'dummy'</code>, and a <code>process_class_name</code> of <code>'FotoJazzProcess'</code>.
+
+The <code>process_start()</code> function binds all of its code to the <code>click()</code> event of our submit button. So, when we click the button, an AJAX request is sent to the path <code>/process/start/</code> <code>process_class_name/</code> on the server side. We haven't yet implemented this server-side callback, but for now let's assume that (as its pathname suggests), this callback starts a new process thread, and returns some info about the new thread (e.g. a reference ID, a progress indication, etc). The AJAX 'success' callback for this request then waits 100ms (with the help of <code>setTimeout()</code>), before calling <code>process_progress()</code>, passing it the CSS name and the class name that <code>process_start()</code> originally received, plus <code>data.key</code>, which is the unique ID of the new thread on the server.
+
+The main job of <code>process_progress()</code>, is to make AJAX calls to the server that request the latest progress of the thread (again, let's imagine that the callback for this is done on the server side). When it receives the latest progress data, it then updates the jQuery progress bar widget's value, waits 100ms, and calls itself recursively. Via this recursion loop, it continues to update the progress bar widget, until the process is 100% complete, at which point the JavaScript terminates, and our job is done.
+
+This code is extremely generic and re-usable. There's only one line in all the code, that's actually specific to the batch task that we're running: the <code>process_start('dummy', 'FotoJazzProcess');</code> call. To implement another task on the front-end, all we'd have to do is copy and paste this one-line function call, changing the two parameter values that get passed to it (along with also copy-pasting the HTML markup to match). Or, if things started to get unwieldy, we could even put the function call inside a loop, and iterate through an array of parameter values.
+
+<h2>The web front-end: Python</h2>
+
+Now, let's take a look at the Python code to implement our server-side callback paths (which, in this case, are built as views in the <a href="http://flask.pocoo.org/">Flask</a> framework, and can be found in the <code>project/fotojazz/views.py</code> file in the source code):
+
+<pre class="python"><code>from uuid import uuid4
+
+from flask import jsonify
+from flask import Module
+from flask import request
+
+from project import fotojazz_processes
+
+# ...
+
+mod = Module(__name__, 'fotojazz')
+
+# ...
+
+@mod.route('/process/start/<process_class_name>/')
+def process_start(process_class_name):
+    """Starts the specified threaded process. This is a sort-of
+    'generic' view, all the different FotoJazz tasks share it."""
+
+    # ...
+
+    process_module_name = process_class_name
+    if process_class_name != 'FotoJazzProcess':
+        process_module_name = process_module_name.replace('Process', '')
+    process_module_name = process_module_name.lower()
+
+    # Dynamically import the class / module for the particular process
+    # being started. This saves needing to import all possible
+    # modules / classes.
+    process_module_obj = __import__('%s.%s.%s' % ('project',
+                                                  'fotojazz',
+                                                  process_module_name),
+                                    fromlist=[process_class_name])
+    process_class_obj = getattr(process_module_obj, process_class_name)
+
+    # ...
+
+    # Initialise the process thread object.
+    fjp = process_class_obj(*args, **kwargs)
+    fjp.start()
+
+    if not process_class_name in fotojazz_processes:
+        fotojazz_processes[process_class_name] = {}
+    key = str(uuid4())
+
+    # Store the process thread object in a global dict variable, so it
+    # continues to run and can have its progress queried, independent
+    # of the current session or the current request.
+    fotojazz_processes[process_class_name][key] = fjp
+
+    percent_done = round(fjp.percent_done(), 1)
+    done=False
+
+    return jsonify(key=key, percent=percent_done, done=done)
+
+@mod.route('/process/progress/<process_class_name>/')
+def process_progress(process_class_name):
+    """Reports on the progress of the specified threaded process.
+    This is a sort-of 'generic' view, all the different FotoJazz tasks
+    share it."""
+
+    key = request.args.get('key', '', type=str)
+
+    if not process_class_name in fotojazz_processes:
+        fotojazz_processes[process_class_name] = {}
+
+    if not key in fotojazz_processes[process_class_name]:
+        return jsonify(error='Invalid process key.')
+
+    # Retrieve progress of requested process thread, from global
+    # dict variable where the thread reference is stored.
+    percent_done = fotojazz_processes[process_class_name][key] \
+                   .percent_done()
+
+    done = False
+    if not fotojazz_processes[process_class_name][key].is_alive() or \
+       percent_done == 100.0:
+        del fotojazz_processes[process_class_name][key]
+        done = True
+    percent_done = round(percent_done, 1)
+
+    return jsonify(key=key, percent=percent_done, done=done)</code></pre>
+
+As with the JavaScript, these Python functions are completely generic and re-usable. The <code>process_start()</code> function dynamically imports and instantiates the process class object needed for this particular task, based on the parameter sent to it in the URL path. It then kicks off the thread, and stores the thread in <code>fotojazz_processes</code>, which is a global dictionary variable. A unique ID is generated as the key for this dictionary, and that ID is then sent back to the javascript, via the JSON response object.
+
+The <code>process_progress()</code> function retrieves the running thread by its unique key, and finds the progress of the thread as a percentage value. It also checks if the thread is now finished, as this is valuable information back on the JavaScript end (we don't want that recursive AJAX polling to continue forever!). It also returns its data to the front-end, via a JSON response object.
+
+With code now in place at all necessary levels, our AJAX interface to the dummy batch task should now be working smoothly:
+
+[thumbnail thread-progress-dummy-running.jpg The dummy task is off and running, and the progress bar is working.]
+
+Absolutely no extra Python view code is needed, in order to implement new batch tasks. As long as the correct new thread class (inheriting from FotoJazzProcess) exists and can be found, everything Just Works&trade;. Not bad, eh?
+
+<h2>Final thoughts</h2>
+
+Progress feedback on threads is a fairly common development pattern in more traditional desktop GUI apps. There's a lot of info out there on threads and progress bars in Python's version of the Qt GUI library, for example. However, I had trouble finding much info about implementing threads and progress bars in a web-based app. Hopefully, this article will help those of you looking for info on the topic.
+
+The example code I've used here is taken directly from my FotoJazz app, and is still loosely coupled to it. As such, it's example code, not a ready-to-go framework or library for Python threads with web-based progress indication. However, it wouldn't take that much more work to get the code to that level. Consider it your homework!
+
+Also, an important note: the code demonstrated in this article &mdash; and the FotoJazz app in general &mdash; is <strong>not</strong> suitable for a real-life online web app (in its current state), as it has not been developed with security, performance, or scalability in mind at all. In particular, I'm pretty sure that the AJAX in its current state is vulnerable to all sorts of <abbr title="Cross-Site Request Forgery">CSRF</abbr> attacks; not to mention the fact that all sorts of errors and exceptions are liable to occur, most of them currently uncaught. I'm also a total newbie to threads, and I understand that threads in web apps are particularly prone to cause strange explosions. You must remember: FotoJazz is a web-based desktop app, not an actual web app; and web-based desktop app code is not necessarily web-app-ready code.
+
+Finally, what I've demonstrated here is not particularly specific to the technologies I've chosen to use. Instead of jQuery, any number of other JavaScript libraries could be used (e.g. YUI, Prototype). And instead of Python, the whole back-end could be implemented in any other server-side language (e.g. PHP, Java), or in another Python framework (e.g. Django, web.py). I'd be interested to hear if anyone else has done (or plans to do) similar work, but with a different technology stack.
