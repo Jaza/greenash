@@ -1,0 +1,35 @@
+{
+  "comments": [
+    {
+      "date": "2011-02-15T19:01:43Z",
+      "name": "Lars",
+      "url": "http://lars-pohlmann.de/",
+      "comment": "Thanks, just what I needed."
+    },
+    {
+      "date": "2011-02-15T19:11:40Z",
+      "name": "Lars",
+      "comment": "BTW: I'm on Debian 6 and keeping the <code>-b</code> option in doesn't seem to make any problems. I only had to remove the <code>-daemon</code> option.\n\nEven after restart of the Machine Jetty starts.\n\nI used: <code>update-rc.d jetty defaults</code> to register the script."
+    },
+    {
+      "date": "2011-03-19T01:24:43Z",
+      "name": "Sindre",
+      "comment": "Thank you. You saved me many hours of debugging :). I only removed the <code>--daemon</code> option and it seem to work. I haven't tried rebooting yet though."
+    },
+    {
+      "date": "2011-06-06T02:27:16Z",
+      "name": "Scott Diedrick",
+      "comment": "Thanks for this post. I ran into the same problem on Ubuntu 10"
+    },
+    {
+      "date": "2011-08-13T07:26:24Z",
+      "name": "Pankaj",
+      "comment": "Thanks man, for listing out the whole procedure. Though, in my case the error wasn't occuring because of <code>-daemon</code> but because of wrong permissions for the log directory. But I was only able to discover it because of your article."
+    },
+    {
+      "date": "2011-11-30T09:01:55Z",
+      "name": "jd",
+      "comment": "Another thank you! for the clear and step-by-step description. Not assuming/skipping info was very helpful. I had exactly the same problem."
+    }
+  ]
+}
