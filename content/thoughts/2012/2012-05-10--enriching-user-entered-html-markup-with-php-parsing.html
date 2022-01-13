@@ -1,0 +1,246 @@
+---
+title: Enriching user-entered HTML markup with PHP parsing
+date: 2012-05-10
+teaser: |-
+  I recently found myself faced with an interesting little web dev challenge. Here's the scenario. You've got a site that's powered by a PHP CMS (in this case, <a href="http://drupal.org/">Drupal</a>). One of the pages on this site contains a number of HTML text blocks, each of which must be user-editable with a rich-text editor (in this case, <a href="http://www.tinymce.com/">TinyMCE</a>). However, some of the HTML within these text blocks (in this case, the unordered lists) needs some fairly advanced styling &ndash; the kind that's only possible either with CSS3 (using, for example, <code>nth-child</code> pseudo-selectors), with JS / jQuery manipulation, or with the addition of some extra markup (for example, some <code>first</code>, <code>last</code>, and <code>first-in-row</code> classes on the list item elements).
+
+  Naturally, IE7+ compatibility is required &ndash; so, CSS3 selectors are out. Injecting element attributes via jQuery is a viable option, but it's an ugly approach, and it may not kick in immediately on page load. Since the users will be editing this content via <abbr title="What You See Is What You Get">WYSIWYG</abbr>, we can't expect them to manually add CSS classes to the markup, or to maintain any markup that the developer provides in such a form. That leaves only one option: injecting extra attributes on the server-side.
+
+  When it comes to HTML manipulation, there are two general approaches. The first is <a href="http://www.codinghorror.com/blog/2009/11/parsing-html-the-cthulhu-way.html">Parsing HTML The Cthulhu Way</a> (i.e. using Regular Expressions). However, you already have one problem to solve &ndash; <a href="http://regex.info/blog/2006-09-15/247">do you really want two?</a> The second is to use an HTML parser. Sadly, this problem must be solved in PHP &ndash; which, unlike some <a href="http://www.python.org/">other</a> <a href="http://www.ruby-lang.org/">languages</a>, lacks an <a href="http://www.crummy.com/software/BeautifulSoup/">obvious</a> <a href="http://hpricot.com/">tool</a> of choice in the realm of parsers. I chose to use PHP5's built-in <a href="http://www.php.net/manual/en/class.domdocument.php">DOMDocument</a> library, which (from what I can tell) is one of the most mature and widely-used PHP HTML parsers available today. Here's my code snippet.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+  - thoughtstopics/programming
+---
+I recently found myself faced with an interesting little web dev challenge. Here's the scenario. You've got a site that's powered by a PHP CMS (in this case, <a href="http://drupal.org/">Drupal</a>). One of the pages on this site contains a number of HTML text blocks, each of which must be user-editable with a rich-text editor (in this case, <a href="http://www.tinymce.com/">TinyMCE</a>). However, some of the HTML within these text blocks (in this case, the unordered lists) needs some fairly advanced styling &ndash; the kind that's only possible either with CSS3 (using, for example, <code>nth-child</code> pseudo-selectors), with JS / jQuery manipulation, or with the addition of some extra markup (for example, some <code>first</code>, <code>last</code>, and <code>first-in-row</code> classes on the list item elements).
+
+Naturally, IE7+ compatibility is required &ndash; so, CSS3 selectors are out. Injecting element attributes via jQuery is a viable option, but it's an ugly approach, and it may not kick in immediately on page load. Since the users will be editing this content via <abbr title="What You See Is What You Get">WYSIWYG</abbr>, we can't expect them to manually add CSS classes to the markup, or to maintain any markup that the developer provides in such a form. That leaves only one option: injecting extra attributes on the server-side.
+
+When it comes to HTML manipulation, there are two general approaches. The first is <a href="http://www.codinghorror.com/blog/2009/11/parsing-html-the-cthulhu-way.html">Parsing HTML The Cthulhu Way</a> (i.e. using Regular Expressions). However, you already have one problem to solve &ndash; <a href="http://regex.info/blog/2006-09-15/247">do you really want two?</a> The second is to use an HTML parser. Sadly, this problem must be solved in PHP &ndash; which, unlike some <a href="http://www.python.org/">other</a> <a href="http://www.ruby-lang.org/">languages</a>, lacks an <a href="http://www.crummy.com/software/BeautifulSoup/">obvious</a> <a href="http://hpricot.com/">tool</a> of choice in the realm of parsers. I chose to use PHP5's built-in <a href="http://www.php.net/manual/en/class.domdocument.php">DOMDocument</a> library, which (from what I can tell) is one of the most mature and widely-used PHP HTML parsers available today. Here's my code snippet.
+
+<h2>Markup parsing function</h2>
+
+<pre class="php"><code><?php
+/**
+ * Parses the specified markup content for unordered lists, and enriches
+ * the list markup with unique identifier classes, 'first' and 'last'
+ * classes, 'first-in-row' classes, and a prepended inside element for
+ * each list item.
+ *
+ * @param $content
+ *   The markup content to enrich.
+ * @param $id_prefix
+ *   Each list item is given a class with name 'PREFIX-item-XX'.
+ *   Optional.
+ * @param $items_per_row
+ *   For each Nth element, add a 'first-in-row' class. Optional.
+ *   If not set, no 'first-in-row' classes are added.
+ * @param $prepend_to_li
+ *   The name of an HTML element (e.g. 'span') to prepend inside
+ *   each liist item. Optional.
+ *
+ * @return
+ *   Enriched markup content.
+ */
+function enrich_list_markup($content, $id_prefix = NULL,
+$items_per_row = NULL, $prepend_to_li = NULL) {
+  // Trim leading and trailing whitespace, DOMDocument doesn't like it.
+  $content = preg_replace('/^ */', '', $content);
+  $content = preg_replace('/ *$/', '', $content);
+  $content = preg_replace('/ *\n */', "\n", $content);
+
+  // Remove newlines from the content, DOMDocument doesn't like them.
+  $content = preg_replace('/[\r\n]/', '', $content);
+
+  $doc = new DOMDocument();
+  $doc->loadHTML($content);
+
+  foreach ($doc->getElementsByTagName('ul') as $ul_node) {
+    $i = 0;
+    foreach ($ul_node->childNodes as $li_node) {
+      $li_class_list = array();
+
+      if ($id_prefix) {
+        $li_class_list[] = $id_prefix . '-item-' . sprintf('%02d', $i+1);
+      }
+
+      if (!$i) {
+        $li_class_list[] = 'first';
+      }
+      if ($i == $ul_node->childNodes->length-1) {
+        $li_class_list[] = 'last';
+      }
+      if (!empty($items_per_row) && !($i % $items_per_row)) {
+        $li_class_list[] = 'first-in-row';
+      }
+
+      $li_node->setAttribute('class', implode(' ', $li_class_list));
+
+      if (!empty($prepend_to_li)) {
+        $prepend_el = $doc->createElement($prepend_to_li);
+        $li_node->insertBefore($prepend_el, $li_node->firstChild);
+      }
+
+      $i++;
+    }
+  }
+
+  $content = $doc->saveHTML();
+
+  // Manually fix up HTML entity encoding - if there's a better
+  // solution for this, let me know.
+  $content = str_replace('&acirc;&#128;&#147;', '&ndash;', $content);
+
+  // Manually remove the doctype, html, and body tags that DOMDocument
+  // wraps around the text. Apparently, this is the only easy way
+  // to fix the problem:
+  // http://stackoverflow.com/a/794548
+  $content = mb_substr($content, 119, -15);
+
+  return $content;
+}
+?></code></pre>
+
+This is a fairly simple parsing routine, that loops through the <code>li</code> elements of the unordered lists in the text, and that adds some CSS classes, and also prepends a child node. There's some manual cleanup needed after the parsing is done, due to some quirks associated with DOMDocument.
+
+<h2>Markup parsing example</h2>
+
+For example, say your users have entered the following markup:
+
+<pre class="html"><code><ul>
+  <li>Apples</li>
+  <li>Bananas</li>
+  <li>Boysenberries</li>
+  <li>Peaches</li>
+  <li>Lemons</li>
+  <li>Grapes</li>
+</ul></code></pre>
+
+And your designer has given you the following rules:
+
+<ul>
+  <li>List items to be laid out in rows, with three items per row</li>
+  <li>The first and last items to be coloured purple</li>
+  <li>The third and fifth items to be coloured green</li>
+  <li>All other items to be coloured blue</li>
+  <li>Each list item to be given a coloured square 'bullet', which should be the same colour as the list item's background colour, but a darker shade</li>
+</ul>
+
+You can ready the markup for the implementation of these rules, by passing it through the parsing function as follows:
+
+<pre class="php"><code><?php
+$content = enrich_list_markup($content, 'fruit', 3, 'span');
+?></code></pre>
+
+After parsing, your markup will be:
+
+<pre class="html"><code><ul>
+  <li class="fruit-item-01 first first-in-row"><span></span>Apples</li>
+  <li class="fruit-item-02"><span></span>Bananas</li>
+  <li class="fruit-item-03"><span></span>Boysenberries</li>
+  <li class="fruit-item-04 first-in-row"><span></span>Peaches</li>
+  <li class="fruit-item-05"><span></span>Lemons</li>
+  <li class="fruit-item-06 last"><span></span>Grapes</li>
+</ul></code></pre>
+
+You can then whip up some CSS to make your designer happy:
+
+<pre class="css"><code>#fruit ul {
+  list-style-type: none;
+}
+
+#fruit ul li {
+  display: block;
+  width: 150px;
+  padding: 20px 20px 20px 45px;
+  float: left;
+  margin: 0 0 20px 20px;
+  background-color: #bbddfb;
+  position: relative;
+}
+
+#fruit ul li.first-in-row {
+  clear: both;
+  margin-left: 0;
+}
+
+#fruit ul li span {
+  display: block;
+  position: absolute;
+  left: 20px;
+  top: 23px;
+  width: 15px;
+  height: 15px;
+  background-color: #191970;
+}
+
+#fruit ul li.first, #fruit ul li.last {
+  background-color: #968adc;
+}
+
+#fruit ul li.fruit-item-03, #fruit ul li.fruit-item-05 {
+  background-color: #7bdca6;
+}
+
+#fruit ul li.first span, #fruit ul li.last span {
+  background-color: #4b0082;
+}
+
+#fruit ul li.fruit-item-03 span, #fruit ul li.fruit-item-05 span {
+  background-color: #00611c;
+}</code></pre>
+
+Your finished product is bound to win you smiles on every front:
+
+<style type="text/css">
+#fruit ul {
+  list-style-type: none;
+}
+
+#fruit ul li {
+  display: block;
+  width: 150px;
+  padding: 20px 20px 20px 45px;
+  float: left;
+  margin: 0 0 20px 20px;
+  background-color: #bbddfb;
+  position: relative;
+}
+
+#fruit ul li.first-in-row {
+  clear: both;
+  margin-left: 0;
+}
+
+#fruit ul li span {
+  display: block;
+  position: absolute;
+  left: 20px;
+  top: 23px;
+  width: 15px;
+  height: 15px;
+  background-color: #191970;
+}
+
+#fruit ul li.first, #fruit ul li.last {
+  background-color: #968adc;
+}
+
+#fruit ul li.fruit-item-03, #fruit ul li.fruit-item-05 {
+  background-color: #7bdca6;
+}
+
+#fruit ul li.first span, #fruit ul li.last span {
+  background-color: #4b0082;
+}
+
+#fruit ul li.fruit-item-03 span, #fruit ul li.fruit-item-05 span {
+  background-color: #00611c;
+}
+</style>
+
+[thumbnail html-markup-enriched-with-php-parsing.png How the parsed markup looks when rendered]
+
+Obviously, this is just one example of how a markup parsing function might look, and of the exact end result that you might want to achieve with such parsing. Take everything presented here, and fiddle liberally to suit your needs.
+
+In the approach I've presented here, I believe I've managed to achieve a reasonable balance between stakeholder needs (i.e. easily editable content, good implementation of visual design), hackery, and technical elegance. Also note that this article is not at all CMS-specific (the code snippets work stand-alone), nor is it particularly parser-specific, or even language-specific (although code snippets are in PHP). Feedback welcome.

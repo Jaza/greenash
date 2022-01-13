@@ -1,0 +1,220 @@
+---
+title: Node.js itself is blocking, only its I/O is non-blocking
+date: 2012-11-15
+permalink: /thoughts/2012/11/nodejs-itself-is-blocking-only-its-io-is-non-blocking/
+teaser: |-
+  I've recently been getting my feet wet, playing around with <a href="http://nodejs.org/">Node.js</a> (yes, I know &ndash; <a href="http://java.dzone.com/articles/f-mongodb-f-nodejs-and-f-you">what took me so long?</a>). I'm having a lot of fun, <a href="http://expressjs.com/">learning</a> new <a href="http://jade-lang.com/">technologies</a> by the <a href="http://www.mongodb.org/">handful</a>. It's <a href="http://learnboost.github.com/stylus/">all</a> very exciting.
+
+  I just thought I'd stop for a minute, however, to point out one important detail of Node.js that had me confused for a while, and that <a href="http://stackoverflow.com/questions/5670190/how-do-i-write-non-blocking-code-in-node-js">seems to have confused others</a>, too. More likely than not, the first feature of Node.js that you heard about, was its <a href="http://www.h3manth.com/content/blocking-vs-non-blocking-nodejs">non-blocking I/O model</a>.
+
+  Now, please re-read that last phrase, and re-read it carefully. Non. Blocking. <strong>I/O.</strong> You will never hear anywhere, from anyone, that Node.js <em>is</em> non-blocking. You will only hear that it <em>has</em> non-blocking I/O. If, like me, you're new to Node.js, and you didn't stop to think about what exactly "I/O" means (in the context of Node.js) before diving in (and perhaps you weren't too clear on "non-blocking", either), then fear not.
+
+  What exactly &ndash; with reference to Node.js &ndash; is blocking, and what is non-blocking? And what exactly &ndash; also with reference to Node.js &ndash; is I/O, and what is not I/O? Let me clarify, for me as much as for you.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/nodejs
+---
+I've recently been getting my feet wet, playing around with <a href="http://nodejs.org/">Node.js</a> (yes, I know &ndash; <a href="http://java.dzone.com/articles/f-mongodb-f-nodejs-and-f-you">what took me so long?</a>). I'm having a lot of fun, <a href="http://expressjs.com/">learning</a> new <a href="http://jade-lang.com/">technologies</a> by the <a href="http://www.mongodb.org/">handful</a>. It's <a href="http://learnboost.github.com/stylus/">all</a> very exciting.
+
+I just thought I'd stop for a minute, however, to point out one important detail of Node.js that had me confused for a while, and that <a href="http://stackoverflow.com/questions/5670190/how-do-i-write-non-blocking-code-in-node-js">seems to have confused others</a>, too. More likely than not, the first feature of Node.js that you heard about, was its <a href="http://www.h3manth.com/content/blocking-vs-non-blocking-nodejs">non-blocking I/O model</a>.
+
+Now, please re-read that last phrase, and re-read it carefully. Non. Blocking. <strong>I/O.</strong> You will never hear anywhere, from anyone, that Node.js <em>is</em> non-blocking. You will only hear that it <em>has</em> non-blocking I/O. If, like me, you're new to Node.js, and you didn't stop to think about what exactly "I/O" means (in the context of Node.js) before diving in (and perhaps you weren't too clear on "non-blocking", either), then fear not.
+
+What exactly &ndash; with reference to Node.js &ndash; is blocking, and what is non-blocking? And what exactly &ndash; also with reference to Node.js &ndash; is I/O, and what is not I/O? Let me clarify, for me as much as for you.
+
+<h2>Blocking vs non-blocking</h2>
+
+Let's start by defining <em>blocking</em>. A line of code is blocking, if all functionality invoked by that line of code must terminate before the next line of code executes.
+
+This is the way that all traditional procedural code works. Here's a super-basic example of some blocking code in JavaScript:
+
+<pre class="javascript"><code>console.log('Peking duck');
+console.log('Coconut lychee');</code></pre>
+
+In this example, the first line of code is blocking. Therefore, the first line must finish doing everything we told it to do, before our CPU gives the second line of code the time of day. Therefore, we are guaranteed to get this output:
+
+<pre class="no-highlight"><code>Peking duck
+Coconut lychee</code></pre>
+
+Now, let me introduce you to Kev the Kook. Rather than just outputting the above lines to console, Kev wants to thoroughly cook his Peking duck, and exquisitely prepare his coconut lychee, before going ahead and brashly telling the guests that the various courses of their dinner are ready. Here's what we're talking about:
+
+<pre class="javascript"><code>function prepare_peking_duck() {
+  var duck = slaughter_duck();
+  duck = remove_feathers(duck);
+  var oven = preheat_oven(180, 'Celsius');
+  duck = marinate_duck(duck, "Mr Wu's secret Peking herbs and spices");
+  duck = bake_duck(duck, oven);
+  serve_duck_with(duck, 'Spring rolls');
+}
+
+function prepare_coconut_lychee() {
+  bowl = get_bowl_from_cupboard();
+  bowl = put_lychees_in_bowl(bowl);
+  bowl = put_coconut_milk_in_bowl(bowl);
+  garnish_bowl_with(bowl, 'Peanut butter');
+}
+
+prepare_peking_duck();
+console.log('Peking duck is ready');
+
+prepare_coconut_lychee();
+console.log('Coconut lychee is ready');</code></pre>
+
+In this example, we're doing quite a bit of grunt work. Also, it's quite likely that the first task we call will take considerably longer to execute than the second task (mainly because we have to remove the feathers, that can be quite a tedious process). However, all that grunt work is still guaranteed to be performed in the order that we specified. So, the Peking duck will always be ready before the coconut lychee. This is excellent news, because eating the coconut lychee first would simply be revolting, everyone knows that it's a dessert dish.
+
+Now, let's suppose that Kev previously had this code implemented in server-side JavaScript, but in a regular library that provided only blocking functions. He's just decided to port the code to Node.js, and to re-implement it using non-blocking functions.
+
+Up until now, everything was working perfectly: the Peking duck was always ready before the coconut lychee, and nobody ever went home with a sour stomach (well, alright, maybe the peanut butter garnish didn't go down so well with everyone&hellip; but hey, just no pleasing some folks). Life was good for Kev. But now, things are more complicated.
+
+In contrast to blocking, a line of code is <a href="http://www.engscope.com/pic-example-codes/non-blocking-code/"><em>non-blocking</em></a>, if the next line of code may execute before the line of functionality invoked by that line of code has terminated.
+
+Back to Kev's Chinese dinner. It turns out that in order to port the duck and lychee code to Node.js, pretty much all of his high-level functions will have to call some non-blocking Node.js library functions. And the way that non-blocking code essentially works is: if a function calls any other function that is non-blocking, then the calling function itself is also non-blocking. Sort of a viral, from-the-inside-out effect.
+
+Kev hasn't really got his head around this whole non-blocking business. He decides, what the hell, let's just implement the code exactly as it was before, and see how it works. To his great dismay, though, the results of executing the original code with Node.js non-blocking functions is not great:
+
+<pre class="no-highlight"><code>Peking duck is ready
+Coconut lychee is ready
+
+/path/to/prepare_peking_duck.js:9
+    duck.toString();
+         ^
+TypeError: Cannot call method 'toString' of undefined
+    at remove_feathers (/path/to/prepare_peking_duck.js:9:8)
+</code></pre>
+
+This output worries Kev for two reasons. Firstly, and less importantly, it worries him because there's an error being thrown, and Kev doesn't like errors. Secondly, and much more importantly, it worries him because the error is being thrown <em>after</em> the program successfully outputs both "Peking duck is ready" and "Coconut lychee is ready". If the program isn't able to get past the end of <code>remove_feathers()</code> without throwing a fatal error, then how could it possibly have finished the rest of the duck and lychee preparation?
+
+The answer, of course, is that all of Kev's dinner preparation functions are now effectively non-blocking. This means that the following happened when Kev ran his script:
+
+<pre class="no-highlight"><code>Called prepare_peking_duck()
+  Called slaughter_duck()
+    Non-blocking code in slaughter_duck() doesn't execute until
+    after current blocking code is done. Is supposed to return an int,
+    but actually returns nothing
+  Called remove_feathers() with return value of slaughter_duck()
+  as parameter
+    Non-blocking code in remove_feathers() doesn't execute until
+    after current blocking code is done. Is supposed to return an int,
+    but actually returns nothing
+  Called other duck-preparation functions
+    They all also contain non-blocking code, which doesn't execute
+    until after current blocking code is done
+Printed 'Peking duck is ready'
+Called prepare_coconut_lychee()
+  Called lychee-preparation functions
+    They all also contain non-blocking code, which doesn't execute
+    until after current blocking code is done
+Printed 'Coconut lychee is ready'
+Returned to prepare_peking_duck() context
+  Returned to slaughter_duck() context
+    Executed non-blocking code in slaughter_duck()
+  Returned to remove_feathers() context
+    Error executing non-blocking code in remove_feathers()</code></pre>
+
+Before too long, Kev works out &ndash; by way of logical reasoning &ndash; that the execution flow described above is indeed what is happening. So, he comes to the realisation that he needs to re-structure his code to work the Node.js way: that is, using <a href="http://www.theprojectspot.com/tutorial-post/nodejs-for-beginners-callbacks/4">a whole lotta callbacks</a>.
+
+After spending a while fiddling with the code, this is what Kev ends up with:
+
+<pre class="javascript"><code>function prepare_peking_duck(done) {
+  slaughter_duck(function(err, duck) {
+    remove_feathers(duck, function(err, duck) {
+      preheat_oven(180, 'Celsius', function(err, oven) {
+        marinate_duck(duck,
+                      "Mr Wu's secret Peking herbs and spices",
+                      function(err, duck) {
+          bake_duck(duck, oven, function(err, duck) {
+            serve_duck_with(duck, 'Spring rolls', done);
+          });
+        });
+      });
+    });
+  });
+}
+
+function prepare_coconut_lychee(done) {
+  get_bowl_from_cupboard(function(err, bowl) {
+    put_lychees_in_bowl(bowl, function(err, bowl) {
+      put_coconut_milk_in_bowl(bowl, function(err, bowl) {
+        garnish_bowl_with(bowl, 'Peanut butter', done);
+      });
+    });
+  });
+}
+
+prepare_peking_duck(function(err) {
+  console.log('Peking duck is ready');
+});
+
+prepare_coconut_lychee(function(err) {
+  console.log('Coconut lychee is ready');
+});</code></pre>
+
+This runs without errors. However, it produces its output in the wrong order &ndash; this is what it spits onto the console:
+
+<pre class="no-highlight"><code>Coconut lychee is ready
+Peking duck is ready</code></pre>
+
+This output is possible because, with the code in its current state, the execution of both of Kev's preparation routines &ndash; the Peking duck preparation, and the coconut lychee preparation &ndash; are sent off to run as non-blocking routines; and whichever one finishes executing first gets its callback fired before the other. And, as mentioned, the Peking duck can take a while to prepare (although utilising a cloud-based grid service for the feather plucking can boost performance).
+
+Now, as we already know, eating the coconut lychee before the Peking duck causes you to fart a Szechuan Stinker, which is classified <a href="http://www.opcw.org/chemical-weapons-convention/">under international law</a> as a chemical weapon. And Kev would rather not be guilty of war crimes, simply on account of a small culinary technical hiccup.
+
+This final execution-ordering issue can be fixed easily enough, by converting one remaining spot to use a nested callback pattern:
+
+<pre class="javascript"><code>prepare_peking_duck(function(err) {
+  console.log('Peking duck is ready');
+  prepare_coconut_lychee(function(err) {
+    console.log('Coconut lychee is ready');
+  });
+});</code></pre>
+
+Finally, Kev can have his lychee and eat it, too.
+
+<h2>I/O vs non-I/O</h2>
+
+I/O stands for Input/Output. I know this because I spent four years studying Computer Science at university.
+
+Actually, that's a lie. I already knew what I/O stood for when I was about ten years old.
+
+But you know what I did learn at university? I learnt more about I/O than what the letters stood for. I learnt that the technical definition of a computer program, is: an executable that accepts some discrete <em>input</em>, that performs some <em>processing</em>, and that finishes off with some discrete <em>output</em>.
+
+Actually, that's a lie too. I already knew that from high school computer classes.
+
+You know what else is a lie? (OK, not exactly a lie, but at the very least it's confusing and incomplete). The description that Node.js folks give you for "what I/O means". Have a look at <a href="http://www.guptamayank.com/what-is-node.js-evented-non-blocking-io-javascript">any old source</a> (yes, <a href="http://stackoverflow.com/questions/10570246/what-is-non-blocking-or-asynchronous-i-o-in-node-js">pretty much</a> anywhere <a href="http://anders.janmyr.com/2011/05/not-very-short-introduction-to-nodejs.html">will do</a>). Wherever you look, the answer will roughly be: <em>I/O is working with files, doing database queries, and making web requests from your app</em>.
+
+As I said, that's not exactly a lie. However, that's not what I/O <em>is</em>. That's a set of <em>examples</em> of what I/O is. If you want to know what the definition of I/O actually is, let me tell you: it's any interaction that your program makes with anything external to itself. That's it.
+
+I/O usually involves your program reading a piece of data from an external source, and making it available as a variable within your code; or conversely, taking a piece of data that's stored as a variable within your code, and writing it to an external source. However, it doesn't always involve reading or writing data; and (as I'm trying to emphasise), it doesn't <em>need</em> to involve that, in order to fall within the definition of I/O for your program.
+
+At a basic technical level, I/O is nothing more than any instance of <em>your</em> program invoking <em>another</em> program on the same machine. The simplest example of this, is executing another program via a command-line statement from your program. Node.js provides the non-blocking I/O function <a href="http://nodejs.org/api/child_process.html#child_process_child_process_exec_command_options_callback"><code>child_process.exec()</code></a> for this purpose; running shell commands with it <a href="http://www.dzone.com/snippets/execute-unix-command-nodejs">is pretty easy</a>.
+
+The most common and the most obvious example of I/O, reading and writing files, involves (under the hood) your program invoking the various utility programs provided by all <abbr title="Operating System">OS</abbr>es for interacting with files. <code>open</code> is another program somewhere on your system. <code>read</code>, <code>write</code>, <code>close</code>, <code>stat</code>, <code>rename</code>, <code>unlink</code> &ndash; all individual utility programs living on your box.
+
+From this perspective, a <abbr title="Database Management System">DBMS</abbr> is just one more utility program living on your system. (At least, the client utility lives on your system &ndash; where the server lives, and how to access it, is the client utility's problem, not yours). When you open a connection to a DB, perform some queries (regardless of them being read or write queries), and then close the connection, the only really significant point (for our purposes) is that you're making various invocations to a program that's external to <em>your</em> program.
+
+Similarly, all network communication performed by your program is nothing more than a bunch of invocations to external utility programs. Although these utility programs provide the illusion (both to the programmer and to the end-user) that your program is interacting directly with remote sources, in reality the direct interaction is only with the utilities on your machine for opening a socket, port mapping, TCP / UDP packet management, IP addressing, DNS lookup, and all the other gory details.
+
+And, of course, working with HTTP is simply dealing with one extra layer of utility programs, on top of all the general networking utility programs. So, when you consider it from this point of view, making a JSON API request to an online payment broker over SSL, is really no different to executing the <code>pwd</code> shell command. It's all I/O!
+
+I hope I've made it crystal-clear by now, what constitutes I/O. So, conversely, you should also now have a clearer idea of exactly what constitutes non-I/O. In a nutshell: any code that does <em>not</em> invoke any external programs, any code that is completely insular and that performs all processing internally, is non-I/O code.
+
+The philosophy behind Node.js, is that most database-driven web apps &ndash; what with their being database-driven, and web-based, and all &ndash; don't actually have a whole lot of non-I/O code. In most such apps, the non-I/O code consists of little more than bits 'n' pieces that happen in between the I/O bits: some calculations after retrieving data from the database; some rendering work after performing the business logic; some parsing and validation upon receiving incoming API calls or form submissions. It's rare for web apps to perform any particularly intensive tasks, without the help of other external utilities.
+
+Some programs <em>do</em> contain a lot of non-I/O code. Typically, these are programs that perform more heavy processing based on the direct input that they receive. For example, a program that performs an expensive mathematical computation, such as finding all Fibonacci numbers up to a given value, may take a long time to execute, even though it only contains non-I/O code (by the way, please <a href="http://joshuakehn.com/2011/10/3/Diagnosis-No-Cancer.html">don't write a Fibonacci number app in Node.js</a>). Similarly, image processing utility programs are generally non-I/O, as they perform a specialised task using exactly the image data provided, without outside help.
+
+<h2>Putting it all together</h2>
+
+We should now all be on the same page, regarding blocking vs non-blocking code, and regarding I/O vs non-I/O code. Now, back to the point of this article, which is to better explain the key feature of Node.js: its non-blocking I/O model.
+
+As others <a href="http://debuggable.com/posts/understanding-node-js:4bd98440-45e4-4a9a-8ef7-0f7ecbdd56cb">have explained</a>, in Node.js <a href="http://blog.mixu.net/2011/02/01/understanding-the-node-js-event-loop/">everything runs in parallel, except your code</a>. What this means is that all I/O code that you write in Node.js is non-blocking, while (conversely) all non-I/O code that you write in Node.js is blocking.
+
+So, as Node.js experts are quick to point out: if you write a Node.js web app with non-I/O code that blocks execution for a long time, your app will be completely unresponsive until that code finishes running. As I said: please, <a href="http://www.unlimitednovelty.com/2011/10/nodejs-has-jumped-shark.html">no Fibonacci in Node.js</a>.
+
+When I started writing in Node.js, I was under the impression that the <a href="http://code.google.com/p/v8/">V8 engine</a> it uses automagically makes your code non-blocking, each time you make a function call. So I thought that, for example, changing a long-running while loop to a recursive loop would make my (completely non-I/O) code non-blocking. <strong>Wrong!</strong> (As it turns out, if you'd like a language that automagically makes your code non-blocking, apparently <a href="http://journal.dedasys.com/2010/04/29/erlang-vs-node-js">Erlang can do it</a> for you &ndash; however, I've never used Erlang, so can't comment on this).
+
+In fact, the secret to non-blocking code in Node.js is not magic. It's a bag of rather dirty tricks, the most prominent (and the dirtiest) of which is <a href="http://oneoveractivemind.blogspot.com/2011/12/nodejs-and-processnexttick-why-you-dont.html">the <code>process.nextTick()</code> function</a>.
+
+As others have explained, if you need to write truly non-blocking processor-intensive code, then the correct way to do it is to implement it as a separate program, and to then invoke that external program from your Node.js code. Remember:
+
+<blockquote>Not in your Node.js code == I/O == non-blocking</blockquote>
+
+I hope this article has cleared up more confusion than it's created. I don't think I've explained anything totally new here, but I believe I've explained a number of concepts from a perspective that others haven't considered very thoroughly, and with some new and refreshing examples. As I said, I'm still brand new to Node.js myself. Anyway, happy coding, and feel free to add your two cents below.

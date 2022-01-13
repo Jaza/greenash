@@ -1,0 +1,200 @@
+---
+title: Introducing the Drupal Template Field Variables module
+date: 2012-05-29
+teaser: |-
+  Drupal 7's new Field API is a great feature. Unfortunately, theming an entity and its fields can be quite a daunting task. The main reason for this, is that the field variables that get passed to template files are not particularly themer-friendly. Themers are HTML markup and CSS coders; they're not PHP or Drupal coders. When themers start writing their <code>node--page.tpl.php</code> file, all they really want to know is: <em>How do I output each field of this page &#91;node type&#93;, exactly where I want, and with minimal fuss?</em>
+
+  It is in the interests of improving the <a href="http://groups.drupal.org/node/157999">Drupal Themer Experience</a>, therefore, that I present the <a href="http://drupal.org/project/tpl_field_vars">Template Field Variables</a> module. (As the project description says,) this module takes the mystery out of theming fieldable entities. For each field in an entity, it extracts the values that you actually want to output (from the infamous "massive nested arrays" that Drupal provides), and it puts those values in dead-simple variables.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+---
+Drupal 7's new Field API is a great feature. Unfortunately, theming an entity and its fields can be quite a daunting task. The main reason for this, is that the field variables that get passed to template files are not particularly themer-friendly. Themers are HTML markup and CSS coders; they're not PHP or Drupal coders. When themers start writing their <code>node--page.tpl.php</code> file, all they really want to know is: <em>How do I output each field of this page &#91;node type&#93;, exactly where I want, and with minimal fuss?</em>
+
+It is in the interests of improving the <a href="http://groups.drupal.org/node/157999">Drupal Themer Experience</a>, therefore, that I present the <a href="http://drupal.org/project/tpl_field_vars">Template Field Variables</a> module. (As the project description says,) this module takes the mystery out of theming fieldable entities. For each field in an entity, it extracts the values that you actually want to output (from the infamous "massive nested arrays" that Drupal provides), and it puts those values in dead-simple variables.
+
+<h2>What we've got</h2>
+
+Let me tell you a story, about an enthusiastic fledgling Drupal themer. The sprightly lad has just added a new text field, called <code>byline</code>, to his <code>page</code> node type in Drupal 7. He wants to output this field at the bottom of his <code>node--page.tpl.php</code> file, in a <code>blockquote</code> tag.
+
+Using nothing but Drupal 7 core, how does he do it?
+
+He's got two options. His first option &mdash; the "Drupal 7 recommended" option &mdash; is to use the <a href="http://drupal.org/node/930760">Render API</a>, to hide the byline from the spot where all the node's fields get outputted by default; and to then <code>render()</code> it further down the page.
+
+<em>Well,</em> says the budding young themer, <em>that sure sounds easy enough.</em> So, the themer goes and <a href="http://drupal.org/node/1059636">reads up</a> on <a href="http://drupal.org/node/254940#granular">how to use the Render API</a>, finds the example snippets of <code>hide($content['bla']);</code> and <code>print render($content['bla']);</code>, and whips up a template file:
+
+<pre class="php"><code><?php
+/* My node--page.tpl.php file. It rocks. */
+?>
+
+<?php // La la la, do some funky template stuff. ?>
+
+<?php // Don't wanna show this in the spot where Drupal vomits
+      // out content by default, let's call hide(). ?>
+<?php hide($content['field_byline']); ?>
+
+<?php // Now Drupal can have a jolly good ol' spew. ?>
+<?php print render($content); ?>
+
+<?php // La la la, more funky template stuff. ?>
+
+<?php // This is all I need in order to output the byline at the
+      // bottom of the page in a blockquote, right? ?>
+<blockquote><?php print render($content['field_byline']); ?></blockquote>
+ </code></pre>
+
+Now, let's see what page output that gives him:
+
+<pre class="html"><code><!-- La la la, this is my page output. -->
+
+<!-- La la la, Drupal spewed out all my fields here. -->
+
+<!-- La la... hey!! What the..?! Why has Drupal spewed out a -->
+<!-- truckload of divs, and a label, that I didn't order? -->
+<!-- I just want the byline, $#&%ers!! -->
+<blockquote><div class="field field-name-field-byline field-type-text field-label-above"><div class="field-label">Byline:&nbsp;</div><div class="field-items"><div class="field-item even">It&#039;s hip to be about something</div></div></div></blockquote>
+ </code></pre>
+
+Our bright-eyed Drupal theming novice was feeling pretty happy with his handiwork so far. But now, disappointment lands. All he wants is the actual value of the byline. No div soup. No random label. He created a byline field. He saved a byline value to a node. Now he wants to output the byline, and <em>only</em> the byline. What more could possibly be involved, in such a simple task?
+
+He racks his brains, searching for a solution. He's not a coder, but he's tinkered with PHP before, and he's pretty sure it's got some thingamybob that lets you cut stuff out of a string that you don't want. After a bit of googling, he finds the code snippets he needs. <em>Ah!</em> He exclaims. <em>This should do the trick:</em>
+
+<pre class="php"><code><?php // I knew I was born to be a Drupal ninja. Behold my
+      // marvellous creation! ?>
+<blockquote><?php print str_replace('<div class="field field-name-field-byline field-type-text field-label-above"><div class="field-label">Byline:&nbsp;</div><div class="field-items"><div class="field-item even">', '', str_replace('</div></div></div>', '', render($content['field_byline']))); ?></blockquote>
+ </code></pre>
+
+Now, now, Drupal veterans &ndash; don't cringe. I know you've all seen it in a real-life project. Perhaps you even wrote it yourself, once upon a time. So, don't be too quick to judge the young grasshopper harshly.
+
+However, although the <code>str_replace()</code> snippet does indeed do the trick, even our newbie grasshopper recognises it for the abomination and the kitten-killer that it is, and he cannot live knowing that a <code>git blame</code> on line 47 of <code>node--page.tpl.php</code> will forever reveal the awful truth. So, he decides to <a href="http://drupal.org/node/1366784">read up</a> a bit more, and he finally discovers that the recommended solution is to <a href="http://api.drupal.org/api/drupal/modules!field!theme!field.tpl.php/7">create your own field.tpl.php override file</a>. So, he whips up a one-line <code>field--field-byline.tpl.php</code> file:
+
+<pre class="php"><code><?php print render($item); ?>
+ </code></pre>
+
+And, at long last, he's got the byline and just the byline outputting&hellip; and he's done it The Drupal Way!
+
+The newbie themer begins to feel more at ease. He's happy that he's learnt how to build template files in a Drupal 7 theme, without resorting to hackery. To celebrate, he snacks on juicy cherries dipped in chocolate-flavoured custard.
+
+But a niggling concern remains at the back of his mind. Perhaps what he's done is The Drupal Way, but he's still not convinced that it's The Right Way. It seems like a lot of work &mdash; calling <code>hide();</code> in one spot, having to call <code>print render();</code> (not just <code>print</code>) further down, having to override <code>field.tpl.php</code> &mdash; and all just to output a simple little byline. Is there really no one-line alternative?
+
+Ever optimistic, the aspiring Drupal themer continues searching, until at last he discovers that <a href="http://drupal.org/node/1323842">it is possible</a> to <a href="http://drupal.org/node/788238">access the raw field values</a> from a node template. And so, finally, he settles for <a href="http://stackoverflow.com/questions/6478623/printing-nodes-field-value">a solution</a> that he's more comfortable with:
+
+<pre class="php"><code><?php
+/* My node--page.tpl.php file. It rocks. */
+?>
+
+<?php // La la la, do some funky template stuff. ?>
+
+<?php // Still need hide(), unless I manually output all my node fields,
+// and don't call print render($content);
+// grumble grumble... ?>
+<?php hide($content['field_byline']); ?>
+
+<?php // Now Drupal can have a jolly good ol' spew. ?>
+<?php print render($content); ?>
+
+<?php // La la la, more funky template stuff. ?>
+
+<?php // Yay - I actually got the raw byline value to output here! ?>
+<blockquote><?php print check_plain($node->field_byline[$node->language][0]['value']); ?></blockquote>
+ </code></pre>
+
+And so the sprightly young themer goes on his merry way, and hacks up <code>.tpl.php</code> files happily ever after.
+
+<h2>Why all that sucks</h2>
+
+That's the typical journey of someone new to Drupal theming, and/or new to the Field API, who wants to customise the output of fields for an entity. It's flawed for a number of reasons:
+
+<ul>
+  <li>We're making themers learn how to make function calls unnecessarily. It's OK to make them learn function calls if they need to do something fancy. But in the case of the Render API, they need to learn two &ndash; <code>hide()</code> and <code>render()</code> &ndash; just to output something. All they should need to know is <code>print</code>.</li>
+  <li>We're making themers understand a complex, unnecessary, and artificially constructed concept: the Render API. Themers don't care how Drupal constructs the page content, they don't care what render arrays are (or if they exist); and they shouldn't have to care.</li>
+  <li>We're making it unnecessarily difficult to output raw values, using the recommended theming method (i.e. using the Render API). In order to output raw values using the render API, you basically have to override <code>field.tpl.php</code> in the manner illustrated above. This will prove to be too advanced (or simply too much effort) for many themers, who may resort to the type of string-replacement hackery described above.</li>
+  <li>The only actual method of outputting the raw value directly is fraught with problems:
+  <ul>
+    <li>It requires a long line of code, that drills deep into nested arrays / objects before it can <code>print</code> the value</li>
+    <li>Those nested arrays / objects are hard even for experienced developers to navigate / debug, let alone newbie themers</li>
+    <li>It requires themers to concern themselves with field translation and with the i18n API</li>
+    <li>Guesswork is needed for determining the exact key that will yield the outputtable value, at the end of the nested array (usually <code>'value'</code>, but sometimes not, e.g. <code>'url'</code> for link fields)</li>
+    <li>It's highly prone to security issues, as there's no way that novice themers can be expected to understand when to use <code>'value'</code> vs <code>'safe_value'</code>, when <code>check_plain()</code> / <code>filter_xss_admin()</code> should be called, etc. (even experienced developers often misuse or omit Drupal's string output security, as anyone who's familiar with the Drupal security advisories would know)</li>
+  </ul>
+</ul>
+
+In a nutshell: the current system has too high a learning curve, it's unnecessarily complex, and it unnecessarily exposes themers to security risks.
+
+<h2>A better way</h2>
+
+Now let me tell you another story, about that same enthusiastic fledgling Drupal themer, who wanted to show his <code>byline</code> in a <code>blockquote</code> tag. This time, he's using Drupal 7 core, plus the <a href="http://drupal.org/project/tpl_field_vars">Template Field Variables</a> module.
+
+First, he opens up his <code>template.php</code> file, and adds the following:
+
+<pre class="php"><code>/**
+ * Preprocessor for node.tpl.php template file.
+ */
+function foobar_preprocess_node(&$vars) {
+  tpl_field_vars_preprocess($vars, $vars['node'], array(
+    'cleanup' => TRUE,
+    'debug' => TRUE,
+  ));
+}</code></pre>
+
+After doing this (and after clearing his cache), he opens up his node (of type 'page') in a browser; and because he's set <code>'debug' => TRUE</code> (above), he sees this output on page load:
+
+<strong><code>$body =</code></strong>
+
+<pre class="no-highlight"><code><p>There was a king who had twelve beautiful daughters. They slept in
+twelve beds all in one room; and when they went to bed, the doors were
+shut and locked up; but every morning their shoes were found to be
+quite worn through as if they had been danced in all night; and yet
+nobody could find out how it happened, or where they had been.</p>
+<p>Then the king made it known to all the land, that if any person
+could discover the secret, and find out where it was that the
+princesses danced in the night, he should have the one he liked best
+for his wife, and should be king after his ...</code></pre>
+
+<strong><code>$byline =</code></strong>
+
+<pre class="no-highlight"><code>It's hip to be about something</code></pre>
+
+And now, he has all the info he needs in order to write his new <code>node--page.tpl.php</code> file, which looks like this:
+
+<pre class="php"><code><?php
+/* My node--page.tpl.php file. It rocks. */
+?>
+
+<?php // La la la, do some funky template stuff. ?>
+
+<?php // No spewing, please, Drupal - just the body field. ?>
+<?php print $body; ?>
+
+<?php // La la la, more funky template stuff. ?>
+
+<?php // Output the byline here, pure and simple. ?>
+<blockquote><?php print $byline; ?></blockquote>
+ </code></pre>
+
+He sets <code>'debug' => FALSE</code> in his <code>template.php</code> file, he reloads the page in his browser, and&hellip; voila! He's done theming for the day.
+
+<h2>About the module</h2>
+
+The story that I've told above, describes the purpose and function of the Template Field Variables module better than a plain description can. (As the project description says,) it's a utility module for themers. Its only purpose is to make Drupal template development less painful. It has no front-end. It stores no data. It implements no hooks. In order for it to do anything, some coding is required, but only coding in your theme files.
+
+I've illustrated here the most basic use case of Template Field Variables, i.e. outputting simple text fields. However, the module's real power lies in its ability to let you print out the values of more complex field types, just as easily. Got an image field? Want to print out the URL of the original-size image, plus the URLs of any/all of the resized derivatives of that image&hellip; and all in one <code>print</code> statement? Got a date field, and want to output the 'start date' and 'end date' values with minimal fuss? Got a nodereference field, and want to output the referenced node's title within an <code>h3</code> tag? Got a field with multiple values, and want to loop over those values in your template, just as easily as you output a single value? For all these use cases, Template Field Variables is your friend.
+
+If you never want to again see a template containing:
+
+<pre class="php"><code><?php print $node->field_foo['und'][0]['safe_value']; ?></code></pre>
+
+And if, from this day forward, you only ever want to see a template containing:
+
+<pre class="php"><code><?php print $foo; ?></code></pre>
+
+Then I really think you should take Template Field Variables for a spin. You may discover, for the first time in your life, that Drupal theming can actually be fun. And sane.
+
+<h2>Additional resources</h2>
+
+<ul>
+  <li><a href="http://drupal.org/node/1294536">Output in node--foo.tpl.php</a></li>
+  <li><a href="http://robotlikehuman.com/web/printing-cck-content-field-values-drupal-7">Printing CCK (content) field values in Drupal 7</a></li>
+  <li><a href="http://www.computerminds.co.uk/articles/rendering-drupal-7-fields-right-way">Rendering Drupal 7 fields (the right way)</a></li>
+  <li><a href="http://stackoverflow.com/questions/6478623/printing-nodes-field-value">Printing nodes field value</a></li>
+</ul>

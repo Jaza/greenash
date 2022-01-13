@@ -1,0 +1,213 @@
+---
+title: Flattening many-to-many fields for MySQL to CSV export
+date: 2012-05-23
+teaser: |-
+  Relational databases are able to store, with minimal fuss, pretty much any data entities you throw at them. For the more complex cases &ndash; particularly cases involving hierarchical data &ndash; they offer many-to-many relationships. Querying many-to-many relationships is usually quite easy: you perform a series of SQL joins in your query; and you retrieve a result set containing the combination of your joined tables, in denormalised form (i.e. with the data from some of your tables being duplicated in the result set).
+
+  A denormalised query result is quite adequate, if you plan to process the result set further &ndash; as is very often the case, e.g. when the result set is subsequently prepared for output to HTML / XML, or when the result set is used to populate data structures (objects / arrays / dictionaries / etc) in programming memory. But what if you want to export the result set directly to a flat format, such as a single CSV file? In this case, denormalised form is not ideal. It would be much better, if we could aggregate all that many-to-many data into a single result set containing no duplicate data, and if we could do that within a single SQL query.
+
+  This article presents an example of how to write such a query in MySQL &ndash; that is, a query that's able to aggregate complex many-to-many relationships, into a result set that can be exported directly to a single CSV file, with no additional processing necessary.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+  - thoughtstopics/innovations
+  - thoughtstopics/mysql
+---
+Relational databases are able to store, with minimal fuss, pretty much any data entities you throw at them. For the more complex cases &ndash; particularly cases involving hierarchical data &ndash; they offer many-to-many relationships. Querying many-to-many relationships is usually quite easy: you perform a series of SQL joins in your query; and you retrieve a result set containing the combination of your joined tables, in denormalised form (i.e. with the data from some of your tables being duplicated in the result set).
+
+A denormalised query result is quite adequate, if you plan to process the result set further &ndash; as is very often the case, e.g. when the result set is subsequently prepared for output to HTML / XML, or when the result set is used to populate data structures (objects / arrays / dictionaries / etc) in programming memory. But what if you want to export the result set directly to a flat format, such as a single CSV file? In this case, denormalised form is not ideal. It would be much better, if we could aggregate all that many-to-many data into a single result set containing no duplicate data, and if we could do that within a single SQL query.
+
+This article presents an example of how to write such a query in MySQL &ndash; that is, a query that's able to aggregate complex many-to-many relationships, into a result set that can be exported directly to a single CSV file, with no additional processing necessary.
+
+<h2>Example: a lil' Bio database</h2>
+
+For this article, I've whipped up a simple little schema for a biographical database. The database contains, first and foremost, people. Each person has, as his/her core data: a person ID; a first name; a last name; and an e-mail address. Each person also optionally has some additional bio data, including: bio text; date of birth; and gender. Additionally, each person may have zero or more: profile pictures (with each picture consisting of a filepath, nothing else); web links (with each link consisting of a title and a URL); and tags (with each tag having a name, existing in a separate tags table, and being linked to people via a joining table). For the purposes of the example, we don't need anything more complex than that.
+
+Here's the SQL to create the example schema:
+
+<pre class="sql"><code>CREATE TABLE person (
+  pid int(10) unsigned NOT NULL AUTO_INCREMENT,
+  firstname varchar(255) NOT NULL,
+  lastname varchar(255) NOT NULL,
+  email varchar(255) NOT NULL,
+  PRIMARY KEY (pid),
+  UNIQUE KEY email (email),
+  UNIQUE KEY firstname_lastname (firstname(100), lastname(100))
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+CREATE TABLE tag (
+  tid int(10) unsigned NOT NULL AUTO_INCREMENT,
+  tagname varchar(255) NOT NULL,
+  PRIMARY KEY (tid),
+  UNIQUE KEY tagname (tagname)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+CREATE TABLE person_bio (
+  pid int(10) unsigned NOT NULL,
+  bio text NOT NULL,
+  birthdate varchar(255) NOT NULL DEFAULT '',
+  gender varchar(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (pid),
+  FULLTEXT KEY bio (bio)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE person_pic (
+  pid int(10) unsigned NOT NULL,
+  pic_filepath varchar(255) NOT NULL,
+  PRIMARY KEY (pid, pic_filepath)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE person_link (
+  pid int(10) unsigned NOT NULL,
+  link_title varchar(255) NOT NULL DEFAULT '',
+  link_url varchar(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (pid, link_url),
+  KEY link_title (link_title)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE person_tag (
+  pid int(10) unsigned NOT NULL,
+  tid int(10) unsigned NOT NULL,
+  PRIMARY KEY (pid, tid)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;</code></pre>
+
+And here's the SQL to insert some sample data into the schema:
+
+<pre class="sql"><code>INSERT INTO person (firstname, lastname, email) VALUES ('Pete', 'Wilson', 'pete@wilson.com');
+INSERT INTO person (firstname, lastname, email) VALUES ('Sarah', 'Smith', 'sarah@smith.com');
+INSERT INTO person (firstname, lastname, email) VALUES ('Jane', 'Burke', 'jane@burke.com');
+
+INSERT INTO tag (tagname) VALUES ('awesome');
+INSERT INTO tag (tagname) VALUES ('fantabulous');
+INSERT INTO tag (tagname) VALUES ('sensational');
+INSERT INTO tag (tagname) VALUES ('mind-boggling');
+INSERT INTO tag (tagname) VALUES ('dazzling');
+INSERT INTO tag (tagname) VALUES ('terrific');
+
+INSERT INTO person_bio (pid, bio, birthdate, gender) VALUES (1, 'Great dude, loves elephants and tricycles, is really into coriander.', '1965-04-24', 'male');
+INSERT INTO person_bio (pid, bio, birthdate, gender) VALUES (2, 'Eccentric and eclectic collector of phoenix wings. Winner of the 2003 International Small Elbows Award.', '1982-07-20', 'female');
+INSERT INTO person_bio (pid, bio, birthdate, gender) VALUES (3, 'Has purply-grey eyes. Prefers to only go out on Wednesdays.', '1990-11-06', 'female');
+
+INSERT INTO person_pic (pid, pic_filepath) VALUES (1, 'files/person_pic/pete1.jpg');
+INSERT INTO person_pic (pid, pic_filepath) VALUES (1, 'files/person_pic/pete2.jpg');
+INSERT INTO person_pic (pid, pic_filepath) VALUES (1, 'files/person_pic/pete3.jpg');
+INSERT INTO person_pic (pid, pic_filepath) VALUES (3, 'files/person_pic/jane_on_wednesday.jpg');
+
+INSERT INTO person_link (pid, link_title, link_url) VALUES (2, 'The Great Blog of Sarah', 'http://www.omgphoenixwingsaresocool.com/');
+INSERT INTO person_link (pid, link_title, link_url) VALUES (3, 'Catch Jane on Blablablabook', 'http://www.blablablabook.com/janepurplygrey');
+INSERT INTO person_link (pid, link_title, link_url) VALUES (3, 'Jane ranting about Thursdays', 'http://www.janepurplygrey.com/thursdaysarelame/');
+
+INSERT INTO person_tag (pid, tid) VALUES (1, 3);
+INSERT INTO person_tag (pid, tid) VALUES (1, 4);
+INSERT INTO person_tag (pid, tid) VALUES (1, 5);
+INSERT INTO person_tag (pid, tid) VALUES (1, 6);
+INSERT INTO person_tag (pid, tid) VALUES (2, 2);</code></pre>
+
+<h2>Querying for direct CSV export</h2>
+
+If we were building, for example, a simple web app to output a list of all the people in this database (along with all their biographical data), querying this database would be quite straightforward. Most likely, our first step would be to query the one-to-one data: i.e. query the main 'person' table, join on the 'bio' table, and loop through the results (in a server-side language, such as PHP). The easiest way to get at the rest of the data, in such a case, would be to then query each of the many-to-many relationships (i.e. user's pictures; user's links; user's tags) in separate SQL statements, and to execute each of those queries once for each user being processed.
+
+In that scenario, we'd be writing four different SQL queries, and we'd be executing SQL numerous times: we'd execute the main query once, and we'd execute each of the three secondary queries, once for each user in the database. So, with the sample data provided here, we'd be executing SQL <code>1 + (3 x 3) = 10</code> times.
+
+Alternatively, we could write a single query which joins together all of the three many-to-many relationships in one go, and our web app could then just loop through a single result set. However, this result set would potentially contain a lot of duplicate data, as well as a lot of NULL data. So, the web app's server-side code would require extra logic, in order to deal with this messy result set effectively.
+
+In our case, neither of the above solutions is adequate. We can't afford to write four separate queries, and to perform 10 query executions. We don't want a single result set that contains duplicate data and/or excessive NULL data. We want a single query, that produces a single result set, containing one person per row, and with all the many-to-many data for each person aggregated into that person's single row.
+
+Here's the magic SQL that can make our miracle happen:
+
+<pre class="sql"><code>SELECT        person_base.pid,
+              person_base.firstname,
+              person_base.lastname,
+              person_base.email,
+              IFNULL(person_base.bio, '') AS bio,
+              IFNULL(person_base.birthdate, '') AS birthdate,
+              IFNULL(person_base.gender, '') AS gender,
+              IFNULL(pic_join.val, '') AS pics,
+              IFNULL(link_join.val, '') AS links,
+              IFNULL(tag_join.val, '') AS tags
+FROM (
+    SELECT        p.pid,
+                  p.firstname,
+                  p.lastname,
+                  p.email,
+                  IFNULL(pb.bio, '') AS bio,
+                  IFNULL(pb.birthdate, '') AS birthdate,
+                  IFNULL(pb.gender, '') AS gender
+    FROM          person p
+    LEFT JOIN     person_bio pb
+    ON            p.pid = pb.pid
+) AS person_base
+LEFT JOIN (
+    SELECT        join_tbl.pid,
+                  IFNULL(
+                      GROUP_CONCAT(
+                          DISTINCT CAST(join_tbl.pic_filepath AS CHAR)
+                          SEPARATOR ';;'
+                      ),
+                      ''
+                  ) AS val
+    FROM          person_pic join_tbl
+    GROUP BY      join_tbl.pid
+) AS pic_join
+ON            person_base.pid = pic_join.pid
+LEFT JOIN (
+    SELECT        join_tbl.pid,
+                  IFNULL(
+                      GROUP_CONCAT(
+                          DISTINCT CONCAT(
+                              CAST(join_tbl.link_title AS CHAR),
+                              '::',
+                              CAST(join_tbl.link_url AS CHAR)
+                          )
+                          SEPARATOR ';;'
+                      ),
+                      ''
+                  ) AS val
+    FROM          person_link join_tbl
+    GROUP BY      join_tbl.pid
+) AS link_join
+ON            person_base.pid = link_join.pid
+LEFT JOIN (
+    SELECT        join_tbl.pid,
+                  IFNULL(
+                      GROUP_CONCAT(
+                          DISTINCT CAST(t.tagname AS CHAR)
+                          SEPARATOR ';;'
+                      ),
+                      ''
+                  ) AS val
+    FROM          person_tag join_tbl
+    LEFT JOIN     tag t
+    ON            join_tbl.tid = t.tid
+    GROUP BY      join_tbl.pid
+) AS tag_join
+ON            person_base.pid = tag_join.pid
+ORDER BY      lastname ASC,
+              firstname ASC;</code></pre>
+
+If you run this in a MySQL admin tool that supports exporting query results directly to CSV (such as phpMyAdmin), then there's no more fancy work needed on your part. Just click 'Export -> CSV', and you'll have your results looking like this:
+
+<pre class="no-highlight"><code>pid,firstname,lastname,email,bio,birthdate,gender,pics,links,tags
+3,Jane,Burke,jane@burke.com,Has purply-grey eyes. Prefers to only go out on Wednesdays.,1990-11-06,female,files/person_pic/jane_on_wednesday.jpg,Catch Jane on Blablablabook::http://www.blablablabook.com/janepurplygrey;;Jane ranting about Thursdays::http://www.janepurplygrey.com/thursdaysarelame/,
+2,Sarah,Smith,sarah@smith.com,Eccentric and eclectic collector of phoenix wings. Winner of the 2003 International Small Elbows Award.,1982-07-20,female,,The Great Blog of Sarah::http://www.omgphoenixwingsaresocool.com/,fantabulous
+1,Pete,Wilson,pete@wilson.com,Great dude, loves elephants and tricycles, is really into coriander.,1965-04-24,male,files/person_pic/pete1.jpg;;files/person_pic/pete2.jpg;;files/person_pic/pete3.jpg,,sensational;;mind-boggling;;dazzling;;terrific</code></pre>
+
+<h2>The query explained</h2>
+
+The most important feature of this query, is that it takes advantage of MySQL's ability to perform subqueries. What we're actually doing, is we're performing four separate queries: one query on the main <code>person</code> table (which joins to the <code>person_bio</code> table); and one on each of the three many-to-many elements of a person's bio. We're then joining these four queries, and selecting data from all of their result sets, in the parent query.
+
+The magic function in this query, is the MySQL <a href="http://dev.mysql.com/doc/refman/5.0/en/group-by-functions.html#function_group-concat"><code>GROUP_CONCAT()</code></a> function. This basically allows us to join together the results of a particular field, using a delimiter string, much like the <code>join()</code> array-to-string function in many programming languages (i.e. like PHP's <a href="http://php.net/manual/en/function.implode.php"><code>implode()</code></a> function). In this example, I've used two semicolons (<code>;;</code>) as the delimiter string.
+
+In the case of <code>person_link</code> in this example, each row of this data has two fields ('link title' and 'link URL'); so, I've concatenated the two fields together (separated by a double-colon (<code>::</code>) string), before letting <code>GROUP_CONCAT()</code> work its wonders.
+
+The case of <code>person_tags</code> is also interesting, as it demonstrates performing an additional join within the many-to-many subquery, and returning data from that joined table (i.e. the tag name) as the result value. So, all up, each of the many-to-many relationships in this example is a slightly different scenario: <code>person_pic</code> is the basic case of a single field within the many-to-many data; <code>person_link</code> is the case of more than one field within the many-to-many data; and <code>person_tags</code> is the case of an additional one-to-many join, on top of the many-to-many join.
+
+<h2>Final remarks</h2>
+
+Note that although this query depends on several MySQL-specific features, most of those features are available in a fairly equivalent form, in most other major database systems. Subqueries vary quite little between the DBMSes that support them. And it's possible to achieve <code>GROUP_CONCAT()</code> functionality <a href="http://mssql-to-postgresql.blogspot.com/2007/12/cool-groupconcat.html">in PostgreSQL</a>, <a href="http://stackoverflow.com/questions/1120706/is-there-an-oracle-sql-query-that-aggregates-multiple-rows-into-one-row">in Oracle</a>, and even <a href="http://www.sqlite.org/lang_aggfunc.html">in SQLite</a>.
+
+It should also be noted that it would be possible to achieve the same result (i.e. the same end CSV output), using 10 SQL query executions and a whole lot of PHP (or other) glue code. However, taking that route would involve more code (spread over four queries and numerous lines of procedural glue code), and it would invariably suffer worse performance (although I make no guarantees as to the performance of my example query, I haven't benchmarked it with particularly large data sets).
+
+This querying trick was originally written in order to export data from a Drupal MySQL database, to a flat CSV file. The many-to-many relationships were referring to field tables, as defined by Drupal's Field API. I made the variable names within the subqueries as generic as possible (e.g. <code>join_tbl</code>, <code>val</code>), because I needed to copy the subqueries numerous times (for each of the numerous field data tables I was dealing with), and I wanted to make as few changes as possible on each copy.
+
+The trick is particularly well-suited to Drupal Field API data (known in Drupal 6 and earlier as 'CCK data'). However, I realised that it could come in useful with any database schema where a "flattening" of many-to-many fields is needed, in order to perform a CSV export with a single query. Let me know if you end up adopting this trick for schemas of your own.

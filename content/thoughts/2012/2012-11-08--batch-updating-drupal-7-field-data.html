@@ -1,0 +1,136 @@
+---
+title: Batch updating Drupal 7 field data
+date: 2012-11-08
+teaser: |-
+  On a number of my recently-built Drupal sites, I've become a fan of using the <a href="http://drupal.org/project/computed_field">Computed Field</a> module <a href="http://www.matttarsi.com/using-computed-fields-combine-exposed-filters">to provide a "search data" field</a>, as a Views exposed filter. This technique <a href="http://drupal.stackexchange.com/questions/5614/exposing-fields-for-a-search-in-views/5691#5691">has been documented</a> by other folks <a href="http://drupal.org/node/732458#comment-3279376">here and there</a> (I didn't invent it), so I won't cover its details here. Basically, it's a handy way to create a search form that searches exactly the fields you're interested in, thus providing you with more fine-grained control than the core Drupal search module, and with much less installation / configuration overhead than Apache Solr.
+
+  On one such site, which has about 4,000+ nodes that are searchable via this technique, I needed to add another field to the index, and re-generate the Computed Field data for every node. This data normally only gets re-generated when each individual node is saved. In my case, that would not be sufficient - I needed the entire search index refreshed immediately.
+
+  The obvious solution, would be to whip up a quick script that loops through all the nodes in question, and that calls <code>node_save()</code> on each pass through the loop. However, this solution has two problems. Firstly, <code>node_save()</code> is really slow (particularly when the node has a lot of other fields, such as was my case). So slow, in fact, that in my case I was fighting a losing battle against PHP "maximum execution time exceeded" errors. Secondly, <code>node_save()</code> is slow <em>unnecessarily</em>, as it re-saves <em>all</em> the data for <em>all</em> a node's fields (plus it invokes a bazingaful of hooks), whereas we only actually need to re-save the data for <em>one</em> field (and we don't need any hooks invoked, thanks).
+
+  In the interests of both speed and cutting-out-the-cruft, therefore, I present here an alternative solution: getting rid of the middle man (<code>node_save()</code>), and instead invoking the <code>field_storage_write</code> callback directly. Added bonus: I've implemented it using the Batch API functionality available via Drupal 7's <a href="http://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_update_N/7"><code>hook_update_N()</code></a>.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+---
+On a number of my recently-built Drupal sites, I've become a fan of using the <a href="http://drupal.org/project/computed_field">Computed Field</a> module <a href="http://www.matttarsi.com/using-computed-fields-combine-exposed-filters">to provide a "search data" field</a>, as a Views exposed filter. This technique <a href="http://drupal.stackexchange.com/questions/5614/exposing-fields-for-a-search-in-views/5691#5691">has been documented</a> by other folks <a href="http://drupal.org/node/732458#comment-3279376">here and there</a> (I didn't invent it), so I won't cover its details here. Basically, it's a handy way to create a search form that searches exactly the fields you're interested in, thus providing you with more fine-grained control than the core Drupal search module, and with much less installation / configuration overhead than Apache Solr.
+
+On one such site, which has about 4,000+ nodes that are searchable via this technique, I needed to add another field to the index, and re-generate the Computed Field data for every node. This data normally only gets re-generated when each individual node is saved. In my case, that would not be sufficient - I needed the entire search index refreshed immediately.
+
+The obvious solution, would be to whip up a quick script that loops through all the nodes in question, and that calls <code>node_save()</code> on each pass through the loop. However, this solution has two problems. Firstly, <code>node_save()</code> is really slow (particularly when the node has a lot of other fields, such as was my case). So slow, in fact, that in my case I was fighting a losing battle against PHP "maximum execution time exceeded" errors. Secondly, <code>node_save()</code> is slow <em>unnecessarily</em>, as it re-saves <em>all</em> the data for <em>all</em> a node's fields (plus it invokes a bazingaful of hooks), whereas we only actually need to re-save the data for <em>one</em> field (and we don't need any hooks invoked, thanks).
+
+In the interests of both speed and cutting-out-the-cruft, therefore, I present here an alternative solution: getting rid of the middle man (<code>node_save()</code>), and instead invoking the <code>field_storage_write</code> callback directly. Added bonus: I've implemented it using the Batch API functionality available via Drupal 7's <a href="http://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_update_N/7"><code>hook_update_N()</code></a>.
+
+<h2>Show me the code</h2>
+
+The below code uses a (pre-defined) Computed field called <code>field_search_data</code>, and processes nodes of type <code>event</code>, <code>news</code> or <code>page</code>. It also sets the limit per batch run to 50 nodes. Naturally, all of this should be modified per your site's setup, when borrowing the code.
+
+<pre class="php"><code><?php
+/**
+ * Batch update computed field values for 'field_search_data'.
+ */
+function mymodule_update_7000(&$sandbox) {
+  $entity_type = 'node';
+  $field_name = 'field_search_data';
+  $langcode = 'und';
+  $storage_module = 'field_sql_storage';
+
+  $field_id = db_query('SELECT id FROM {field_config} WHERE ' .
+  'field_name = :field_name', array(
+    ':field_name' => $field_name
+    ))->fetchField();
+
+  $field = field_info_field($field_name);
+  $types = array(
+    'event',
+    'news',
+    'page',
+  );
+
+  // Go through all published nodes in all of the above node types,
+  // and generate a new 'search_data' computed value.
+  $instance = field_info_instance($entity_type,
+                                  $field_name,
+                                  $bundle_name);
+
+  if (!isset($sandbox['progress'])) {
+    $sandbox['progress'] = 0;
+    $sandbox['last_nid_processed'] = -1;
+    $sandbox['max'] = db_query('SELECT COUNT(*) FROM {node} WHERE ' .
+      'type IN (:types) AND status = 1 ORDER BY nid', array(
+        ':types' => $types
+      ))->fetchField();
+
+    // I chose to delete existing data for this field, so I can
+    // clearly monitor in phpMyAdmin the field data being re-generated.
+    // Not necessary to do this.
+    // NOTE: do not do this if you have actual important data in
+    // this field! In my case it's just a search index, so it's OK.
+    // May not be so cool in your case.
+    db_query('TRUNCATE TABLE {field_data_' . $field_name . '}');
+    db_query('TRUNCATE TABLE {field_revision_' . $field_name . '}');
+  }
+
+  $limit = 50;
+  $result = db_query_range('SELECT nid FROM {node} WHERE ' .
+    'type IN (:types) AND status = 1 AND nid > :lastnid ORDER BY nid',
+    0, $limit, array(
+      ':types' => $types,
+      ':lastnid' => $sandbox['last_nid_processed']
+    ));
+
+  while ($nid = $result->fetchField()) {
+    $entity = node_load($nid);
+
+    if (!empty($entity->nid)) {
+      $items = isset($entity->{$field_name}[$langcode]) ?
+                 $entity->{$field_name}[$langcode] :
+                 array();
+
+      _computed_field_compute_value($entity_type, $entity, $field,
+                                    $instance, $langcode, $items);
+
+      if ($items !== array() ||
+          isset($entity->{$field_name}[$langcode])) {
+        $entity->{$field_name}[$langcode] = $items;
+
+        // This only writes the data for the single field we're
+        // interested in to the database. Much less expensive than
+        // the easier alternative, which would be to node_save()
+        // every node.
+        module_invoke($storage_module, 'field_storage_write',
+                      $entity_type, $entity, FIELD_STORAGE_UPDATE,
+                      array($field_id));
+      }
+    }
+
+    $sandbox['progress']++;
+    $sandbox['last_nid_processed'] = $nid;
+  }
+
+  if (empty($sandbox['max'])) {
+    $sandbox['#finished'] = 1.0;
+  }
+  else {
+    $sandbox['#finished'] = $sandbox['progress'] / $sandbox['max'];
+  }
+
+  if ($sandbox['#finished'] == 1.0) {
+    return t('Updated \'search data\' computed field values.');
+  }
+}
+ </code></pre>
+
+The feature of note in this code, is that we're updating Field API data without calling <code>node_save()</code>. We're doing this by manually generating the new Computed Field data, via <code>_computed_field_compute_value()</code>; and by then invoking the <code>field_storage_write</code> callback with the help of <code>module_invoke()</code>.
+
+Unfortunately, doing it this way is a bit complicated - these functions expect a whole lot of Field API and Entity API parameters to be passed to them, and preparing all these parameters is no walk in the park. Calling <code>node_save()</code> takes care of all this legwork behind the scenes.
+
+This approach still isn't lightning-fast, but it performs significantly better than its alternative. Plus, by avoiding the usual node hook invocations, we also avoid any unwanted side-effects of simulating a node save operation (e.g. creating a new revision, affecting workflow state).
+
+To execute the procedure as it's implemented here, all you need to do is visit <code>update.php</code> in your browser (or run <code>drush updb</code> from your terminal), and it will run as a standard Drupal database update. In my case, I chose to implement it in <code>hook_update_N()</code>, because: it gives me access to the Batch API for free; it's guaranteed to run only once; and it's protected by superuser-only access control. But, for example, you could also implement it as a custom admin page, calling the Batch API from a menu callback within your module.
+
+<h2>Just one example</h2>
+
+The use case presented here &ndash; a Computed Field used as a search index for Views exposed filters &ndash; is really just one example of how this technique could come in handy. What I'm trying to provide in this article, is a code template that can be applied to any scenario in which a single field (or a small number of fields) needs to be modified across a large volume of existing nodes (or other entities).
+
+I can think of quite a few other potential scenarios. A custom "phone" field, where a region code needs to be appended to all existing data. A "link" field, where any existing data missing a "www" prefix needs to have it added. A node reference field, where certain saved Node IDs need to be re-mapped to new values, because the old pages have been archived. Whatever your specific requirement, I hope this code snippet makes your life a bit easier, and your server load a bit lighter.

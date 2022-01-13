@@ -1,0 +1,216 @@
+---
+title: Introducing the Drupal Handy Block module
+date: 2012-06-08
+teaser: |-
+  I've been noticing more and more lately, that for every new Drupal site I build, I define a lot of custom blocks. I put the code for these blocks in one or more custom modules, and most of them are really simple. For me, at least, the most common task that these blocks perform, is to display one or more fields of the node (or other entity) page currently being viewed; and in second place, is the task of displaying a list of nodes from a nodequeue (as I'm rather a <a href="http://drupal.org/project/nodequeue">Nodequeue module</a> addict, I tend to have nodequeues strewn all over my sites).
+
+  In short, I've gotten quite bored of copy-pasting the same block definition code over and over, usually with minimal changes. I also feel that such simple block definitions don't warrant defining a new custom module &ndash; as they have zero interesting logic / functionality, and as their purpose is purely presentational, I'd prefer to define them at the theme level. Additionally, every Drupal module has both administrative overhead (need to install / enable it on different environments, need to manage its deployment, etc), and performance overhead (every extra PHP <code>include()</code> call involves opening and reading a new file from disk, and every enabled Drupal module is a minimum of one extra PHP file to be included); so, less enabled modules means a faster site.
+
+  To make my life easier &ndash; and the life of anyone else in the same boat &ndash; I've written the <a href="http://drupal.org/project/handyblock">Handy Block</a> module. (As the project description says,) if you often have a bunch of custom modules on your site, that do nothing except implement block hooks (along with block callback functions), for blocks that do little more than display some fields for the entity currently being viewed, then Handy Block should&hellip; well, it should come in handy! You'll be able to do the same thing in just a few lines of your <code>template.php</code> file; and then, you can delete those custom modules of yours altogether.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+---
+I've been noticing more and more lately, that for every new Drupal site I build, I define a lot of custom blocks. I put the code for these blocks in one or more custom modules, and most of them are really simple. For me, at least, the most common task that these blocks perform, is to display one or more fields of the node (or other entity) page currently being viewed; and in second place, is the task of displaying a list of nodes from a nodequeue (as I'm rather a <a href="http://drupal.org/project/nodequeue">Nodequeue module</a> addict, I tend to have nodequeues strewn all over my sites).
+
+In short, I've gotten quite bored of copy-pasting the same block definition code over and over, usually with minimal changes. I also feel that such simple block definitions don't warrant defining a new custom module &ndash; as they have zero interesting logic / functionality, and as their purpose is purely presentational, I'd prefer to define them at the theme level. Additionally, every Drupal module has both administrative overhead (need to install / enable it on different environments, need to manage its deployment, etc), and performance overhead (every extra PHP <code>include()</code> call involves opening and reading a new file from disk, and every enabled Drupal module is a minimum of one extra PHP file to be included); so, less enabled modules means a faster site.
+
+To make my life easier &ndash; and the life of anyone else in the same boat &ndash; I've written the <a href="http://drupal.org/project/handyblock">Handy Block</a> module. (As the project description says,) if you often have a bunch of custom modules on your site, that do nothing except implement block hooks (along with block callback functions), for blocks that do little more than display some fields for the entity currently being viewed, then Handy Block should&hellip; well, it should come in handy! You'll be able to do the same thing in just a few lines of your <code>template.php</code> file; and then, you can delete those custom modules of yours altogether.
+
+<h2>The custom module way</h2>
+
+Let me give you a quick example. Your <code>page</code> node type has two fields, called <code>sidebar_image</code> and <code>sidebar_text</code>. You'd like these two fields to display in a sidebar block, whenever they're available for the <code>page</code> node currently being viewed.
+
+Using a custom module, how would you achieve this?
+
+First of all, you have to build the basics for your new custom module. In this case, let's say you want to call your module <code>pagemod</code> &ndash; you'll need to start off by creating a <code>pagemod</code> directory (in, for example, <code>sites/all/modules/custom</code>), and writing a <code>pagemod.info</code> file that looks like this:
+
+<pre class="ini"><code>name = Page Mod
+description = Custom module that does bits and pieces for page nodes.
+core = 7.x
+files[] = pagemod.module
+</code></pre>
+
+You'll also need an almost-empty <code>pagemod.module</code> file:
+
+<pre class="php"><code><?php
+
+/**
+ * @file
+ * Custom module that does bits and pieces for page nodes.
+ */
+</code></pre>
+
+Your module now exists &ndash; you can enable it if you want. Now, you can start building your sidebar block &ndash; let's say that you want to call it <code>sidebar_snippet</code>. First off, you need to tell Drupal that the block exists, by implementing <code>hook_block_info()</code> (note: this and all following code goes in <code>pagemod.module</code>, unless otherwise indicated):
+
+<pre class="php"><code><?php
+/**
+ * Implements hook_block_info().
+ */
+function pagemod_block_info() {
+  $blocks['sidebar_snippet']['info'] = t('Page sidebar snippet');
+  return $blocks;
+}</code></pre>
+
+Next, you need to define what gets shown in your new block. You do this by implementing <code>hook_block_view()</code>:
+
+<pre class="php"><code><?php
+/**
+ * Implements hook_block_view().
+ */
+function pagemod_block_view($delta = '') {
+  switch ($delta) {
+    case 'sidebar_snippet':
+      return pagemod_sidebar_snippet_block();
+  }
+}</code></pre>
+
+To keep things clean, it's a good idea to call a function for each defined block in <code>hook_block_view()</code>, rather than putting all your code directly in the hook function. Right now, you only have one block to render; but before you know it, you may have fifteen. So, let your block do its stuff here:
+
+<pre class="php"><code><?php
+/**
+ * Displays the sidebar snippet on page nodes.
+ */
+function pagemod_sidebar_snippet_block() {
+  // Pretend that your module also contains this function - for code
+  // example, see handyblock_get_curr_page_node() in handyblock.module.
+  $node = pagemod_get_curr_page_node();
+  if (empty($node->nid) || !($node->type == 'page')) {
+    return;
+  }
+
+  if (!empty($node->field_sidebar_image['und'][0]['uri'])) {
+    // Pretend that your module also contains this function - for code
+    // example, see tpl_field_vars_styled_image_url() in
+    // tpl_field_vars.module
+    $image_url = pagemod_styled_image_url($node->field_sidebar_image
+                                          ['und'][0]['uri'],
+                                          'sidebar_image');
+
+    $body = '';
+    if (!empty($node->field_sidebar_text['und'][0]['safe_value'])) {
+      $body = $node->field_sidebar_text['und'][0]['safe_value'];
+    }
+
+    $block['content'] = array(
+      '#theme' => 'pagemod_sidebar_snippet',
+      '#image_url' => $image_url,
+      '#body' => $body,
+    );
+
+    return $block;
+  }
+}</code></pre>
+
+Almost done. Drupal now recognises that your block exists, which means that you can enable your block and assign it to a region on the <code>administer -> structure -> blocks</code> page. Drupal will execute the code you've written above, when it tries to display your block. However, it won't yet display anything much, because you've defined your block as having a custom theme function, and that theme function hasn't been written yet.
+
+Because you're an adherent of theming best practices, and you like to output all parts of your page using theme templates rather than theme functions, let's register this themable item, and let's define it as having a template:
+
+<pre class="php"><code><?php
+/**
+ * Implements hook_theme().
+ */
+function pagemod_theme() {
+  return array(
+    'pagemod_sidebar_snippet' => array(
+      'variables' => array(
+        'image_url' => NULL,
+        'body' => NULL,
+      ),
+      'template'  => 'pagemod-sidebar-snippet',
+    ),
+  );
+}</code></pre>
+
+And, as the final step, you'll need to create a <code>pagemod-sidebar-snippet.tpl.php</code> file (also in your <code>pagemod</code> module directory), to actually output your block:
+
+<pre class="php"><code><img src="<?php print $image_url; ?>" id="sidebar-snippet-image" />
+
+<?php if (!empty($body)): ?>
+<div id="sidebar-snippet-body-wrapper">
+  <?php print $body; ?>
+</div><!-- /#sidebar-snippet-body-wrapper -->
+<?php endif; ?>
+</code></pre>
+
+Give your Drupal cache a good ol' clear, and voila &ndash; it sure took a while, but you've finally got your sidebar block built and displaying.
+
+<h2>The Handy Block way</h2>
+
+Now, to contrast, let's see how you'd achieve the same result, using the Handy Block module. No need for any of the custom <code>pagemod</code> module stuff above. Just enable Handy Block, and then place this code in your active theme's <code>template.php</code> file:
+
+<pre class="php"><code><?php
+/**
+ * Handy Block theme callback implementation.
+ */
+function MYTHEME_handyblock() {
+  return array(
+    'sidebar_snippet' => array(
+      'block_info' => t('MYTHEME sidebar snippet'),
+      'handyblock_context' => 'curr_page_node',
+      'theme_variables' => array(
+        'image_url',
+        'body',
+      ),
+    ),
+  );
+}
+
+/**
+ * Handy Block alter callback for block 'sidebar_snippet'.
+ */
+function MYTHEME_handyblock_sidebar_snippet_alter(&$block, $context) {
+  $node = $context['node'];
+  $vars = tpl_field_vars($node);
+  if (empty($vars['sidebar_image'])) {
+    $block = NULL;
+    return;
+  }
+
+  $block['content']['#image_url'] = $vars['sidebar_image']
+                                         ['sidebar_image_url'];
+  if (!empty($vars['sidebar_text'])) {
+    $block['content']['#body'] = $vars['sidebar_text'];
+  }
+}</code></pre>
+
+The <code>MYTHEME_handyblock()</code> callback automatically takes care of all three of the Drupal hook implementations that you previously had to write manually: <code>hook_block_info()</code>, <code>hook_block_view()</code>, and <code>hook_theme()</code>. The <code>MYTHEME_handyblock_BLOCKNAME_alter()</code> callback lets you do whatever you want to your block, after automatically providing the current page node as context, and setting the block's theme callback (in this case, the callback is controlling the block's visibility based on whether an image is available or not; and it's populating the block with the image and text fields).
+
+(Note: the example above also makes use of <a href="http://drupal.org/project/tpl_field_vars">Template Field Variables</a>, to make the code even more concise, and even easier to read and to maintain &ndash; for more info, see my previous <a href="/thoughts/2012/05/introducing-the-drupal-template-field-variables-module/">article about Template Field Variables</a>).
+
+Handy Block has done the "paperwork" (i.e. the hook implementations), such that Drupal expects a <code>handyblock-sidebar-snippet.tpl.php</code> file for this block (in your active theme's directory). So, let's create one (looks the same as the old <code>pagemod-sidebar-snippet.tpl.php</code> template):
+
+<pre class="php"><code><img src="<?php print $image_url; ?>" id="sidebar-snippet-image" />
+
+<?php if (!empty($body)): ?>
+<div id="sidebar-snippet-body-wrapper">
+  <?php print $body; ?>
+</div><!-- /#sidebar-snippet-body-wrapper -->
+<?php endif; ?>
+</code></pre>
+
+After completing these steps, clear your Drupal cache, and assign your block to a region &ndash; and hey presto, you've got your custom block showing. Only this time, no custom module was needed, and significantly fewer lines of code were written.
+
+<h2>In summary</h2>
+
+Handy Block is not rocket science. (As the project description says,) this is a convenience module, for module developers and for themers. All it really does, is automate a few hook implementations for you. By implementing the Handy Block theme callback function, Handy Block implements <code>hook_theme()</code>, <code>hook_block_info()</code>, and <code>hook_block_view()</code> for you.
+
+Handy Block is for Drupal site builders, who find themselves building a lot of blocks that:
+
+<ul>
+  <li>Display more than just static text (if that's all you need, just use the 'add block' feature in the Drupal core block module)</li>
+  <li>Display something which is pretty basic (e.g. fields of the node currently being viewed), but which does require some custom code (albeit code that doesn't warrant a whole new custom module on your site)</li>
+  <li>Require a custom theme template</li>
+</ul>
+
+I should also mention that, before starting work on Handy Block, I had a look around for similar existing Drupal modules, and I found two interesting candidates. Both can be used to do the same thing that I've demonstrated in this article; however, I decided to go ahead and write Handy Block anyway, and I did so because I believe Handy Block is a better tool for the job (for the target audience that I have in mind, at least). Nevertheless, I encourage you to have a look at the competition as well.
+
+The first alternative is <a href="http://drupal.org/project/cck_blocks">CCK Blocks</a>. This module lets you achieve similar results to Handy Block &ndash; however, I'm not so keen on it for several reasons: all its config is through the Admin UI (and I want my custom block config in code); it doesn't let you do anything more than output fields of the entity currently being viewed (and I want other options too, e.g. output a nodequeue); and it doesn't allow for completely custom templates for each block (although overriding its templates would probably be adequate in many cases).
+
+The second alternative is <a href="http://drupal.org/project/bean">Bean</a>. I'm actually very impressed with what this module has to offer, and I'm hoping to take it for a spin sometime soon. However, for me, it seems that the Bean module is too far in the opposite extreme (compared to CCK Blocks) &ndash; whereas CCK blocks is too "light" and only has an admin UI for configuration, the Bean module is too complicated for simple use cases, as it requires implementing no small amount of code, within some pretty complex custom hooks. I decided against using Bean, because: it requires writing code within custom modules (not just at the theme layer); it's designed for things more complicated than just outputting fields of the entity currently being viewed (e.g. for performing custom Entity queries in a block, but without the help of Views); and it's above the learning curve of someone who primarily wears a Drupal themer hat.
+
+Apart from the administrative and performance benefits of defining custom blocks in your theme's <code>template.php</code> file (rather than in a custom module), doing all the coding at the theme level also has another advantage. It makes custom block creation more accessible to people who are primarily themers, and who are reluctant (at best) module developers. This is important, because those big-themer-hat, small-developer-hat people are the primary target audience of this module (with the reverse &ndash; i.e. big-developer-hat, small-themer-hat people &ndash; being the secondary target audience).
+
+Such people are scared and reluctant to write modules; they're more comfortable sticking to just the theme layer. Hopefully, this module will make custom block creation more accessible, and less daunting, for such people (and, in many cases, custom block creation is a task that these people need to perform quite often). I also hope that the architecture of this module &ndash; i.e. a callback function that must be implemented in the active theme's <code>template.php</code> file, not in a module &ndash; isn't seen as a hack or as un-Drupal-like. I believe I've justified fairly thoroughly, why I made this architecture decision.
+
+I also recommend that you use <a href="http://drupal.org/project/tpl_field_vars">Template Field Variables</a> in conjunction with Handy Block (see my previous <a href="/thoughts/2012/05/introducing-the-drupal-template-field-variables-module/">article about Template Field Variables</a>). Both of them are utility modules for themers. The idea is that, used stand-alone or used together, these modules make a Drupal themer's life easier. Happy theming, and please let me know your feedback about the module.
