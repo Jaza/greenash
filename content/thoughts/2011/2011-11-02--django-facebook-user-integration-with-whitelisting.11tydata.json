@@ -1,0 +1,10 @@
+{
+  "comments": [
+    {
+      "date": "2012-04-10T23:42:50Z",
+      "name": "Omer Katz",
+      "url": "http://omerkatz.com/",
+      "comment": "Hardcoding this in the library is not maintainable.\n\ndjango-allauth has advanced a lot.\n\nIs there now a hook to whitelist users?"
+    }
+  ]
+}

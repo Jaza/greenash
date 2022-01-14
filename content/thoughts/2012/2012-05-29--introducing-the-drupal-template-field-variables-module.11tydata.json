@@ -1,0 +1,36 @@
+{
+  "comments": [
+    {
+      "date": "2012-05-29T07:43:40Z",
+      "name": "MXT",
+      "comment": "This is the best article I ever read about WHAT Themers simply and REALLY want to do theirs job, and all the difficulties they actually met due to the complexity of Drupal theming system."
+    },
+    {
+      "date": "2012-05-29T09:19:23Z",
+      "name": "R.J. Steinert",
+      "url": "http://rjsteinert.com/",
+      "comment": "It's not client side templating but +1 for making things easier!"
+    },
+    {
+      "date": "2012-05-29T09:20:15Z",
+      "name": "R.J. Steinert",
+      "url": "http://rjsteinert.com/",
+      "comment": "And good job on the explanation! Way to get inside folks' heads."
+    },
+    {
+      "date": "2012-05-29T17:01:21Z",
+      "name": "rooby",
+      "comment": "There are also modules that allow changing field wrappers in the UI, so you can keep doing it this way:\n\n<pre class=\"php\"><code>print render($content['field_byline']);</code></pre>\n\nbut without so much div soup.\n\nSee <a href=\"http://drupal.org/project/fences\">fences</a>"
+    },
+    {
+      "date": "2012-05-31T04:05:45Z",
+      "name": "Chris",
+      "comment": "Not sure what utterly fundamental thing I'm doing wrong here...\n\nI've followed the instructions above to the letter, but when I try to print the body field, I eg get\n\n<pre class=\"no-highlight\"><code>Notice: Undefined variable: body in include() (line 8 of sitepath/node--page.tpl.php).</code></pre>"
+    },
+    {
+      "date": "2012-05-31T06:15:50Z",
+      "isAuthorReply": true,
+      "comment": "@Chris: thanks for the bug report. Turns out that there was indeed an issue, the default <code>$body</code> field wasn't coming through, as its internal name doesn't begin with <code>field_</code>, and so it was conflicting with the <code>body</code> key already in the preprocess <code>$vars</code> array.\n\nI've now fixed this - please download version 1.1 of Template Field Variables, and it should all work for you."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "comments": [
+    {
+      "date": "2012-05-10T10:39:11Z",
+      "name": "rooby",
+      "comment": "Your code would be much less if you went the regular expressions route.\n\nRegular expressions take a little bit to get your head around but they are so powerful and a very useful tool to know how to use.\n\nAlso, it seems like you are saying to call the parsing function from your theme template.\n\nThat is not a good idea.\n\nYou should be at least doing it <a href=\"http://drupal.org/node/223430\">in the template preprocess function</a> for that template.\n\nBut even better would be to do it as an input filter.\n\nThen for example you could assign your parser to your filtered HTML input filter and then whenever the Filtered HTML input format is used the text runs trough your parser.\n\nFor more info see <a href=\"http://api.drupal.org/api/drupal/modules!filter!filter.api.php/function/hook_filter_info/7\"><code>hook_filter_info()</code></a>.\n\nThere are some examples around the place, including <a href=\"http://drupal.org/project/examples\">in the examples module</a>."
+    },
+    {
+      "date": "2012-05-10T11:36:06Z",
+      "isAuthorReply": true,
+      "comment": "@rooby:\n\nI decided not to use regular expressions in this case, as the nature of the task would have required quite a complicated regex pattern. Perhaps my code would be less quantity, but it would be much harder to read and to maintain. I have plenty of experience in using regexes, enough to know when not to use them.\n\nIn my case, I'm actually calling the function from the callback code of a custom-defined block, in a custom module. I agree with your suggestions: calling it from a template preprocess function would also be a good idea, and implementing it as an input filter would be appropriate too. Of course, calling the function directly from a theme template would be bad coding practice. However, I purposely chose not to discuss in this article where I'm calling the code from in Drupal (or from what possible locations one could call it in Drupal), as the example in this article is not CMS-dependent, and as the article is purely about HTML parsing (not about how to integrate HTML parsing with Drupal)."
+    },
+    {
+      "date": "2012-05-10T15:48:40Z",
+      "name": "Shaun",
+      "url": "http://www.checkmarkmedia.com/",
+      "comment": "Try <a href=\"http://querypath.org/\">querypath</a> for parsing the HTML."
+    },
+    {
+      "date": "2012-05-11T00:13:13Z",
+      "name": "Nate Wildermuth",
+      "comment": "I believe that using CKeditor's templates would be another (limited) solution."
+    },
+    {
+      "date": "2012-05-11T15:46:44Z",
+      "name": "loopduplicate",
+      "url": "http://www.burningtoken.com/",
+      "comment": "Another vote for querypath! It's like jquery for PHP."
+    }
+  ]
+}
