@@ -1,0 +1,20 @@
+{
+  "comments": [
+    {
+      "date": "2012-06-10T21:13:08Z",
+      "name": "Murray",
+      "url": "http://cruncht.com/",
+      "comment": "Hi Jeremy, I remember having a a chat with you in the pub many moons ago about those pesky little functions which need to go into a module :)\n\nThese days I would tend to reach for Views to handle the use cases you describe. Views will allow you to grab the current node as an argument and to pull out fields for display as a block. You can do this for a single node or a list of them, as is the case with nodequeue. This is traditional site building with no coding needed.\n\nAny reason for not going down this path?\n\nI'd also be interested to find out a bit more on this line:\n\n<pre class=\"no-highlight\"><code>'handyblock_context' => 'curr_page_node',</code></pre>\n\nAny other contexts available?\n\nThanks for the module and maybe see you at a meetup one of these days."
+    },
+    {
+      "date": "2012-06-11T05:40:12Z",
+      "isAuthorReply": true,
+      "comment": "@Murray: There are a number of reasons why you might prefer to do block-building (for showing fields of the current node) as I've described it here, rather than with Views:\n\n<ul>\n<li>You might want to do some extra preprocessing (e.g. output an image in a different preset size, depending on the exact node page being viewed), which would be difficult to achieve with Views</li>\n<li>Views <em>can</em> be used for displaying only one node, but I'm always reluctant to use it in this way, seems like overkill</li>\n<li>Also overkill, in my opinion, to use Views when no complex filtering / joining / sorting is needed</li>\n<li>Each View that you display on a page affects performance, as Views performs a (poorly-optimised) query for every View render; with the Handy Block approach, there's almost no performance impact, as there's no extra querying (it just calls <code>node_load()</code>, which has already loaded the current node and cached it in memory by the time your block gets rendered)</li>\n<li>Views templating is a major pain; personally, I prefer to render my own custom template, that I have total control over, and that I can keep super-clean and super-themer-friendly, rather than bother with yet another (dreaded) <code>views-view-fields--VIEWNAME.tpl.php</code> override</li>\n<li>Having less site-structure stuff (such as view definitions) in the database, and more site-structure stuff (such as handy block definitions) in code, makes deployment easier, means that you have version-control (e.g. Git) tracking over more stuff, and is in general a step closer towards Best Practices for site development</li>\n</ul>\n\nI realise that for the majority of Drupal site builders, most of the above reasons aren't particularly compelling, and at the end of the day they decide that the benefits outweigh the drawbacks for using Views in cases such as these. But hey, different developers have different priorities and different strategies.\n\nFor those devs for whom the strategies I've presented here ring true, hopefully this article helps make your lives easier. For the rest of you, hope you find the article interesting, and feel free to make up your own mind thereafter; I'm not forcing anyone to adopt a new way to build Drupal sites, I'm just presenting some alternatives that perhaps aren't explained very often or very thoroughly in Drupal materials."
+    },
+    {
+      "date": "2012-06-11T05:45:05Z",
+      "isAuthorReply": true,
+      "comment": "@Murray: re: <code>'handyblock_context' => 'curr_page_node'</code>. All this does, is load the current node using <code>node_load()</code>, and pass the node object on as a context variable. And yes, currently there are three other handyblock contexts available: <code>curr_page_user</code>, <code>curr_page_term</code>, and <code>nodequeue</code> (the last one also takes an <code>nqid</code> as argument)."
+    }
+  ]
+}

@@ -31,6 +31,54 @@
       "date": "2012-05-31T06:15:50Z",
       "isAuthorReply": true,
       "comment": "@Chris: thanks for the bug report. Turns out that there was indeed an issue, the default <code>$body</code> field wasn't coming through, as its internal name doesn't begin with <code>field_</code>, and so it was conflicting with the <code>body</code> key already in the preprocess <code>$vars</code> array.\n\nI've now fixed this - please download version 1.1 of Template Field Variables, and it should all work for you."
+    },
+    {
+      "date": "2012-06-02T09:06:53Z",
+      "name": "Ken",
+      "url": "http://englishprofi.com/",
+      "comment": "A fun read but a video is worth a gazillion words. Can you show us this in a nice high quality (visually) video including all your tra la la la boom de ahas and such, thanks."
+    },
+    {
+      "date": "2012-06-02T09:27:34Z",
+      "name": "Ken",
+      "url": "http://englishprofi.com/",
+      "comment": "He opened up his node (of type 'page') in a browser and it worked as described, He opened up his user profile page (profile2 with field collections) and he did not see anything from the module.\n\nWhat should he do next?"
+    },
+    {
+      "date": "2012-07-24T06:09:27Z",
+      "name": "Zach Harkey",
+      "comment": "I loved reading this article.\n\nI can't help but think that one of the primary reasons the Drupal themer experience is so miserable is because it is almost impossible for a themer to effectively articulate the problem in the first place.\n\nYour style of walking the reader through a typical trial and error case study is brilliant. Casting the themer in the role of the humble protagonist illustrates the underlying problems without coming off like whining, or finger pointing, or minimizing the complexity and history of effort that led the situation to its current state.\n\nAny future article written in hopes of advocating for the themer's experience should use this format.\n\nI can't wait to try the module."
+    },
+    {
+      "date": "2012-07-31T10:02:59Z",
+      "name": "Brad",
+      "comment": "Great article, awesome module."
+    },
+    {
+      "date": "2012-10-15T07:10:50Z",
+      "name": "A themer",
+      "comment": "First off had a laugh reading this. Thanks needed that.\n\nHaving said that, without knocking the article, stumbled into one of Drupal's other pet peeves I have:\n\nCode explained on a web page will quite often NOT work.\n\nI've read the instructions, followed them to a t, and am not getting any output. Moreover I'm completely lost. I've been reading hours on trying how to output the value of a simple field for Pete's sake, it's not rocket science.\n\nWho are these developers building for? Please build so people CAN ACTUALLY USE IT,and still have a social life. It seems like there is a contest within Drupal development world who can write the most complex code, instead of just making it bullet proof to use. IT IS INSANE.\n\nRTM? Which Manual? The manual is broke, because nobody, except an elite few can understand this crap. Please save that for personal projects, but this is a general project. K.I.S.S. please.\n\nWasted an entire sunday on this crap."
+    },
+    {
+      "date": "2012-10-15T07:43:01Z",
+      "name": "Themer",
+      "comment": "O.k. it seems I missed some steps.\n\n<ol>\n<li>You have to install this module for any of this to work. Duh, Facepalm.</li>\n<li>Read the readme.txt in the module. It gives an expanded explanation which answers a lot of questions. Also it is unclear what 'entity' is. Do you mean a content type with this?</li>\n</ol>\n\nAnyway gave up for now, the readme reads like hieroglyphs to me. I can build a PHP application from scratch, etc. But can't print a simple field in a template file in Drupal.\n\nKeep up the good work though, you're on the right path.\n\nMy rant wasn't at you. Maybe it is better to ditch Drupal and write my own application. Actually keep some spare time."
+    },
+    {
+      "date": "2012-10-16T04:37:16Z",
+      "isAuthorReply": true,
+      "comment": "@Themer:\n\nThe issues you're having sound similar to what's been reported <a href=\"http://drupal.org/node/1705596\">in this tpl_field_vars support request</a>. Please read that thread, follow the advice that's been given there so far, and would be great if you could add your own feedback there too.\n\nRe: what is an \"entity\". Please see the <a href=\"http://drupal.org/node/1261744\">official introductory guide to Drupal entities</a> for help. When using tpl_field_vars, an entity is a node, a user, or a taxonomy term.\n\nAgreed, this is a component of Drupal that is broken to some extent. tpl_field_vars is an effort to fix the broken-ness a little bit. The module does what it can, but of course it's not a magic fix for every Drupal bug that ever existed. Sorry to hear that your experience with Drupal theming so far has been negative."
+    },
+    {
+      "date": "2012-11-06T04:43:37Z",
+      "name": "Luis",
+      "url": "http://www.uiux.mx/",
+      "comment": "Great article, specially this line: \"...what he's done is The Drupal Way, but he's still not convinced that it's The Right Way.\" That's exactly how I feel while struggling with Drupal-themeing.\n\nI hope things change for Drupal 8. Front-EndDev for Drupal is, as you said, unnecessarily complex."
+    },
+    {
+      "date": "2012-12-13T06:30:05Z",
+      "name": "Sam",
+      "comment": "A link to this article should be on the FIRST page of \"Theming for Drupal 101\"!! Maybe more developers/themers would embrace Drupal.\n\nThank you so much for this. I hope to spend more time with my family because of this. :)"
     }
   ]
 }

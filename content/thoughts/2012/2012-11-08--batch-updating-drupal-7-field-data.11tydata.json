@@ -1,0 +1,20 @@
+{
+  "comments": [
+    {
+      "date": "2012-11-08T06:15:03Z",
+      "name": "Roman Zimmermann",
+      "url": "http://devblog.more-onion.com/",
+      "comment": "In such cases I always try to whip up a database query that does the job on its own. That usually works in the blink of an eye and spares me hours of digging into drupal core internals.\n\nI'll keep your post in mind though for whenever the SQL-only approach fails."
+    },
+    {
+      "date": "2012-11-09T00:22:28Z",
+      "name": "Craig",
+      "comment": "In Drupal 6 there is the <a href=\"http://drupal.org/project/computed_field_tools\">computed_field_tools</a> module that does the recompute. Unfortunately there is only a dev version for D7."
+    },
+    {
+      "date": "2012-12-06T09:59:18Z",
+      "name": "TechNikh",
+      "comment": "<pre class=\"no-highlight\"><code>bundle_name is undefined.\n$instance = field_info_instance($entity_type,\n                                $field_name,\n                                $bundle_name);\n\nNotice: Undefined variable: bundle_name in..................</code></pre>"
+    }
+  ]
+}
