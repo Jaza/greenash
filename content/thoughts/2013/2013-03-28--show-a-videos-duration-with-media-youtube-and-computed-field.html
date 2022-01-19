@@ -1,0 +1,230 @@
+---
+title: "Show a video's duration with Media: YouTube and Computed Field"
+date: 2013-03-28
+permalink: /thoughts/2013/03/show-a-videos-duration-with-media-youtube-and-computed-field/
+teaser: |-
+  I build quite a few Drupal sites that use embedded YouTube videos, and my module of choice for handling this is <a href="http://drupal.org/project/media_youtube">Media: YouTube</a>, which is built upon the popular <a href="http://drupal.org/project/media">Media module</a>. The Media: YouTube module generally works great; but on one site that I recently built, I discovered one of its shortcomings. It doesn't let you display a YouTube video's duration.
+
+  I thought up a quick, performant and relatively easy way to solve this. With just a few snippets of custom code, and the help of the <a href="http://drupal.org/project/computed_field">Computed Field</a> module, showing video duration (in hours / minutes / seconds) for a Media: YouTube managed asset, is a walk in the park.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+---
+I build quite a few Drupal sites that use embedded YouTube videos, and my module of choice for handling this is <a href="http://drupal.org/project/media_youtube">Media: YouTube</a>, which is built upon the popular <a href="http://drupal.org/project/media">Media module</a>. The Media: YouTube module generally works great; but on one site that I recently built, I discovered one of its shortcomings. It doesn't let you display a YouTube video's duration.
+
+I thought up a quick, performant and relatively easy way to solve this. With just a few snippets of custom code, and the help of the <a href="http://drupal.org/project/computed_field">Computed Field</a> module, showing video duration (in hours / minutes / seconds) for a Media: YouTube managed asset, is a walk in the park.
+
+<h2>Getting set up</h2>
+
+First up, install the Media: YouTube module (and its dependent modules) on a Drupal 7 site of your choice. Then, add a YouTube video field to one of the site's content types. For this example, I added a field called 'Video' (<code>field_video</code>) to my content type 'Page' (<code>page</code>). Be sure to select a 'field type' of 'File', and a 'widget' of type 'Media file selector'. In the field settings, set 'Allowed remote media types' to just 'Video', and set 'Allowed URI schemes' to just 'youtube://'.
+
+To configure video display, go to 'Administration > Configuration > Media > File types' in your site admin, and for 'Video', click on 'manage file display'. You should be on the 'default' tab. For 'Enabled displays', enable just 'YouTube Video'. Customise the other display settings to your tastes.
+
+Add a YouTube video to one of your site's pages. For this example, I've chosen one of the many clips highlighting YouTube's role as the zenith of modern society's intellectual capacity: a <a href="http://www.youtube.com/watch?v=hDXvtqvXL54">dancing duck</a>.
+
+To show the video within your site's theme, open up your theme's <code>template.php</code> file, and add the following preprocess function (in this example, my theme is called <code>foobar</code>):
+
+<pre class="php"><code><?php
+/**
+ * Preprocessor for node.tpl.php template file.
+ */
+function foobar_preprocess_node(&$vars) {
+  if ($vars['node']->type == 'page' &&
+      !empty($vars['node']->field_video['und'][0]['fid'])) {
+    $video_file = file_load($vars['node']->field_video['und'][0]['fid']);
+    $vf = file_view_file($video_file, 'default', '');
+    $vars['video'] = drupal_render($vf);
+  }
+}
+</code></pre>
+
+And add the following snippet to your <code>node.tpl.php</code> file or equivalent (in my case, I added it to my <code>node--page.tpl.php</code> file):
+
+<pre class="php"><code><!-- template stuff bla bla bla -->
+
+<?php if (!empty($video)): ?>
+  <?php print $video; ?>
+<?php endif; ?>
+
+<!-- more template stuff bla bla bla -->
+</code></pre>
+
+The duck should now be dancing for you:
+
+[thumbnail dancing-duck.jpg Embrace The Duck.]
+
+<h2>Getting the duration</h2>
+
+On most sites, you won't have any need to retrieve and display the video's duration by itself. As you can see, the embedded YouTube element shows the duration pretty clearly, and that's adequate for most use cases. However, if your client wants the duration shown elsewhere (other than within the embedded video area), or if you're just in the mood for putting the duration between a spantabulously vomitive pair of <code>&lt;font color="pink"&gt;&lt;blink&gt;2:48&lt;/blink&gt;&lt;/font&gt;</code> tags, then keep reading.
+
+Unfortunately, the Media: YouTube module doesn't provide any functionality whatsoever for getting a video's duration (or much other video metadata, for that matter). But, have no fear, it turns out that a <a href="http://stackoverflow.com/questions/9167442/get-duration-from-a-youtube-url/9167754#9167754">quick code snippet</a> for querying a YouTube video's duration, based on video ID, is pretty quick and painless in bare-bones PHP. Add this to a custom module on your site (in my case, I added it to my <code>foobar_page.module</code>):
+
+<pre class="php"><code><?php
+/**
+ * Gets a YouTube video's duration, based on video ID.
+ *
+ * Copied (almost exactly) from:
+ * http://stackoverflow.com/questions/9167442/
+ * get-duration-from-a-youtube-url/9167754#9167754
+ *
+ * @param $video_id
+ *   YouTube video ID.
+ *
+ * @return
+ *   Video duration (or FALSE on failure).
+ */
+function foobar_page_get_youtube_video_duration($video_id) {
+  $data = @file_get_contents('http://gdata.youtube.com/feeds/api/videos/'
+  . $video_id . '?v=2&alt=jsonc');
+  if ($data === FALSE) {
+    return FALSE;
+  }
+
+  $obj = json_decode($data);
+  return $obj->data->duration;
+}
+</code></pre>
+
+Great &ndash; turns out that querying the YouTube API for the duration is very easy. But we don't want to perform an external HTTP request, every time we want to display a video's duration: that would be a potential performance issue (and, in the event that YouTube is slow or unavailable, it would completely hang the page loading process). What we should do instead, is only query the duration from YouTube when we save a node (or other entity), and then store the duration locally for easy retrieval later.
+
+<h2>Storing the duration</h2>
+
+There are a number of possibilities, for how to store this data. Using Drupal's <code>variable_get()</code> and <code>variable_set()</code> functionality is one option (with either one variable per duration value, or with all duration values stored in a single serialized variable). However, that has numerous disadvantages: it would negatively affect performance (both for retrieving duration values, and for the whole Drupal site); and, at the end of the day, it's an abuse of the Drupal variable system, which is only meant to be used for one-off values, not for values that are potentially set for every node on your site (sadly, it would be far from the first such case of abuse of the Drupal variable system &ndash; but the fact that other people / other modules do it, doesn't make it any less dodgy).
+
+Patching the Media: YouTube module to have an extra database field for video duration, and making the module retrieve and store this value, would be another option. However, that would be a lot more work and a lot more code; it would also mean having a hacked version of the module, until (if and when) a patch for the module (that we'd have to submit and refine) gets committed on drupal.org. Plus, it would mean learning a whole lot more about the Field API, the Media module, and the File API than any sane person would care to subject his/her self to.
+
+Enter the Computed Field module. With the help of this handy module, we have the possibility of implementing a better, faster, nicer solution.
+
+Add this to a custom module on your site (in my case, I added it to my <code>foobar_page.module</code>):
+
+<pre class="php"><code><?php
+/**
+ * Computed field callback.
+ */
+function computed_field_field_video_duration_compute(
+&$entity_field, $entity_type, $entity,
+$field, $instance, $langcode, $items) {
+  if (!empty($entity->nid) && $entity->type == 'page' &&
+      !empty($entity->field_video['und'][0]['fid'])) {
+    $video_file = file_load($entity->field_video['und'][0]['fid']);
+    if (!empty($video_file->uri) &&
+        preg_match('/^youtube\:\/\/v\/.+$/', $video_file->uri)) {
+      $video_id = str_replace('youtube://v/', '', $video_file->uri);
+      $duration = foobar_page_get_youtube_video_duration($video_id);
+
+      if (!empty($duration)) {
+        $entity_field[0]['value'] = $duration;
+      }
+    }
+  }
+}
+</code></pre>
+
+Next, install the Computed Field module on your Drupal site. Add a new field to your content type, called 'Video duration' (<code>field_video_duration</code>), with 'field type' and 'widget' of type 'Computed'. On the settings page for this field, you should see the message: <em>"This field is COMPUTED using <code>computed_field_field_video_duration_compute()</code>"</em>. In the 'database storage settings', ensure that 'Data type' is 'text', and that 'Data length' is '255'. You can leave all other settings for this field at their defaults.
+
+Re-save the node that has YouTube video content, in order to retrieve and save the new computed field value for the duration.
+
+<h2>Displaying the duration</h2>
+
+For the formatting of the duration (the raw value of which is stored in seconds), in hours:minutes:seconds format, here's a dodgy custom function that I whipped up. Use it, or don't &ndash; totally your choice. If you choose to use, then add this to a custom module on your site:
+
+<pre class="php"><code><?php
+/**
+ * Formats the given time value in h:mm:ss format (if it's >= 1 hour),
+ * or in mm:ss format (if it's < 1 hour).
+ *
+ * Based on Drupal's format_interval() function.
+ *
+ * @param $interval
+ *   Time interval (in seconds).
+ *
+ * @return
+ *   Formatted time value.
+ */
+function foobar_page_format_time_interval($interval) {
+  $units = array(
+    array('format' => '%d', 'value' => 3600),
+    array('format' => '%d', 'value' => 60),
+    array('format' => '%02d', 'value' => 1),
+  );
+
+  $granularity = count($units);
+  $output = '';
+  $has_value = FALSE;
+  $i = 0;
+
+  foreach ($units as $unit) {
+    $format = $unit['format'];
+    $value = $unit['value'];
+    $new_val = floor($interval / $value);
+    $new_val_formatted = ($output !== '' ? ':' : '') .
+                         sprintf($format, $new_val);
+    if ((!$new_val && $i) || $new_val) {
+      $output .= $new_val_formatted;
+
+      if ($new_val) {
+        $has_value = TRUE;
+      }
+    }
+
+    if ($interval >= $value && $has_value) {
+      $interval %= $value;
+    }
+
+    $granularity--;
+    $i++;
+
+    if ($granularity == 0) {
+      break;
+    }
+  }
+
+  return $output ? $output : '0:00';
+}
+</code></pre>
+
+Update your <code>mytheme_preprocess_node()</code> function, with some extra code for making the formatted video duration available in your node template:
+
+<pre class="php"><code><?php
+/**
+ * Preprocessor for node.tpl.php template file.
+ */
+function foobar_preprocess_node(&$vars) {
+  if ($vars['node']->type == 'page' &&
+      !empty($vars['node']->field_video['und'][0]['fid'])) {
+    $video_file = file_load($vars['node']->field_video['und'][0]['fid']);
+    $vf = file_view_file($video_file, 'default', '');
+    $vars['video'] = drupal_render($vf);
+
+    if (!empty($vars['node']->field_video_duration['und'][0]['value'])) {
+      $vars['video_duration'] = foobar_page_format_time_interval(
+        $vars['node']->field_video_duration['und'][0]['value']);
+    }
+  }
+}
+</code></pre>
+
+Finally, update your <code>node.tpl.php</code> file or equivalent:
+
+<pre class="php"><code><!-- template stuff bla bla bla -->
+
+<?php if (!empty($video)): ?>
+  <?php print $video; ?>
+<?php endif; ?>
+
+<?php if (!empty($video_duration)): ?>
+  <p><strong>Duration:</strong> <?php print $video_duration; ?></p>
+<?php endif; ?>
+
+<!-- more template stuff bla bla bla -->
+</code></pre>
+
+Reload the page on your site, and lo and behold:
+
+[thumbnail dancing-duck-duration.jpg We have duration!]
+
+<h2>Final remarks</h2>
+
+I hope this example comes in handy, for anyone else who needs to display YouTube video duration metadata in this way.
+
+I'd also like to strongly note, that what I've demonstrated here isn't solely applicable to this specific use case. With some modification, it could easily be applied to various different related use cases. Other than duration, you could retrieve / store / display any of the other metadata fields available via the YouTube API (e.g. date video uploaded, video category, number of comments). Or, you could work with media from another source, using another Drupal media-enabled module (e.g. <a href="http://drupal.org/project/media_vimeo">Media: Vimeo</a>). Or, you could store externally-queried data for some completely different field. I encourage you to experiment and to use your imagination, when it comes to the Computed Field module. The possibilities are endless.

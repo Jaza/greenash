@@ -1,0 +1,87 @@
+---
+title: Configuring Silex (Symfony2) and Monolog to email errors
+date: 2013-03-30
+permalink: /thoughts/2013/03/configuring-silex-symfony2-and-monolog-to-email-errors/
+teaser: |-
+  There's a pretty good documentation page on <a href="http://symfony.com/doc/2.1/cookbook/logging/monolog_email.html">how to configure Monolog to email errors</a> in <a href="http://symfony.com/">Symfony2</a>. This, and all other documentation that I could find on the subject, works great if: (a) you're using the <a href="https://github.com/symfony/symfony-standard">Symfony2 Standard Edition</a>; and (b) you want to send emails with <a href="http://swiftmailer.org/">Swift Mailer</a>. However, I couldn't find anything for my use case, in which: (a) I'm using <a href="http://silex.sensiolabs.org/">Silex</a>; and (b) I want to send mail with PHP's native mail handler (Swift Mailer is overkill for me).
+
+  Turns out that, after a bit of digging and poking around, it's not so hard to cobble together a solution that meets this use case. I'm sharing it here, in case anyone else finds themselves with similar needs in the future.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/symfony2
+---
+There's a pretty good documentation page on <a href="http://symfony.com/doc/2.1/cookbook/logging/monolog_email.html">how to configure Monolog to email errors</a> in <a href="http://symfony.com/">Symfony2</a>. This, and all other documentation that I could find on the subject, works great if: (a) you're using the <a href="https://github.com/symfony/symfony-standard">Symfony2 Standard Edition</a>; and (b) you want to send emails with <a href="http://swiftmailer.org/">Swift Mailer</a>. However, I couldn't find anything for my use case, in which: (a) I'm using <a href="http://silex.sensiolabs.org/">Silex</a>; and (b) I want to send mail with PHP's native mail handler (Swift Mailer is overkill for me).
+
+Turns out that, after a bit of digging and poking around, it's not so hard to cobble together a solution that meets this use case. I'm sharing it here, in case anyone else finds themselves with similar needs in the future.
+
+<h2>The code</h2>
+
+Assuming that you've installed both Silex and Monolog (by adding <code>silex/silex</code> and <code>monolog/monolog</code> to the <code>require</code> section of your <code>composer.json</code> file, or by some alternate install method), you'll need something like this for your app's bootstrap code (in my case, it's in my <code>project/app.php</code> file):
+
+<pre class="php"><code><?php
+
+/**
+ * @file
+ * Bootstraps this Silex application.
+ */
+
+$loader = require_once __DIR__ . '/../vendor/autoload.php';
+
+$app = new Silex\Application();
+
+function get_app_env() {
+  $gethostname_result = gethostname();
+
+  $gethostname_map = array(
+    'prodservername' => 'prod',
+    'stagingservername' => 'staging',
+  );
+
+  $is_hostname_mapped = !empty($gethostname_result) &&
+                        isset($gethostname_map[$gethostname_result]);
+
+  return $is_hostname_mapped ? $gethostname_map[$gethostname_result]
+                             : 'dev';
+}
+
+$app['env'] = get_app_env();
+
+$app['debug'] = $app['env'] == 'dev';
+
+$app['email.default_to'] = array(
+  'Dev Dude <dev.dude@nonexistentemailaddress.com>',
+  'Manager Dude <manager.dude@nonexistentemailaddress.com>',
+);
+
+$app['email.default_subject'] = '[My App] Error report';
+
+$app['email.default_from'] =
+  'My App <my.app@nonexistentemailaddress.com>';
+
+$app->register(new Silex\Provider\MonologServiceProvider(), array(
+  'monolog.logfile' =>  __DIR__ . '/../log/' . $app['env'] . '.log',
+  'monolog.name' => 'myapp',
+));
+
+$app['monolog'] = $app->share($app->extend('monolog',
+function($monolog, $app) {
+  if (!$app['debug']) {
+    $monolog->pushHandler(new Monolog\Handler\NativeMailerHandler(
+      $app['email.default_to'],
+      $app['email.default_subject'],
+      $app['email.default_from'],
+      Monolog\Logger::CRITICAL
+    ));
+  }
+
+  return $monolog;
+}));
+
+return $app;
+</code></pre>
+
+I've got some code here for determining the current environment (which can be <code>prod</code>, <code>staging</code> or <code>dev</code>), and for only enabling the error emailing functionality for environments other than <code>dev</code>. Up to you whether you want / need that functionality; plus, this example is just one of many possible ways to implement it.
+
+I followed the Silex docs for <a href="http://silex.sensiolabs.org/doc/providers/monolog.html#customization">customising Monolog by adding extra handlers</a>, which is actually very easy to use, although it's lacking any documented examples.
+
+That's about it, really. Using this code, you can have a Silex app which logs errors to a file (the usual) when running in your dev environment, but that also sends an error email to one or more addresses, when running in your other environments. Not rocket science &ndash; but, in my opinion, it's an important setup to be able to achieve in pretty much any web framework (i.e. regardless of your technology stack, receiving email notification of critical errors is a recommended best practice); and it doesn't seem to be documented anywhere so far for Silex.

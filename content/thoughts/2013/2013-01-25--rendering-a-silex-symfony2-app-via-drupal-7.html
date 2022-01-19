@@ -1,0 +1,247 @@
+---
+title: Rendering a Silex (Symfony2) app via Drupal 7
+date: 2013-01-25
+permalink: /thoughts/2013/01/rendering-a-silex-symfony2-app-via-drupal-7/
+teaser: |-
+  There's been a <a href="http://www.chapterthree.com/blog/mark-ferree/drupal-developer-symfony-land">lot of talk recently</a> regarding the integration of the <a href="http://symfony.com/components">Symfony2 components</a>, as a <a href="http://www.garfieldtech.com/drupal-symfony2">fundamental part</a> of Drupal 8's core system. I won't rabble on repeating the many things that have already been said elsewhere; however, to quote the great Bogeyman himself, let me just say that <a href="http://www.imdb.com/title/tt0034583/quotes"><em>"I think this is the beginning of a beautiful friendship"</em></a>.
+
+  On a project I'm currently working on, I decided to try out something of a related flavour. I built a stand-alone app in <a href="http://silex.sensiolabs.org/">Silex</a> (a sort of Symfony2 distribution); but, per the project's requirements, I also managed to heavily integrate the app with an existing Drupal 7 site. The app does almost everything on its own, except that: it passes its output to <a href="http://api.drupal.org/api/drupal/includes%21common.inc/function/drupal_render_page/7"><code>drupal_render_page()</code></a> before returning the request; and it checks that a Drupal user is currently logged-in and has a certain Drupal user role, for pages where authorisation is required.
+
+  The result is: an app that has its own custom database, its own routes, its own forms, its own business logic, and its own templates; but that gets rendered via the Drupal theming system, and that relies on Drupal data for authentication and authorisation. What's more, the implementation is quite clean (minimal hackery involved) &ndash; only a small amount of code is needed for the integration, and then (for the most part) Drupal and Silex leave each other alone to get on with their respective jobs. Now, let me show you how it's done.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+  - thoughtstopics/symfony2
+---
+There's been a <a href="http://www.chapterthree.com/blog/mark-ferree/drupal-developer-symfony-land">lot of talk recently</a> regarding the integration of the <a href="http://symfony.com/components">Symfony2 components</a>, as a <a href="http://www.garfieldtech.com/drupal-symfony2">fundamental part</a> of Drupal 8's core system. I won't rabble on repeating the many things that have already been said elsewhere; however, to quote the great Bogeyman himself, let me just say that <a href="http://www.imdb.com/title/tt0034583/quotes"><em>"I think this is the beginning of a beautiful friendship"</em></a>.
+
+On a project I'm currently working on, I decided to try out something of a related flavour. I built a stand-alone app in <a href="http://silex.sensiolabs.org/">Silex</a> (a sort of Symfony2 distribution); but, per the project's requirements, I also managed to heavily integrate the app with an existing Drupal 7 site. The app does almost everything on its own, except that: it passes its output to <a href="http://api.drupal.org/api/drupal/includes%21common.inc/function/drupal_render_page/7"><code>drupal_render_page()</code></a> before returning the request; and it checks that a Drupal user is currently logged-in and has a certain Drupal user role, for pages where authorisation is required.
+
+The result is: an app that has its own custom database, its own routes, its own forms, its own business logic, and its own templates; but that gets rendered via the Drupal theming system, and that relies on Drupal data for authentication and authorisation. What's more, the implementation is quite clean (minimal hackery involved) &ndash; only a small amount of code is needed for the integration, and then (for the most part) Drupal and Silex leave each other alone to get on with their respective jobs. Now, let me show you how it's done.
+
+<h2>Drupal setup</h2>
+
+To start with, set up a new bare-bones Drupal 7 site. I won't go into the details of Drupal installation here. If you need help with setting up a local Apache VirtualHost, editing your <code>/etc/hosts</code> file, setting up a MySQL database / user, launching the Drupal installer, etc, please refer to the <a href="http://drupal.org/documentation/install">Drupal installation guide</a>. For this guide, I'll be using a Drupal 7 instance that's been installed to the <code>/www/d7silextest</code> directory on my local machine, and that can be accessed via <code>http://d7silextest.local</code>.
+
+[thumbnail d7silextest.jpg D7 Silex test site after initial setup.]
+
+Once you've got that (or something similar) up and running, and if you're keen to follow along, then keep up with me as I outline further Drupal config steps. Firstly, go to <code>administration > people > permissions > roles</code>, create a new role called <code>'administrator'</code> (if it doesn't exist already). Then, assign the role to user 1.
+
+Next, download the patches from <a href="http://drupal.org/node/1891708">Need DRUPAL_ROOT in include of template.php</a> and <a href="http://drupal.org/node/1891802">Need DRUPAL_ROOT when rendering CSS include links</a>, and apply them to your Drupal codebase. Note: these are some bugs in core, where certain PHP files are being included without properly appending the <code>DRUPAL_ROOT</code> prefix. As of writing, I've submitted these patches to drupal.org, but they haven't yet been committed. Please check the status of these issue threads &ndash; if they're now resolved, then you may not need to apply the patches (check exactly which version of Drupal you're using, as of Drupal 7.19 the patches are still needed).
+
+If you're using additional Drupal contrib or custom modules, they may also have similar bugs. For example, I've also submitted <a href="http://drupal.org/node/1890872">Need DRUPAL_ROOT in require of include files</a> for the Revisioning module (not yet committed as of writing), and <a href="http://drupal.org/node/1890866">Need DRUPAL_ROOT in require of og.field.inc</a> for the Organic Groups module (now committed and applied in latest stable release of OG). If you find any more <code>DRUPAL_ROOT</code> bugs, that prevent an external script such as Symfony2 from utilising Drupal from within a subdirectory, then please patch these bugs yourself, and <a href="http://drupal.org/patch/submit">submit patches to drupal.org</a> as I've done.
+
+Enable the menu module (if it's not already enabled), and define a 'Page' content type (if not already defined). Create a new 'Page' node (in my config below, I assume that it's node 1), with a menu item (e.g. in 'main menu'). Your new test page should look something like this:
+
+[thumbnail d7silextest-silexpage.jpg D7 Silex test site with test page.]
+
+That's sufficient Drupal configuration for the purposes of our example. Now, let's move on to Silex.
+
+<h2>Silex setup</h2>
+
+To start setting up your example Silex site, create a new directory, which is outside of your Drupal site's directory tree. In this article, I'm assuming that the Silex directory is at <code>/www/silexd7test</code>. Within this directory, create a <code>composer.json</code> file with the following:
+
+<pre class="json"><code>{
+    "require": {
+        "silex/silex": "1.0.*"
+    },
+    "minimum-stability": "dev"
+}</code></pre>
+
+<a href="http://getcomposer.org/">Get Composer</a> (if you don't have it), by executing this command:
+
+<code>curl -s http://getcomposer.org/installer | php</code>
+
+Once you've got Composer, <a href="http://silex.sensiolabs.org/download">installing Silex</a> is very easy, just execute this command from your Silex directory:
+
+<code>php composer.phar install</code>
+
+Next, create a new directory called <code>web</code> in your silex root directory; and create a file called <code>web/index.php</code>, that looks like this:
+
+<pre class="php"><code><?php
+
+/**
+ * @file
+ * The PHP page that serves all page requests on a Silex installation.
+ */
+
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$app = new Silex\Application();
+
+$app['debug'] = TRUE;
+
+$app->get('/', function() use($app) {
+  return '<p>You should see this outputting ' .
+    'within your Drupal site!</p>';
+});
+
+$app->run();
+</code></pre>
+
+That's a very basic Silex app ready to go. The app just defines one route (the 'home page' route), which outputs the text <code>You should see this outputting within your Drupal site!</code> on request. The Silex app that I actually built and integrated with Drupal did a whole more of this &ndash; but for the purposes of this article, a "Hello World" example is all we need.
+
+To see this app in action, in your Drupal root directory create a symlink to the Silex web folder:
+
+<code>ln -s /www/silexd7test/web/ silexd7test</code>
+
+Now you can go to <code>http://d7silextest.local/silexd7test/</code>, and you should see something like this:
+
+[thumbnail silexd7test.jpg Silex serving requests stand-alone, under Drupal web path.]
+
+So far, the app is running under the Drupal web path, but it isn't integrated with the Drupal site at all. It's just running its own bootstrap code, and outputting the response for the requested route without any outside help. We'll be changing that shortly.
+
+<h2>Integration</h2>
+
+Open up the <code>web/index.php</code> file again, and change it to look like this:
+
+<pre class="php"><code><?php
+
+/**
+ * @file
+ * The PHP page that serves all page requests on a Silex installation.
+ */
+
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$app = new Silex\Application();
+
+$app['debug'] = TRUE;
+
+$app['drupal_root'] = '/www/d7silextest';
+$app['drupal_base_url'] = 'http://d7silextest.local';
+$app['is_embedded_in_drupal'] = TRUE;
+$app['drupal_menu_active_item'] = 'node/1';
+
+/**
+ * Bootstraps Drupal using DRUPAL_ROOT and $base_url values from
+ * this app's config. Bootstraps to a sufficient level to allow
+ * session / user data to be accessed, and for theme rendering to
+ * be invoked..
+ *
+ * @param $app
+ *   Silex application object.
+ * @param $level
+ *   Level to bootstrap Drupal to. If not provided, defaults to
+ *   DRUPAL_BOOTSTRAP_FULL.
+ */
+function silex_bootstrap_drupal($app, $level = NULL) {
+  global $base_url;
+
+  // Check that Drupal bootstrap config settings can be found.
+  // If not, throw an exception.
+  if (empty($app['drupal_root'])) {
+    throw new \Exception("Missing setting 'drupal_root' in config");
+  }
+  elseif (empty($app['drupal_base_url'])) {
+    throw new \Exception("Missing setting 'drupal_base_url' in config");
+  }
+
+  // Set values necessary for Drupal bootstrap from external script.
+  // See:
+  // http://www.csdesignco.com/content/using-drupal-data-functions-
+  // and-session-variables-external-php-script
+  define('DRUPAL_ROOT', $app['drupal_root']);
+  $base_url = $app['drupal_base_url'];
+
+  // Bootstrap Drupal.
+  require_once DRUPAL_ROOT . '/includes/bootstrap.inc';
+  if (is_null($level)) {
+    $level = DRUPAL_BOOTSTRAP_FULL;
+  }
+  drupal_bootstrap($level);
+
+  if ($level == DRUPAL_BOOTSTRAP_FULL &&
+  !empty($app['drupal_menu_active_item'])) {
+    menu_set_active_item($app['drupal_menu_active_item']);
+  }
+}
+
+/**
+ * Checks that an authenticated and non-blocked Drupal user is tied to
+ * the current session. If not, deny access for this request.
+ *
+ * @param $app
+ *   Silex application object.
+ */
+function silex_limit_access_to_authenticated_users($app) {
+  global $user;
+
+  if (empty($user->uid)) {
+    $app->abort(403, 'You must be logged in to access this page.');
+  }
+  if (empty($user->status)) {
+    $app->abort(403, 'You must have an active account in order to ' .
+      'access this page.');
+  }
+  if (empty($user->name)) {
+    $app->abort(403, 'Your session must be tied to a username to ' .
+    'access this page.');
+  }
+}
+
+/**
+ * Checks that the current user is a Drupal admin (with 'administrator'
+ * role). If not, deny access for this request.
+ *
+ * @param $app
+ *   Silex application object.
+ */
+function silex_limit_access_to_admin($app) {
+  global $user;
+
+  if (!in_array('administrator', $user->roles)) {
+    $app->abort(403,
+                'You must be an administrator to access this page.');
+  }
+}
+
+$app->get('/', function() use($app) {
+  silex_bootstrap_drupal($app);
+  silex_limit_access_to_authenticated_users($app);
+  silex_limit_access_to_admin($app);
+
+  $ret = '<p>You should see this outputting within your ' .
+         'Drupal site!</p>';
+
+  return !empty($app['is_embedded_in_drupal']) ?
+    drupal_render_page($ret) :
+    $ret;
+});
+
+$app->run();
+</code></pre>
+
+A number of things have been added to the code in this file, so let's examine them one-by-one. First of all, some Drupal-related settings have been added to the Silex <code>$app</code> object. The <code>drupal_root</code> and <code>drupal_base_url</code> settings, are the critical ones that are needed in order to bootstrap Drupal from within Silex. Because the Silex script is in a different filesystem path from the Drupal site, and because it's also being served from a different URL path, these need to be manually set and passed on to Drupal.
+
+The <code>is_embedded_in_drupal</code> setting allows the rendering of the page via <code>drupal_render_page()</code> to be toggled on or off. The script could work fine without this, and with rendering via <code>drupal_render_page()</code> hard-coded to always occur; allowing it to be toggled is just a bit more elegant. The <code>drupal_menu_active_item</code> setting, when set, triggers the Drupal menu path to be set to the path specified (via <code>menu_set_active_item()</code>).
+
+The route handler for our 'home page' path now calls three functions, before going on to render the page. The first one, <code>silex_bootstrap_drupal()</code>, is pretty self-explanatory. The second one, <code>silex_limit_access_to_authenticated_users()</code>, checks the Drupal <code>global $user</code> object to ensure that the current user is logged-in, and if not, it throws an exception. Similarly, <code>silex_limit_access_to_admin()</code> checks that the current user has the 'administrator' role (with failure resulting in an exception).
+
+To test the authorisation checks that are now in place, log out of the Drupal site, and visit the Silex 'front page' at <code>http://d7silextest.local/silexd7test/</code>. You should see something like this:
+
+[thumbnail silexd7test-accessdenied.jpg Silex denying access to a page because Drupal user is logged out]
+
+The <code>drupal_render_page()</code> function is usually &ndash; in the case of a Drupal menu callback &ndash; passed a callback (a function name as a string), and rendering is then delegated to that callback. However, it also accepts an output string as its first argument; in this case, the passed-in string is outputted directly as the content of the 'main page content' Drupal block. Following that, all other block regions are assembled, and the full Drupal page is themed for output, business as usual.
+
+To see the Silex 'front page' fully rendered, and without any 'access denied' message, log in to the Drupal site, and visit <code>http://d7silextest.local/silexd7test/</code> again. You should now see something like this:
+
+[thumbnail silexd7test-working.jpg Silex serving output that's been passed through drupal_render_page().]
+
+And that's it &ndash; a Silex callback, with Drupal theming and Drupal access control!
+
+<h2>Final remarks</h2>
+
+The example I've walked through in this article, is a simplified version of what I implemented for my recent real-life project. Some important things that I modified, for the purposes of keeping this article quick 'n' dirty:
+
+<ul>
+  <li>Changed the route handler and Drupal bootstrap / access-control functions, from being methods in a Silex Controller class (implementing <code>Silex\ControllerProviderInterface</code>) in a separate file, to being functions in the main <code>index.php</code> file</li>
+  <li>Changed the config values, from being stored in a JSON file and loaded via <code>Igorw\Silex\ConfigServiceProvider</code>, to being hard-coded into the <code>$app</code> object in raw PHP</li>
+  <li>Took out logging for the app via <code>Silex\Provider\MonologServiceProvider</code></li>
+</ul>
+
+My real-life project is also significantly more than just a single "Hello World" route handler. It defines its own custom database, which it accesses via Doctrine's DBAL and ORM components. It uses Twig templates for all output. It makes heavy use of Symfony2's Form component. And it includes a number of custom command-line scripts, which are implemented using Symfony2's Console component. However, most of that is standard Silex / Symfony2 stuff which is not so noteworthy; and it's also not necessary for the purposes of this article.
+
+I should also note that although this article is focused on Symfony2 / Silex, the example I've walked through here could be applied to any other PHP script that you might want to integrate with Drupal 7 in a similar way (as long as the PHP framework / script in question doesn't conflict with Drupal's function or variable names). However, it does make particularly good sense to integrate Symfony2 / Silex with Drupal 7 in this way, because: (a) Symfony2 components are going to be the foundation of Drupal 8 anyway; and (b) Symfony2 components are the latest and greatest components available for PHP right now, so the more projects you're able to use them in, the better.
