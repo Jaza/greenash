@@ -144,7 +144,7 @@ figure > a:hover {
   background: none;
 }
 
-figcaption {
+figcaption, .wideflex-wrapper > p {
   font-style: italic;
   text-align: center;
 }
