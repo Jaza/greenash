@@ -1,0 +1,156 @@
+---
+title: "Symfony2: as good as PHP gets?"
+date: 2013-10-16
+permalink: /thoughts/2013/10/symfony2-as-good-as-php-gets/
+teaser: |-
+  I've been getting my hands dirty with <a href="http://symfony.com/">Symfony2</a> of late. At the start of the year, I was introduced to it when <a href="http://greenash.net.au/thoughts/2013/01/rendering-a-silex-symfony2-app-via-drupal-7/">I built an app using Silex</a> (a Symfony2 distribution). The special feature of my app was that it allows integration between Silex and Drupal 7.
+
+  More recently, I finished another project, which I decided to implement using Symfony2 Standard Edition. Similar to my earlier project, it had the business requirement that it needed tight integration with a Drupal site; so, for this new project, I decided to write a <a href="https://github.com/Jaza/DrupalIntegrationBundle">Symfony2 Drupal integration bundle</a>.
+
+  Overall, I'm quite impressed with Symfony2 (in its various flavours), and I enjoy coding in it. I've been struggling to enjoy coding in Drupal (and PHP in general) &ndash; the environment that I know best &ndash; for quite some time. That's why I've been increasingly turning to Django (and other Python frameworks, e.g. Flask), for my dev projects. Symfony2 is a very welcome breath of fresh air in the PHP world.
+
+  However, I can't help but think: is Symfony2 "as good as PHP gets"? By that, I mean: Symfony2 appears to have borrowed many of the best practices that have evolved in the non-PHP world, and to have implemented them about as well as they physically can be implemented in PHP (indeed, the same could be said of PHP itself of late). But, PHP being so inferior to most of its competitors in so many ways, PHP implementations are also doomed to being inferior to their alternatives.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/symfony2
+---
+I've been getting my hands dirty with <a href="http://symfony.com/">Symfony2</a> of late. At the start of the year, I was introduced to it when <a href="http://greenash.net.au/thoughts/2013/01/rendering-a-silex-symfony2-app-via-drupal-7/">I built an app using Silex</a> (a Symfony2 distribution). The special feature of my app was that it allows integration between Silex and Drupal 7.
+
+More recently, I finished another project, which I decided to implement using Symfony2 Standard Edition. Similar to my earlier project, it had the business requirement that it needed tight integration with a Drupal site; so, for this new project, I decided to write a <a href="https://github.com/Jaza/DrupalIntegrationBundle">Symfony2 Drupal integration bundle</a>.
+
+Overall, I'm quite impressed with Symfony2 (in its various flavours), and I enjoy coding in it. I've been struggling to enjoy coding in Drupal (and PHP in general) &ndash; the environment that I know best &ndash; for quite some time. That's why I've been increasingly turning to Django (and other Python frameworks, e.g. Flask), for my dev projects. Symfony2 is a very welcome breath of fresh air in the PHP world.
+
+However, I can't help but think: is Symfony2 "as good as PHP gets"? By that, I mean: Symfony2 appears to have borrowed many of the best practices that have evolved in the non-PHP world, and to have implemented them about as well as they physically can be implemented in PHP (indeed, the same could be said of PHP itself of late). But, PHP being so inferior to most of its competitors in so many ways, PHP implementations are also doomed to being inferior to their alternatives.
+
+<h2>Pragmatism</h2>
+
+I try to be a pragmatic programmer &ndash; I believe that I'm getting more pragmatic, and less sentimental, as I continue to mature as a programmer. That means that my top concerns when choosing a framework / environment are:
+
+<ul>
+<li>Which one helps me get the job done in the most efficient manner possible? (i.e. which one costs my client the least money right now)</li>
+<li>Which one best supports me in building a maintainable, well-documented, re-usable solution? (i.e. which one will cost my client the least money in the long-term)</li>
+<li>Which one helps me avoid frustrations such as repetitive coding, reverse-engineering, and manual deployment steps? (i.e. which one costs me the least headaches and knuckle-crackings)
+</ul>
+
+Symfony2 definitely gets more brownie points from me than Drupal does, on the pragmatic front. For projects whose data model falls outside the standard CMS data model (i.e. pages, tags, assets, links, etc), I need an ORM (which Drupal's field API is not). For projects whose business logic falls outside the standard CMS business logic model (i.e. view / edit pages, submit simple web forms, search pages by keyword / tag / date, etc), I need a request router (which Drupal's menu API is not). It's also a nice added bonus to have a view / template system that gives me full control over the output without kicking and screaming (as is customary for Drupal's theme system).
+
+However, Symfony2 Standard Edition is a framework, and Drupal is a CMS. Apples and oranges.
+
+Django is a framework. It's also been noted already, by various other people, that many aspects of Symfony2 were inspired by their counterparts in Django (among other frameworks, e.g. Ruby on Rails). So, how about comparing Symfony2 with Django?
+
+Although they're written in different languages, Symfony2 and Django actually have quite a lot in common. In particular, Symfony2's <a href="http://twig.sensiolabs.org/">Twig</a> template engine is syntactically very similar to the Django template language; in fact, it's fairly obvious that Twig's syntax was <del>ripped off from</del> inspired by that of Django templates (Twig <a href="http://jinja.pocoo.org/">isn't the first</a> Django-esque <a href="https://github.com/evanmiller/erlydtl">template engine</a>, either, so I guess that if imitation is the highest form of flattery, then the Django template language should be feeling thoroughly flattered by now).
+
+The request routing / handling systems of Symfony2 and Django are also fairly similar. However, there are significant differences in their implementation styles; and in my personal opinion, the Symfony2 style feels more cumbersome and less elegant than the Django style.
+
+For example, here's the code you'd need to implement a basic 'Hello World' callback:
+
+<h3>In Symfony2</h3>
+
+<code>app/AppKernel.php</code> (in <code>AppKernel->registerBundles()</code>):
+
+<pre class="php"><code><?php
+$bundles = array(
+    // ...
+
+    new Hello\Bundle\HelloBundle(),
+);
+</code></pre>
+
+<code>app/config/routing.yml</code>:
+
+<pre class="json"><code>hello:
+    resource: "@HelloBundle/Controller/"
+    type:     annotation
+    prefix:   /
+</code></pre>
+
+<code>src/Hello/Bundle/Controller/DefaultController.php</code>:
+
+<pre class="php"><code><?php
+namespace Hello\Bundle\Controller;
+
+use Symfony\Component\HttpFoundation\Response;
+
+class DefaultController extends Controller
+{
+    /**
+     * @Route("/")
+     */
+    public function indexAction()
+    {
+        return new Response('Hello World');
+    }
+}
+</code></pre>
+
+<h3>In Django</h3>
+
+<code>project/settings.py</code>:
+
+<pre class="python"><code>INSTALLED_APPS = [
+    # ...
+
+    'hello',
+]
+</code></pre>
+
+<code>project/urls.py</code>:
+
+<pre class="python"><code>from django.conf.urls import *
+
+from hello.views import index
+
+urlpatterns = patterns('',
+    # ...
+
+    url(r'^$', index, name='hello'),
+)
+</code></pre>
+
+<code>project/hello/views.py</code>:
+
+<pre class="python"><code>from django.http import HttpResponse
+
+def index(request):
+    return HttpResponse("Hello World")
+</code></pre>
+
+As you can see above, the steps involved are basically the same for each system. First, we have to register with the framework the "thing" that our Hello World callback lives in: in Symfony2, the "thing" is called a bundle; and in Django, it's called an app. In both systems, we simply add it to the list of installed / registered "things". However, in Symfony2, we have to instantiate a new object, and we have to specify the namespace path to the class; whereas in Django, we simply add the (path-free) name of the "thing" to a list, as a string.
+
+Next, we have to set up routing to our request callback. In Symfony2, this involves using a configuration language (YAML), rather than the framework's programming language (PHP); and it involves specifying the "path" to the callback, as well as the format in which the callback is defined ("annotation" in this case). In Django, it involves importing the callback "callable" as an object, and adding it to the "urlpatterns" list, along with a regular expression defining its URL path.
+
+Finally, there's the callback itself. In Symfony2, the callback lives in a <code>FooController.php</code> file within a bundle's <code>Controller</code> directory. The callback itself is an "action" method that lives within a "controller" class (you can have multiple "actions", in this example there's just one). In Django, the callback doesn't have to be a method within a class: it can be any Python "callable", such as a "class object"; or, as is the case here, a simple function.
+
+I could go on here, and continue with more code comparisons (e.g. database querying / ORM system, form system, logging); but I think what I've shown is sufficient for drawing some basic observations. Feel free to explore Symfony2 / Django code samples in more depth if you're still curious.
+
+<h2>Funny language</h2>
+
+Basically, my criticism is not of Symfony2, as such. My criticism is more of PHP. In particular, I dislike both the syntax and the practical limitations of the namespace system that was introduced in PHP 5.3. I've blogged before about <a href="/thoughts/2010/05/taking-php-fat-free-framework-for-a-test-drive/">what bugs me in a PHP 5.3-based framework</a>, and after writing that article I was accused that my PHP 5.3 rants were clouding my judgement of the framework. So, in this article I'd like to more clearly separate language ranting from framework ranting.
+
+<h3>Language rant</h3>
+
+In the PHP 5.3+ namespace system:
+
+<ul>
+  <li>The namespace delimiter is the backslash character; whereas in other (saner) languages it's the dot character</li>
+  <li>You have to specify the "namespace path" using the "namespace" declaration at the top of every single file in your project that contains namespaced classes; whereas in other (saner) languages the "namespace path" is determined automatically based on directory structure</li>
+  <li>You can only import namespaces using their absolute path, resulting in overly verbose "use" declarations all over the place; wheras in other (saner) languages <a href="https://bugs.php.net/bug.php?id=52504">relative (and wildcard) namespace imports</a> are possible</li>
+</ul>
+
+<h3>Framework rant</h3>
+
+In Symfony2:
+
+<ul>
+  <li>You're able to define configuration (e.g. routing callbacks) in multiple formats, with the preferred format being YAML (although raw PHP configuration is also possible), resulting in an over-engineered config system, and unnecessary extra learning for an invented format in order to perform configuration in the default way</li>
+  <li>Only a class method can be a routing callback, a class itself or a stand-alone function cannot be a callback, as the routing system is too tightly coupled with PHP's class- and method-based namespace system</li>
+  <li>An overly complex and multi-levelled directory structure is needed for even the simplest projects, and what's more, overly verbose namespace declarations and import statements are found in almost every file; this is all a reflection of Symfony2's dependence on the PHP 5.3+ namespace system</li>
+</ul>
+
+<h2>In summary</h2>
+
+Let me repeat: I really do think that Symfony2 is a great framework. I've done professional work with it recently. I intend to continue doing professional work with it in the future. It ticks my pragmatic box of supporting me in building a maintainable, well-documented, re-usable solution. It also ticks my box of avoiding reverse-engineering and manual deployment steps.
+
+However, does it help me get the job done in the most efficient manner possible? If I have to work in PHP, then yes. If I have the choice of working in Python instead, then no. And does it help me avoid frustrations such as repetitive coding? More-or-less: Symfony2 project code isn't too repetitive, but it certainly isn't as compact as I'd like my code to be.
+
+Symfony2 is brimming with the very best of what cutting-edge PHP has to offer. But, at the same time, it's hindered by its "PHP-ness". I look forward to seeing the framework continue to mature and to evolve. And I hope that Symfony2 serves as an example to all programmers, working in all languages, of how to build the most robust product possible, within the limits of that product's foundations and dependencies.
