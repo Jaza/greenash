@@ -1,0 +1,71 @@
+---
+title: Mixing GData auth with Google Discovery API queries
+date: 2014-08-11
+teaser: |-
+  For those of you who have some experience working with Google's APIs, you may be aware of the fact that they <a href="https://groups.google.com/forum/#!topic/google-api-python-client/irQILtgubBA">fall into two categories</a>: the <a href="https://developers.google.com/gdata/docs/2.0/reference">Google Data APIs</a>, which is mainly for older services; and the <a href="https://developers.google.com/discovery/v1/getting_started">discovery-based APIs</a>, which is mainly for newer services.
+
+  There has been <a href="http://stackoverflow.com/questions/13981641/gae-enforcing-sign-in-by-app-yaml-python-decorators-or-users-get-current-user">considerable confusion</a> regarding the difference between the two APIs. I'm no expert, and I admit that I too have fallen victim to the confusion at times. Both systems now require the use of OAuth2 for authentication (it's no longer possible to access any Google APIs without Oauth2). However, each of Google's APIs only falls into one of the two camps; and once authentication is complete, you must use the correct library (either GData or Discovery, for your chosen programming language) in order to actually perform API requests. So, all that really matters, is that for each API that you plan to use, you're crystal clear on which type of API it is, and you use the correct corresponding library.
+
+  The <a href="http://code.google.com/p/gdata-python-client/source/checkout">GData Python library</a> has a very handy mechanism for exporting an authorised access token as a blob (i.e. a serialised string), and for later re-importing the blob back as a programmatic access token. I made extensive use of this when I recently worked with the <a href="https://developers.google.com/analytics/">Google Analytics API</a>, which is GData-based. I couldn't find any similar functionality in the <a href="https://developers.google.com/api-client-library/python/apis/discovery/v1">Discovery API Python library</a>; and I wanted to interact similarly with the <a href="https://developers.google.com/youtube/v3/">YouTube Data API</a>, which is discovery-based. What to do?
+tags:
+  - thoughtstopics/programming
+  - thoughtstopics/python
+  - thoughtstopics/web-services
+---
+For those of you who have some experience working with Google's APIs, you may be aware of the fact that they <a href="https://groups.google.com/forum/#!topic/google-api-python-client/irQILtgubBA">fall into two categories</a>: the <a href="https://developers.google.com/gdata/docs/2.0/reference">Google Data APIs</a>, which is mainly for older services; and the <a href="https://developers.google.com/discovery/v1/getting_started">discovery-based APIs</a>, which is mainly for newer services.
+
+There has been <a href="http://stackoverflow.com/questions/13981641/gae-enforcing-sign-in-by-app-yaml-python-decorators-or-users-get-current-user">considerable confusion</a> regarding the difference between the two APIs. I'm no expert, and I admit that I too have fallen victim to the confusion at times. Both systems now require the use of OAuth2 for authentication (it's no longer possible to access any Google APIs without Oauth2). However, each of Google's APIs only falls into one of the two camps; and once authentication is complete, you must use the correct library (either GData or Discovery, for your chosen programming language) in order to actually perform API requests. So, all that really matters, is that for each API that you plan to use, you're crystal clear on which type of API it is, and you use the correct corresponding library.
+
+The <a href="http://code.google.com/p/gdata-python-client/source/checkout">GData Python library</a> has a very handy mechanism for exporting an authorised access token as a blob (i.e. a serialised string), and for later re-importing the blob back as a programmatic access token. I made extensive use of this when I recently worked with the <a href="https://developers.google.com/analytics/">Google Analytics API</a>, which is GData-based. I couldn't find any similar functionality in the <a href="https://developers.google.com/api-client-library/python/apis/discovery/v1">Discovery API Python library</a>; and I wanted to interact similarly with the <a href="https://developers.google.com/youtube/v3/">YouTube Data API</a>, which is discovery-based. What to do?
+
+<h2>Mix 'n' match</h2>
+
+The GData API already supports <a href="http://blog.bossylobster.com/2012/12/bridging-oauth-20-objects-between-gdata.html">converting a Credentials object to an OAuth2 token object</a>. This is great for an app that has user-facing OAuth2, where a Credentials object is available at the time of making API requests. However, in my situation &ndash; making API requests in a server-side script, that runs via cron with no user-facing OAuth2 &ndash; that's not much use. I have the opposite problem: I can easily get the token object, but I don't have any Credentials object already instantiated.
+
+Well, it turns out that manually instantiating your own Credentials object isn't that hard. So, this is how I go about querying the YouTube Data API:
+
+<pre class="python"><code>import httplib2
+
+import gdata.gauth
+from apiclient.discovery import build
+from oauth2client.client import OAuth2Credentials
+
+from mysettings import token_blob_string, \
+                       youtube_playlist_id, \
+                       page_size, \
+                       next_page_token
+
+# De-serialise the access token that can be conveniently stored in a
+# Python settings file elsewhere, as a blob (string).
+# GData provides the blob functionality, but the Discovery API library
+# doesn't.
+token = gdata.gauth.token_from_blob(token_blob_string)
+
+# Manually instantiate an OAuth2Credentials object from the
+# de-serialised access token.
+credentials = OAuth2Credentials(
+    access_token=token.access_token,
+    client_id=token.client_id,
+    client_secret=token.client_secret,
+    refresh_token=token.refresh_token,
+    token_expiry=None,
+    token_uri=token.token_uri,
+    user_agent=None)
+
+http = credentials.authorize(httplib2.Http())
+youtube = build('youtube', 'v3', http=http)
+
+# Profit!
+response = youtube.playlistItems().list(
+    playlistId=youtube_playlist_id,
+    part="snippet",
+    maxResults=page_size,
+    pageToken=next_page_token
+).execute()
+</code></pre>
+
+<h2>Easy win</h2>
+
+And there you go: you can have your cake and eat it, too! All you need is an OAuth2 access token that you've already saved elsewhere as a blob string; and with that, you can query discovery-based Google APIs from anywhere you want, at any time, with no additional OAuth2 hoops to jump through.
+
+If you want more details on how to serialise and de-serialise access token blobs using the GData Python library, <a href="http://stackoverflow.com/questions/5903278/gdata-python-api-analytics-with-simple-auth">others have explained it step-by-step</a>, I'm not going to repeat all of that here. I hope this makes life a bit easier, for anyone else who's trying to deal with "offline" long-lived access tokens and the discovery-based Google APIs.

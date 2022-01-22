@@ -1,0 +1,72 @@
+---
+title: Conditionally adding HTTP response headers in Flask and Apache
+date: 2014-12-29
+teaser: |-
+  For a <a href="http://flask.pocoo.org/">Flask</a>-based project that I'm currently working on, I just added some front-end functionality that depends on <a href="http://fortawesome.github.io/Font-Awesome/">Font Awesome</a>. Getting Font Awesome to load properly (in well-behaved modern browsers) shouldn't be much of a chore. However, my app spans multiple subdomains (achieved with the help of Flask's <a href="https://exploreflask.com/blueprints.html">Blueprints per-subdomain feature</a>), and my static assets (CSS, JS, etc) are only served from one of those subdomains. And as it turns out (and unlike cross-domain CSS / JS / image requests), <a href="http://davidwalsh.name/cdn-fonts">cross-domain font requests are forbidden</a> unless the font files are served with an appropriate <code>Access-Control-Allow-Origin</code> HTTP response header. For example, this is the error message that's shown in Google Chrome for such a request:
+
+  <pre class="no-highlight"><code>Font from origin 'http://foo.local' has been blocked from loading by Cross-Origin Resource Sharing policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. Origin 'http://bar.foo.local' is therefore not allowed access.</code></pre>
+
+  As a result of this, I had to quickly learn how to conditionally add custom HTTP response headers based on the URL being requested, both for Flask (when running locally with Flask's built-in development server), and for Apache (when running in staging and production). In a typical production Flask setup, it's impossible to do anything at the Python level when serving static files, because these are served directly by the web server (e.g. Apache, Nginx), without ever hitting WSGI. Conversely, in a typical development setup, there <em>is</em> no web server running separately to the WSGI app, and so playing around with static files must be done at the Python level.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/flask
+  - thoughtstopics/python
+---
+For a <a href="http://flask.pocoo.org/">Flask</a>-based project that I'm currently working on, I just added some front-end functionality that depends on <a href="http://fortawesome.github.io/Font-Awesome/">Font Awesome</a>. Getting Font Awesome to load properly (in well-behaved modern browsers) shouldn't be much of a chore. However, my app spans multiple subdomains (achieved with the help of Flask's <a href="https://exploreflask.com/blueprints.html">Blueprints per-subdomain feature</a>), and my static assets (CSS, JS, etc) are only served from one of those subdomains. And as it turns out (and unlike cross-domain CSS / JS / image requests), <a href="http://davidwalsh.name/cdn-fonts">cross-domain font requests are forbidden</a> unless the font files are served with an appropriate <code>Access-Control-Allow-Origin</code> HTTP response header. For example, this is the error message that's shown in Google Chrome for such a request:
+
+<pre class="no-highlight"><code>Font from origin 'http://foo.local' has been blocked from loading by Cross-Origin Resource Sharing policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. Origin 'http://bar.foo.local' is therefore not allowed access.</code></pre>
+
+As a result of this, I had to quickly learn how to conditionally add custom HTTP response headers based on the URL being requested, both for Flask (when running locally with Flask's built-in development server), and for Apache (when running in staging and production). In a typical production Flask setup, it's impossible to do anything at the Python level when serving static files, because these are served directly by the web server (e.g. Apache, Nginx), without ever hitting WSGI. Conversely, in a typical development setup, there <em>is</em> no web server running separately to the WSGI app, and so playing around with static files must be done at the Python level.
+
+<h2>The code</h2>
+
+For a regular Flask request that's handled by one of the app's custom routes, adding another header to the HTTP response would be a simple matter of modifying the <a href="http://flask.pocoo.org/docs/0.10/api/#response-objects"><code>flask.Response</code></a> object before returning it. However, static files (in a development setup) are served by Flask's built-in <a href="http://flask.pocoo.org/docs/0.10/api/#application-object"><code>app.send_static_file()</code></a> function, not by any route that you have control over. So, instead, it's necessary to intercept the response object via Flask's API.
+
+Fortunately, this interception is easily accomplished, courtesy of Flask's <a href="http://flask.pocoo.org/docs/0.10/api/#application-object"><code>app.after_request()</code></a> function, which can either be passed a callback function, or used as a decorator. Here's what did the trick for me:
+
+<pre class="python"><code>import re
+
+from flask import Flask
+from flask import request
+
+
+app = Flask(__name__)
+
+def add_headers_to_fontawesome_static_files(response):
+    """
+    Fix for font-awesome files: after Flask static send_file() does its
+    thing, but before the response is sent, add an
+    Access-Control-Allow-Origin: *
+    HTTP header to the response (otherwise browsers complain).
+    """
+
+    if (request.path and
+        re.search(r'\.(ttf|woff|svg|eot)$', request.path)):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response
+
+if app.debug:
+    app.after_request(add_headers_to_fontawesome_static_files)
+</code></pre>
+
+For a production setup, the above Python code achieves nothing, and it's therefore necessary to add something like this to the config file for the app's VirtualHost:
+
+<pre class="apache"><code><VirtualHost *:80>
+  # ...
+
+  Alias /static /path/to/myapp/static
+  <Location /static>
+    Order deny,allow
+    Allow from all
+    Satisfy Any
+
+    SetEnvIf Request_URI "\.(ttf|woff|svg|eot)$" is_font_file
+    Header set Access-Control-Allow-Origin "*" env=is_font_file
+  </Location>
+</VirtualHost>
+</code></pre>
+
+<h2>Done</h2>
+
+And there you go: an easy way to add custom HTTP headers to any response, in two different web server environments, based on a conditional request path. So far, cleanly serving cross-domain font files is all that I've neede this for. But it's a very handy little snippet, and no doubt there are plenty of other scenarios in which it could save the day.

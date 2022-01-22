@@ -1,0 +1,72 @@
+---
+title: Australian LGA to postcode mappings with PostGIS and Intersects
+date: 2014-07-12
+teaser: |-
+  For a recent project, I needed to know the LGAs (<a href="http://en.wikipedia.org/wiki/Local_government_in_Australia">Local Government</a> Areas) of all postcodes in Australia, and vice versa. As it turns out, there is no definitive Australia-wide list containing this data anywhere. <a href="http://forums.whirlpool.net.au/archive/1593170">People have been discussing the issue</a> for some time, with no clear outcome. So, I decided to get creative.
+
+  To cut a long story short: I've produced my own list! You can download my <a href="https://docs.google.com/spreadsheets/d/1tHCxouhyM4edDvF60VG7nzs5QxID3ADwr3DGJh71qFg">Australian LGA postcode mappings spreadsheet</a> from Google Docs.
+
+  If you want the full story: I imported both the LGA boundaries data and the Postal Area boundaries data from the <a href="http://www.abs.gov.au/">ABS</a>, into <a href="http://postgis.net/">PostGIS</a>, and I did an "Intersects" query on the two datasets. I exported the results of this query to CSV. Done! And all perfectly reproducible, using freely available public data sets, and using free and open-source software tools.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/databases
+  - thoughtstopics/mapping
+  - thoughtstopics/postgres
+---
+For a recent project, I needed to know the LGAs (<a href="http://en.wikipedia.org/wiki/Local_government_in_Australia">Local Government</a> Areas) of all postcodes in Australia, and vice versa. As it turns out, there is no definitive Australia-wide list containing this data anywhere. <a href="http://forums.whirlpool.net.au/archive/1593170">People have been discussing the issue</a> for some time, with no clear outcome. So, I decided to get creative.
+
+To cut a long story short: I've produced my own list! You can download my <a href="https://docs.google.com/spreadsheets/d/1tHCxouhyM4edDvF60VG7nzs5QxID3ADwr3DGJh71qFg">Australian LGA postcode mappings spreadsheet</a> from Google Docs.
+
+If you want the full story: I imported both the LGA boundaries data and the Postal Area boundaries data from the <a href="http://www.abs.gov.au/">ABS</a>, into <a href="http://postgis.net/">PostGIS</a>, and I did an "Intersects" query on the two datasets. I exported the results of this query to CSV. Done! And all perfectly reproducible, using freely available public data sets, and using free and open-source software tools.
+
+<h2>The process</h2>
+
+I started by downloading the Geo data that I needed, from the <abbr title="Australian Bureau of Statistics">ABS</abbr>. My source was the page <a href="http://www.abs.gov.au/AUSSTATS/abs@.nsf/DetailsPage/1270.0.55.003July%202011?OpenDocument">Australian Statistical Geography Standard (ASGS): Volume 3 - Non ABS Structures, July 2011</a>. This was the most recent page that I could find on the ABS, containing all the data that I needed. I downloaded the files "Local Government Areas ASGS Non ABS Structures Ed 2011 Digital Boundaries in MapInfo Interchange Format", and "Postal Areas ASGS Non ABS Structures Ed 2011 Digital Boundaries in MapInfo Interchange Format".
+
+Big disclaimer: I'm not an expert at anything <abbr title="Geographic Information System">GIS</abbr>- or spatial-related, I'm a complete n00b at this. I decided to download the data I needed in MapInfo format. It's also available on the ABS web site in ArcGIS Shapefile format. I could have downloaded the Shapefiles instead &ndash; they can also be imported into PostGIS, using the same tools that I used. I chose the MapInfo files because I did some quick Googling around, and I got the impression that MapInfo files are less complex and are somewhat more portable. I may have made the wrong choice. Feel free to debate the merits of MapInfo vs ArcGIS files for this task, and to try this out yourself using ArcGIS instead of MapInfo. I'd be interested to see the difference in results (theoretically there should be no difference&hellip; in practice, who wants to bet there is?).
+
+I then had to install PostGIS (I already had Postgres installed) and related tools on my local machine (running Ubuntu 12.04). I'm not providing PostGIS installation instructions here, there's plenty of information available elsewhere to help you get set up with all the tools you need, for your specific OS / requirements. Installing PostGIS and related tools can get complicated, so if you do decide to try all this yourself, don't say I didn't warn you. Ubuntu is probably one of the easier platforms on which to install it, but there are plenty of guides out there for Windows and Mac too.
+
+Once I was all set up, I imported the data files into a PostGIS-enabled Postgres database with these commands:
+
+<pre class="bash"><code>ogr2ogr -a_srs EPSG:4283 -f "PostgreSQL" \
+PG:"host=localhost user=lgapost dbname=lgapost password=PASSWORD" \
+-lco OVERWRITE=yes -nln lga LGA_2011_AUST.mid
+
+ogr2ogr -a_srs EPSG:4283 -f "PostgreSQL" \
+PG:"host=localhost user=lgapost dbname=lgapost password=PASSWORD" \
+-lco OVERWRITE=yes -nln postcodes POA_2011_AUST.mid
+</code></pre>
+
+If you're interested in the OGR Toolkit (<code>ogr2ogr</code> and friends), there are plenty of resources available; in particular, <a href="http://www.bostongis.com/PrinterFriendly.aspx?content_name=ogr_cheatsheet">this OGR Toolkit guide</a> was very useful for me.
+
+After playing around with a few different map projections, I decided that EPSG:4283 was probably the correct one to use as an argument to <code>ogr2ogr</code>. I based my decision on seeing the MapInfo projection string "CoordSys Earth Projection 1, 116" in the header of the ABS data files, and then finding <a href="http://www.groundtruth.com.au/map-projections/">this list of common Australian-used map projections</a>. Once again: I am a total n00b at this. I know very little about map projections (except that it's a big and complex topic). Feel free to let me know if I've used completely the wrong projection for this task.
+
+I renamed the imported tables to 'lga' and 'postcodes' respectively, and I then ran this from the <code>psql</code> shell, to find all LGAs that intersect with all postal areas, and to export the result to a CSV:
+
+<pre class="sql"><code>\copy (SELECT     l.state_name_2011,
+                  l.lga_name_2011,
+                  p.poa_code_2011
+       FROM       lga l
+       INNER JOIN postcodes p
+       ON         ST_Intersects(
+                      l.wkb_geometry,
+                      p.wkb_geometry)
+       ORDER BY   l.state_name_2011,
+                  l.lga_name_2011,
+                  p.poa_code_2011)
+TO '/path/to/lga_postcodes.csv' WITH CSV HEADER;
+</code></pre>
+
+<h2>Final remarks</h2>
+
+That's about it! Also, some notes of mine (mainly based on the trusty Wikipedia page <a href="http://en.wikipedia.org/wiki/Local_government_in_Australia">Local Government in Australia</a>):
+
+<ul>
+  <li>There's no data for the <abbr title="Australian Capital Territory">ACT</abbr>, since the ACT has no LGAs</li>
+  <li>Almost the entire Brisbane and Gold Coast metro areas, respectively, are one LGA</li>
+  <li>Some areas of Australia aren't part of any LGA (although they're all remote areas with very small populations)</li>
+  <li>Quite a large number of valid Australian postcodes are not part of any LGA (because they're for PO boxes, for bulk mail handlers, etc, and they don't cover a geographical area as such, in the way that "normal" postcodes do)</li>
+</ul>
+
+I hope that this information is of use, to anyone else who needs to link up LGAs and postcodes in a database or in a GIS project.

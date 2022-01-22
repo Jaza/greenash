@@ -1,0 +1,80 @@
+---
+title: "The cost of building a \"perfect\" custom Drupal installation profile"
+date: 2014-04-16
+permalink: /thoughts/2014/04/the-cost-of-building-a-perfect-custom-drupal-installation-profile/
+teaser: |-
+  With virtually everything in Drupal, there are two ways to accomplish a task: <a href="http://getlevelten.com/blog/ian-whitcomb/dont-be-noob-top-5-most-common-drupal-beginner-mistakes">The Easy Way</a>, or <a href="http://www.midwesternmac.com/blogs/jeff-geerling/the-drupal-way">The Right&trade; Way</a>.
+
+  Deploying a new Drupal site for the first time is no exception. The Easy Way &ndash; and almost certainly the most common way &ndash; is to simply copy your local version of the database to production (or staging), along with user-uploaded files. (Your code needs to be deployed too, and The Right&trade; Way to deploy it is <a href="https://drupal.org/node/803746">with version-control</a>, which you're hopefully using&hellip; but that's another story.)
+
+  The Right&trade; Way to deploy a Drupal site for the first time (at least since Drupal 7, and "with hurdles" since Drupal 6), is to <strong>only</strong> deploy your code, and to reproduce your database (and ideally also user-uploaded files) with a <a href="http://drupal.stackexchange.com/questions/16233/create-a-repeatable-drupal-install">custom installation profile</a>, and also with significant <a href="http://codekarate.com/daily-dose-of-drupal/drupal-7-features-module-deployment">help from the Features module</a>.
+
+  [thumbnail blue-pill-red-pill.jpg The Right Way can be a deep rabbit hole, though.<br><em>Image source:</em> <a href="http://sixnutrition.com/blog/red-pill-or-blue-pill-the-choice-is-yours/">SIX Nutrition</a>.]
+
+  I've been churning out quite a lot of Drupal sites over the past few years, and I must admit, the vast majority of them were deployed The Easy Way. Small sites, single developer, quick turn-around. That's usually the way it rolls. However, I've done some work that's required custom installation profiles, and I've also been trying to embrace Features more; and so, for my most recent project &ndash; despite it being "yet another small-scale, one-dev site" &ndash; I decided to go the full hog, and to build it 100% The Right&trade; Way, just for kicks.
+
+  Does it give me a warm fuzzy feeling, as a dev, to be able to install a perfect copy of a new site from scratch? Hell yeah. But does that warm fuzzy feeling come at a cost? Hell yeah.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+---
+With virtually everything in Drupal, there are two ways to accomplish a task: <a href="http://getlevelten.com/blog/ian-whitcomb/dont-be-noob-top-5-most-common-drupal-beginner-mistakes">The Easy Way</a>, or <a href="http://www.midwesternmac.com/blogs/jeff-geerling/the-drupal-way">The Right&trade; Way</a>.
+
+Deploying a new Drupal site for the first time is no exception. The Easy Way &ndash; and almost certainly the most common way &ndash; is to simply copy your local version of the database to production (or staging), along with user-uploaded files. (Your code needs to be deployed too, and The Right&trade; Way to deploy it is <a href="https://drupal.org/node/803746">with version-control</a>, which you're hopefully using&hellip; but that's another story.)
+
+The Right&trade; Way to deploy a Drupal site for the first time (at least since Drupal 7, and "with hurdles" since Drupal 6), is to <strong>only</strong> deploy your code, and to reproduce your database (and ideally also user-uploaded files) with a <a href="http://drupal.stackexchange.com/questions/16233/create-a-repeatable-drupal-install">custom installation profile</a>, and also with significant <a href="http://codekarate.com/daily-dose-of-drupal/drupal-7-features-module-deployment">help from the Features module</a>.
+
+[thumbnail blue-pill-red-pill.jpg The Right Way can be a deep rabbit hole, though.<br><em>Image source:</em> <a href="http://sixnutrition.com/blog/red-pill-or-blue-pill-the-choice-is-yours/">SIX Nutrition</a>.]
+
+I've been churning out quite a lot of Drupal sites over the past few years, and I must admit, the vast majority of them were deployed The Easy Way. Small sites, single developer, quick turn-around. That's usually the way it rolls. However, I've done some work that's required custom installation profiles, and I've also been trying to embrace Features more; and so, for my most recent project &ndash; despite it being "yet another small-scale, one-dev site" &ndash; I decided to go the full hog, and to build it 100% The Right&trade; Way, just for kicks. In order to force myself to do things properly, I re-installed my dev site from scratch (and thus deleted my dev database) several times a day; i.e. I continuously tested my custom installation profile during dev.
+
+Does it give me a warm fuzzy feeling, as a dev, to be able to <a href="http://imagexmedia.com/blog/2014/04/inheritable-install-profile-architecture-drupal">install a perfect copy of a new site</a> from scratch? Hell yeah. But does that warm fuzzy feeling come at a cost? Hell yeah.
+
+<h2>What's involved</h2>
+
+For our purposes, the contents of a typical Drupal database can be broken down into three components:
+
+<ol>
+  <li>Critical configuration</li>
+  <li>Secondary configuration</li>
+  <li>Content</li>
+</ol>
+
+Critical configuration is: (a) stuff that should be set immediately upon site install, because important aspects of the site depend on it; and (b) stuff that cannot or should not be managed by Features. When building a custom installation profile, all critical configuration should be set with custom code that lives inside the profile itself, either in its <code><a href="https://api.drupal.org/api/function/hook_install/7">hook_install()</a></code> implementation, or in one of its <code><a href="https://api.drupal.org/api/function/hook_install_tasks/7">hook_install_tasks()</a></code> callbacks. The config in this category generally includes: the default theme and its config; the region/theme for key blocks; user roles, basic user permissions, and user variables; date formats; and text formats. This config isn't all that hard to write (see Drupal core's built-in installation profiles for good example code), and it shouldn't need much updating during dev.
+
+Secondary configuration is: (a) stuff that can be set after the main install process has finished; and (b) stuff that's managed by Features. These days, thanks to various helpers such as <a href="https://drupal.org/project/strongarm">Strongarm</a> and <a href="https://drupal.org/project/features_extra">Features Extra</a>, there isn't much that can't be exported and managed in this way. All secondary configuration should be set in exportable definitions in Features-generated modules, which need to be added as dependencies in the installation profile's <code>.info</code> file. On my recent project, this included: many variables; content types; fields; blocks (including <a href="https://drupal.org/project/block_class">Block Class</a> classes and block content); views; vocabularies; image styles; nodequeues; <a href="https://drupal.org/project/wysiwyg">WYSIWYG</a> profiles; and <a href="https://drupal.org/project/cer">CER</a> presets.
+
+Secondary config isn't hard to write &ndash; in fact, it writes itself! However, it is a serious pain to maintain. Every time that you add or modify any piece of secondary content on your dev site, you need to perform the following workflow:
+
+<ol>
+  <li>Does an appropriate feature module already exist for this config? If not, create a new feature module, export it to your site's codebase, and add the module as a dependency to the installation profile's <code>.info</code> file.</li>
+  <li>Is this config new? If so, manually add it to the relevant feature.</li>
+  <li>For all new or updated config: re-create the relevant feature module, thus re-exporting the config.</li>
+</ol>
+
+I found that I got in the habit of checking my site's Features admin page, before committing whatever code I was about to commit. I re-exported all features that were flagged with changes, and I tried to remember if there was any new config that needed to be added to a feature, before going ahead and making the commit. Because I decided to re-install my dev site from scratch regularly, and to scrap my local database, I had no choice but to take this seriously: if there was any config that I forgot to export, it simply got lost in the next re-install.
+
+Content is stuff that is not config. Content depends on all critical and secondary config being set. And content is not managed by Features: it's managed by users, once the site is deployed. (Content <em>can</em> now be managed by Features, using the <a href="https://drupal.org/project/uuid">UUID module</a> &ndash; but I haven't tried that approach, and I'm not particularly convinced that it's The Right&trade; Way.) On my recent project, content included: nodes (of course); taxonomy terms; menu items; and nodequeue mappings.
+
+An important part of handing over a presentable site to the client, in my experience, is that there's at least some demo / structural content in place. So, in order to handle content in my "continuously installable" setup, I wrote a bunch of custom Drush commands, which defined all the content in raw PHP using arrays / objects, and which imported all the content using Drupal's standard API functions (i.e. <code>node_save()</code> and friends). This also included user-uploaded files (i.e. images and documents): I dumped all these into a directory outside of my Drupal root, and imported them using the Field API and some raw file-copying snippets.
+
+<h2>All rosy?</h2>
+
+The upside of it all: I lived the dream on this project. I freed myself from database state. <em>Everything</em> I'd built was safe and secure within the code repo, and the only thing that needed to be deployed to staging / production was the code itself.
+
+[thumbnail drop-tables-nothingtolose.png Join me, comrades! Join me and all Drupal sites will be equal! (But some more equal than others).]
+
+(Re-)installing the site consisted of little more than running (something similar to) these Drush commands:
+
+<pre class="no-highlight"><code>drush cc all
+drush site-install --yes mycustomprofile --account-mail=info@blaaaaaaaa.com --account-name=admin --account-pass=blaaaaaaa
+drush features-revert-all --yes
+drush mymodule-install-content</code></pre>
+
+The downside of it: constantly maintaining exported features and content-in-code eats up a lot of time. As a rough estimate, I'd say that it resulted in me spending about 30% more time on the project than I would have otherwise. Fortunately, the project was still delivered ahead of schedule and under budget; had constraints been tighter, I probably couldn't have afforded the luxury of this experiment.
+
+Unfortunately, Drupal just isn't designed to store either configuration or content in code. Doing either is an uphill battle. Maintaining all config and content in code was virtually impossible in Drupal 5 and earlier; it had numerous hurdles in Drupal 6; and it's possible (and recommended) but tedious in Drupal 7. Drupal 8 &ndash; despite the enormous strides forward that it's making with the <a href="http://www.previousnext.com.au/blog/understanding-drupal-8s-config-entities">Configuration Management Initiative (CMI)</a> &ndash; will still, at the end of the day, treat the database rather than code as the "source of truth" for config. Therefore, I assert that, although it will be easier than ever to manage all config in code, the "configuration management" and "continuous deployment" problems still won't be completely solved in Drupal 8.
+
+I've been working increasingly with Django over the past few years, where configuration <em>only</em> exists in code (in Python settings, in model classes, in view callables, etc), and where <em>only</em> content exists in the database (and where content has also been easily exportable / deployable using fixtures, since before Drupal "exportables" were invented); and in that world, these are problems that simply don't exist. There's no need to ever synchronise between the "database version" of config and the "code version" of config. Unfortunately, Drupal will probably never reach this Zen-like ideal, because it seems unlikely that Drupal will ever let go of the database as a config store altogether.
+
+Anyway, despite the fact that a "perfect" installation profile probably isn't justifiable for most smaller Drupal projects, I think that it's still worthwhile, in the same way that <a href="http://www.metaltoad.com/blog/why-you-should-spend-extra-time-write-drupal-update-scripts">writing proper update scripts</a> is still worthwhile: i.e. because it significantly improves quality; and because it's an excellent learning tool for you as a developer.

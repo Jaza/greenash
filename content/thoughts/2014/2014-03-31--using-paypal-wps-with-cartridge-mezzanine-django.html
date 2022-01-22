@@ -1,0 +1,290 @@
+---
+title: Using PayPal WPS with Cartridge (Mezzanine / Django)
+date: 2014-03-31
+permalink: /thoughts/2014/03/using-paypal-wps-with-cartridge-mezzanine-django/
+teaser: |-
+  I recently built a web site using <a href="http://mezzanine.jupo.org/">Mezzanine</a>, a CMS built on top of Django. I decided to go with Mezzanine (which I've never used before) for two reasons: it nicely enhances Django's admin experience (plus it enhances, but doesn't get in the way of, the Django developer experience); and there's a shopping cart app called <a href="http://cartridge.jupo.org/">Cartridge</a> that's built on top of Mezzanine, and for this particular site (a <a href="http://www.theartrebellion.com/">children's art class business in Sydney</a>) I needed shopping cart / e-commerce functionality.
+
+  This suite turned out to deliver virtually everything I needed out-of-the-box, with one exception: Cartridge currently lacks support for payment methods that require redirecting to the payment gateway and then returning after payment completion (such as <a href="https://www.paypal.com/au/cgi-bin/webscr?cmd=_wp-standard-overview-outside">PayPal Website Payments Standard</a>, or WPS). It only supports payment methods where payment is completed on-site (such as <a href="https://www.paypal.com/au/cgi-bin/webscr?cmd=_wp-pro-overview-outside">PayPal Website Payments Pro</a>, or WPP). In this case, with the project being small and low-budget, I wanted to avoid the overhead of dealing with SSL and on-site payment, so PayPal WPS was the obvious candidate.
+
+  Turns out that, with a bit of hackery, making Cartridge play nice with WPS isn't too hard to achieve. Here's how you go about it.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/django
+  - thoughtstopics/python
+---
+I recently built a web site using <a href="http://mezzanine.jupo.org/">Mezzanine</a>, a CMS built on top of Django. I decided to go with Mezzanine (which I've never used before) for two reasons: it nicely enhances Django's admin experience (plus it enhances, but doesn't get in the way of, the Django developer experience); and there's a shopping cart app called <a href="http://cartridge.jupo.org/">Cartridge</a> that's built on top of Mezzanine, and for this particular site (a <a href="http://www.theartrebellion.com/">children's art class business in Sydney</a>) I needed shopping cart / e-commerce functionality.
+
+This suite turned out to deliver virtually everything I needed out-of-the-box, with one exception: Cartridge currently lacks support for payment methods that require redirecting to the payment gateway and then returning after payment completion (such as <a href="https://www.paypal.com/au/cgi-bin/webscr?cmd=_wp-standard-overview-outside">PayPal Website Payments Standard</a>, or WPS). It only supports payment methods where payment is completed on-site (such as <a href="https://www.paypal.com/au/cgi-bin/webscr?cmd=_wp-pro-overview-outside">PayPal Website Payments Pro</a>, or WPP). In this case, with the project being small and low-budget, I wanted to avoid the overhead of dealing with SSL and on-site payment, so PayPal WPS was the obvious candidate.
+
+Turns out that, with a bit of hackery, making Cartridge play nice with WPS isn't too hard to achieve. Here's how you go about it.
+
+<h2>Install dependencies</h2>
+
+<strong>Note / disclaimer:</strong> <em> this section is mostly copied from my <a href="http://greenash.net.au/thoughts/2011/11/django-facebook-user-integration-with-whitelisting/">Django Facebook user integration with whitelisting</a> article from over two years ago, because the basic dependencies are quite similar.</em>
+
+I'm assuming that you've already got an environment set up, that's equipped for Django development. I.e. you've already installed Python (my examples here are tested on Python 2.7), a database engine (preferably SQLite on your local environment), pip (recommended), and virtualenv (recommended). If you want to implement these examples fully, then as well as a dev environment with these basics set up, you'll also need a server to which you can deploy a Django site, and on which you can set up a proper public domain or subdomain DNS (because the PayPal API won't actually talk to your localhost, it refuses to do that).
+
+You'll also need a PayPal (regular and "sandbox") account, which you will use for authenticating with the PayPal API.
+
+Here are the basic dependencies for the project. I've copy-pasted this straight out of my <code>requirements.txt</code> file, which I install on a virtualenv using <code>pip install -E . -r requirements.txt</code> (I recommend you do the same):
+
+<pre class="ini"><code>Django==1.6.2
+Mezzanine==3.0.9
+South==0.8.4
+Cartridge==0.9.2
+cartridge-payments==0.97.0
+-e git+https://github.com/dcramer/django-paypal.git@4d582243#egg=django_paypal
+django-uuidfield==0.5.0</code></pre>
+
+<strong>Note:</strong> <em>for <code>dcramer/django-paypal</code>, which has no versioned releases, I'm using the latest git commit as of writing this. I recommend that you check for a newer commit and update your requirements accordingly. For the other dependencies, you should also be able to update version numbers to latest stable releases without issues (although Mezzanine 3.0.x / Cartridge 0.9.x is only compatible with Django 1.6.x, not Django 1.7.x which is still in beta as of writing this).</em>
+
+Once you've got those dependencies installed, make sure this Mezzanine-specific setting is in your <code>settings.py</code> file:
+
+<pre class="python"><code># If True, the south application will be automatically added to the
+# INSTALLED_APPS setting.
+USE_SOUTH = True
+</code></pre>
+
+Then, let's get a new project set up per Mezzanine's standard install:
+
+<pre class="no-highlight"><code>mezzanine-project myproject
+cd myproject
+python manage.py createdb
+python manage.py migrate --all</code></pre>
+
+(When it asks "Would you like to install an initial demo product and sale?", I've gone with "yes" for my test / demo project; feel free to do the same, if you'd like some products available out-of-the-box with which to test checkout / payment).
+
+This will get the Mezzanine foundations installed for you. The basic configuration of the Django / Mezzanine settings file, I leave up to you. If you have some experience already with Django (and if you've got this far, then I assume that you do), you no doubt have a standard settings template already in your toolkit (or at least a standard set of settings tweaks), so feel free to use it. I'll be going over the settings you'll need specifically for this app, in just a moment.
+
+Fire up ye 'ol <code>runserver</code>, open your browser at <code>http://localhost:8000/</code>, and confirm that the <code>"Congratulations!"</code> default Mezzanine home page appears for you. Also confirm that you can access the admin. And that's the basics set up!
+
+[thumbnail cart-wps-test-shot.jpg Basic Django / Mezzanine / Cartridge site: default look after install.]
+
+At this point, you should also be able to test out adding an item to your cart and going to checkout. After entering some billing / delivery details, on the 'payment details' screen it should ask for credit card details. This is the default Cartridge payment setup: we'll be switching this over to PayPal shortly.
+
+<h2>Configure Django settings</h2>
+
+I'm not too fussed about what else you have in your Django settings file (or in how your Django settings are structured or loaded, for that matter); but if you want to follow along, then you should have certain settings configured per the following guidelines (note: much of these instructions are virtually the same as the <a href="https://github.com/explodes/cartridge-payments">cartridge-payments install instructions</a>):
+
+<ul>
+  <li>Your <code>TEMPLATE_CONTEXT_PROCESSORS</code> is to include (as well as <code>'mezzanine.conf.context_processors.settings'</code>):
+
+<pre class="python"><code>[
+    'payments.multipayments.context_processors.settings',
+]</code></pre>
+
+  (See the <a href="https://docs.djangoproject.com/en/dev/ref/settings/#template-context-processors">TEMPLATE_CONTEXT_PROCESSORS documentation</a> for the default value of this setting, to paste into your settings file).</li>
+  <li>Re-configure the <code>SHOP_CHECKOUT_FORM_CLASS</code> setting to this:
+
+<pre class="python"><code>SHOP_CHECKOUT_FORM_CLASS = 'payments.multipayments.forms.base.CallbackUUIDOrderForm'</code></pre></li>
+  <li>Disable the <code>PRIMARY_PAYMENT_PROCESSOR_IN_USE</code> setting:
+
+<pre class="python"><code>PRIMARY_PAYMENT_PROCESSOR_IN_USE = False</code></pre></li>
+  <li>Configure the <code>SECONDARY_PAYMENT_PROCESSORS</code> setting to this:
+
+<pre class="python"><code>SECONDARY_PAYMENT_PROCESSORS = (
+    ('paypal', {
+        'name' : 'Pay With Pay-Pal',
+        'form' : 'payments.multipayments.forms.paypal.PaypalSubmissionForm'
+    }),
+)</code></pre></li>
+  <li>Set a value for the <code>PAYPAL_CURRENCY</code> setting, for example:
+
+<pre class="python"><code># Currency type.
+PAYPAL_CURRENCY = "AUD"</code></pre></li>
+  <li>Set a value for the <code>PAYPAL_BUSINESS</code> setting, for example:
+
+<pre class="python"><code># Business account email. Sandbox emails look like this.
+PAYPAL_BUSINESS = 'cartwpstest@blablablaaaaaaa.com'</code></pre></li>
+  <li>Set a value for the <code>PAYPAL_RECEIVER_EMAIL</code> setting, for example:
+
+<pre class="python"><code>PAYPAL_RECEIVER_EMAIL = PAYPAL_BUSINESS</code></pre></li>
+  <li>Set a value for the <code>PAYPAL_RETURN_WITH_HTTPS</code> setting, for example:
+
+<pre class="python"><code># Use this to enable https on return URLs.  This is strongly recommended! (Except for sandbox)
+PAYPAL_RETURN_WITH_HTTPS = False</code></pre></li>
+  <li>Configure the <code>PAYPAL_RETURN_URL</code> setting to this:
+
+<pre class="python"><code># Function that returns args for `reverse`.
+# URL is sent to PayPal as the for returning to a 'complete' landing page.
+PAYPAL_RETURN_URL = lambda cart, uuid, order_form: ('shop_complete', None, None)</code></pre></li>
+  <li>Configure the <code>PAYPAL_IPN_URL</code> setting to this:
+
+<pre class="python"><code># Function that returns args for `reverse`.
+# URL is sent to PayPal as the URL to callback to for PayPal IPN.
+# Set to None if you do not wish to use IPN.
+PAYPAL_IPN_URL = lambda cart, uuid, order_form: ('paypal.standard.ipn.views.ipn', None, {})</code></pre></li>
+  <li>Configure the <code>PAYPAL_SUBMIT_URL</code> setting to this:
+
+<pre class="python"><code># URL the secondary-payment-form is submitted to
+# For real use set to 'https://www.paypal.com/cgi-bin/webscr'
+PAYPAL_SUBMIT_URL = 'https://www.sandbox.paypal.com/cgi-bin/webscr'</code></pre></li>
+  <li>Configure the <code>PAYPAL_TEST</code> setting to this:
+
+<pre class="python"><code># For real use set to False
+PAYPAL_TEST = True</code></pre></li>
+  <li>Configure the <code>EXTRA_MODEL_FIELDS</code> setting to this:
+
+<pre class="python"><code>EXTRA_MODEL_FIELDS = (
+    (
+        "cartridge.shop.models.Order.callback_uuid",
+        "django.db.models.CharField",
+        (),
+        {"blank" : False, "max_length" : 36, "default": ""},
+    ),
+)</code></pre>
+
+After doing this, you'll probably need to manually create a migration in order to get this field added to your database (per Mezzanine's <a href="http://mezzanine.jupo.org/docs/model-customization.html#field-injection-caveats">field injection caveat docs</a>), and you'll then need to apply that migration (in this example, I'm adding the migration to an app called 'content' in my project):
+
+<code>mkdir /projectpath/content/migrations
+touch /projectpath/content/migrations/__init__.py
+python manage.py schemamigration cartridge.shop --auto --stdout > /projectpath/content/migrations/0001_cartridge_shop_add_callback_uuid.py
+python manage.py migrate --all</code></li>
+  <li>Your <code>INSTALLED_APPS</code> is to include (as well as the basic <code>'mezzanine.*'</code> apps, and <code>'cartridge.shop'</code>):
+
+<pre class="python"><code>[
+    'payments.multipayments',
+    'paypal.standard.ipn',
+]</code></pre>
+
+(You'll need to re-run <code>python manage.py migrate --all</code> after enabling these apps).</li>
+</ul>
+
+<h2>Implement PayPal payment</h2>
+
+Here's how you do it:
+
+<ul>
+  <li>Add this to your <code>urlpatterns</code> variable in your <code>urls.py</code> file (replace the part after <code>paypal-ipn-</code> with a random string of your choice):
+
+<pre class="python"><code>[
+    (r'^paypal-ipn-8c5erc9ye49ia51rn655mi4xs7/', include('paypal.standard.ipn.urls')),
+]</code></pre></li>
+  <li>Although it shouldn't be necessary, I've found that I need to copy the templates provided by <code>explodes/cartridge-payments</code> into my project's <code>templates</code> directory, otherwise they're ignored and Cartridge's default payment template still gets used:
+
+<code>cp -R /projectpath/lib/python2.7/site-packages/payments/multipayments/templates/shop /projectpath/templates/</code></li>
+  <li>Place the following code somewhere in your codebase (per <a href="https://github.com/spookylukey/django-paypal">the django-paypal docs</a>, I placed it in the <code>models.py</code> file for one of my apps):
+
+<pre class="python"><code># ...
+
+from importlib import import_module
+
+from mezzanine.conf import settings
+
+from cartridge.shop.models import Cart, Order, ProductVariation, \
+DiscountCode
+from paypal.standard.ipn.signals import payment_was_successful
+
+# ...
+
+
+def payment_complete(sender, **kwargs):
+    """Performs the same logic as the code in
+    cartridge.shop.models.Order.complete(), but fetches the session,
+    order, and cart objects from storage, rather than relying on the
+    request object being passed in (which it isn't, since this is
+    triggered on PayPal IPN callback)."""
+
+    ipn_obj = sender
+
+    if ipn_obj.custom and ipn_obj.invoice:
+        s_key, cart_pk = ipn_obj.custom.split(',')
+        SessionStore = import_module(settings.SESSION_ENGINE) \
+                           .SessionStore
+        session = SessionStore(s_key)
+
+        try:
+            cart = Cart.objects.get(id=cart_pk)
+            try:
+                order = Order.objects.get(
+                    transaction_id=ipn_obj.invoice)
+                for field in order.session_fields:
+                    if field in session:
+                        del session[field]
+                try:
+                    del session["order"]
+                except KeyError:
+                    pass
+
+                # Since we're manually changing session data outside of
+                # a normal request, need to force the session object to
+                # save after modifying its data.
+                session.save()
+
+                for item in cart:
+                    try:
+                        variation = ProductVariation.objects.get(
+                            sku=item.sku)
+                    except ProductVariation.DoesNotExist:
+                        pass
+                    else:
+                        variation.update_stock(item.quantity * -1)
+                        variation.product.actions.purchased()
+
+                code = session.get('discount_code')
+                if code:
+                    DiscountCode.objects.active().filter(code=code) \
+                        .update(uses_remaining=F('uses_remaining') - 1)
+                cart.delete()
+            except Order.DoesNotExist:
+                pass
+        except Cart.DoesNotExist:
+            pass
+
+payment_was_successful.connect(payment_complete)
+</code></pre>
+
+This little snippet that I whipped up, is the critical spoonful of glue that gets PayPal WPS playing nice with Cartridge. Basically, when a successful payment is realised, PayPal WPS doesn't force the user to redirect back to the original web site, and therefore it doesn't rely on any redirection in order to notify the site of success. Instead, it uses PayPal's IPN (<a href="https://developer.paypal.com/webapps/developer/docs/classic/products/instant-payment-notification/">Instant Payment Notification</a>) system to make a separate, asynchronous request to the original web site &ndash; and it's up to the site to receive this request and to process it as it sees fit.
+
+<p>This code uses the <code>payment_was_successful</code> signal that <code>django-paypal</code> provides (and that it triggers on IPN request), to do what Cartridge usually takes care of (for other payment methods), on success: i.e. it clears the user's shopping cart; it updates remaining quantities of products in stock (if applicable); it triggers Cartridge's "product purchased" actions (e.g. email an invoice / receipt); and it updates a discount code (if applicable).</p></li>
+  <li><p>Apply a hack to <code>cartridge-payments</code> (file <code>lib/python2.7/site-packages/payments/multipayments/forms/paypal.py</code>) <a href="https://github.com/django-mezzanine-paypal/cartridge-payments/commit/6446f09832135e10ebae5cf10c573cafd3607b9b">per this diff</a>:</p>
+
+After line 25 (<code>charset = forms.CharField(widget=forms.HiddenInput(), initial='utf-8')</code>), add this:
+
+<pre class="python"><code>    custom = forms.CharField(required=False, widget=forms.HiddenInput())</code></pre>
+
+After line 49 (<code>(tax_price if tax_price else const.Decimal('0'))</code>), add this:
+
+<pre class="python"><code>        try:
+            s_key = request.session.session_key
+        except:
+            # for Django 1.4 and above
+            s_key = request.session._session_key</code></pre>
+
+After line 70 (<code>self.fields['business'].initial = settings.PAYPAL_BUSINESS</code>), add this:
+
+<pre class="python"><code>self.fields['custom'].initial = ','.join([s_key, str(request.cart.pk)])</code></pre></li>
+  <li><p>Apply a hack to <code>django-paypal</code> (file <code>src/django-paypal/paypal/standard/forms.py</code>) <a href="http://stackoverflow.com/a/16804992/2066849">per these instructions</a>:</p>
+
+After line 15 (<code>"%H:%M:%S %b. %d, %Y PDT",</code>), add this:
+
+<pre class="python"><code>                      "%H:%M:%S %d %b %Y PST",    # note this
+                      "%H:%M:%S %d %b %Y PDT",    # and that</code></pre></li>
+</ul>
+
+That should be all you need, in order to get checkout with PayPal WPS working on your site. So, deploy everything that's been done so far to your online server, log in to the Django admin, and for some of the variations for the sample product in the database, add values for "number in stock".
+
+Then, log out of the admin, and navigate to the "shop" section of the site. Try out adding an item to your cart.
+
+[thumbnail cart-wps-addtocart-shot.jpg Basic Django / Mezzanine / Cartridge site: adding an item to shopping cart.]
+
+Once on the "your cart" page, continue by clicking "go to checkout". On the "billing details" page, enter sample billing information as necessary, then click "next". On the "payment" page, you should see a single button labelled "pay with pay-pal".
+
+[thumbnail cart-wps-gotopaypal-shot.jpg Basic Django / Mezzanine / Cartridge site: 'go to pay-pal' button.]
+
+Click the button, and you should be taken to the PayPal (sandbox, unless configured otherwise) payment landing page. For test cases, log in with a PayPal test account, and click 'Pay Now' to try out the process.
+
+[thumbnail cart-wps-paynowpaypal-shot.jpg Basic Django / Mezzanine / Cartridge site: PayPal payment screen.]
+
+If payment is successful, you should see the PayPal confirmation page, saying "thanks for your order". Click the link labelled "return to email@here.com" to return to the Django site. You should see Cartridge's "order complete" page.
+
+[thumbnail cart-wps-ordercomplete-shot.jpg Basic Django / Mezzanine / Cartridge site: order complete screen.]
+
+And that's it, you're done! You should be able to verify that the IPN callback was triggered, by checking that the "number in stock" has decreased to reflect the item that was just purchased, and by confirming that an order email / confirmation email was received.
+
+<h2>Finished process</h2>
+
+I hope that this guide is of assistance, to anyone else who's looking to integrate PayPal WPS with Cartridge. The difficulties associated with it are also documented in <a href="https://groups.google.com/forum/#!topic/mezzanine-users/n2d6SODIF1o">this mailing list thread</a> (to which I posted a rough version of what I've illustrated in this article). Feel free to leave comments here, and/or in that thread.
+
+Hopefully the hacks necessary to get this working at the moment, will no longer be necessary in the future; it's up to the maintainers of the various projects to get the fixes for these committed. Ideally, the custom signal implementation won't be necessary either in the future: it would be great if Cartridge could work out-of-the-box with PayPal WPS. Unfortunately, the current architecture of Cartridge's payment system simply isn't designed for something like IPN, it only plays nicely with payment methods that keep the user on the Django site the entire time. In the meantime, with the help of this article, you should at least be able to get it working, even if more custom code is needed than what would be ideal.

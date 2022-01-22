@@ -1,0 +1,61 @@
+---
+title: First experiences developing a single-page JS-driven web app
+date: 2014-08-26
+teaser: |-
+  For the past few months, my main dev project has been a custom tool that imports metric data from a variety of sources (via APIs), and that generates reports showing that data in numerous graphical and tabular formats. The app is private (and is still in alpha), so I'm afraid I can't go into more detail than that at this time.
+
+  I decided (and I was encouraged by stakeholders) to build the tool as a <a href="http://en.wikipedia.org/wiki/Single-page_application">single-page application</a>, i.e. as a web app where almost all of the front-end is powered by JavaScript, and where the page is redrawn via <abbr title="Asynchronous JavaScript and XML">AJAX</abbr> calls and client-side templates. This was my first experience developing such an app; as such, I'd like to reflect on the choices I made, and on my understanding of the technology as it stands now.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/javascript
+  - thoughtstopics/programming
+---
+For the past few months, my main dev project has been a custom tool that imports metric data from a variety of sources (via APIs), and that generates reports showing that data in numerous graphical and tabular formats. The app is private (and is still in alpha), so I'm afraid I can't go into more detail than that at this time.
+
+I decided (and I was encouraged by stakeholders) to build the tool as a <a href="http://en.wikipedia.org/wiki/Single-page_application">single-page application</a>, i.e. as a web app where almost all of the front-end is powered by JavaScript, and where the page is redrawn via <abbr title="Asynchronous JavaScript and XML">AJAX</abbr> calls and client-side templates. This was my first experience developing such an app; as such, I'd like to reflect on the choices I made, and on my understanding of the technology as it stands now.
+
+<h2>Drowning in frameworks</h2>
+
+[thumbnail Kirk_surrounded_by_Tribbles.jpg I never saw one before in my life, and I hope I never see one of those fuzzy miserable things again.<br><em>Image source:</em> <a href="http://en.memory-alpha.org/wiki/The_Trouble_with_Tribbles_(episode)">Memory Alpha</a> (originally from Star Trek <abbr title="The Original Series">TOS</abbr> Season 2 Ep 13).]
+
+Building single-page applications is all the rage these days; as such, <a href="http://designzum.com/2014/02/19/top-best-javascript-framework-2014/">a gazillion frameworks</a> have popped up, all promising to take the pain out of the dev work for you. In reality, when your problem is that you need to create an app, and you think: "I know, I'll go and choose a JS framework", <a href="http://blog.codinghorror.com/regular-expressions-now-you-have-two-problems/">now you have two problems</a>.
+
+Actually, that's not the full story either. When you choose the <em>wrong</em> JS* framework &ndash; due to it being unsuitable for your project, and/or due to your failing to grok it &ndash; and you have to look for a framework a second time, and port the code you've already started writing&hellip; now you've got three problems!
+
+(* I'd prefer to just refer to these frameworks as "JS", rather than use the much-bandied-about term "<abbr title="Model-View-Controller">MVC</abbr>", because not all such frameworks are MVC, and because one's project may be unsuitable for client-side MVC anyway).
+
+Ah, the joy of first-time blunders.
+
+I started by choosing <a href="http://emberjs.com/">Ember.js</a>. It's one of the most popular frameworks at the moment. It does everything you could possibly need for your funky new JS app. Turns out that: (a) Ember was complete overkill for my relatively simple app; and (b) despite my best efforts, I failed to grok Ember, and I felt that my time would be better spent switching to something else and thereafter working more efficiently, than continuing to grapple with Ember's philosophy and complexity.
+
+In the end, I settled on <a href="http://sammyjs.org/">Sammy.js</a>. This is one of the lesser-known frameworks out there. It boasts far less features than Ember.js (and even so, I haven't used all that Sammy.js offers either). It doesn't get in the way of my app's functionality. Many of its features are just a thin wrapper on top of <a href="http://jquery.com/">jQuery</a>, which I already know intimately. It adds a few bits 'n' pieces into my existing JS ecosystem, to give my app more structure and more interactivity; rather than nuking my existing ecosystem, and making me feel like single-page JS is a whole new language.
+
+My advice to others who are choosing a whiz-bang JS framework for the first time: don't necessarily go with the most popular or the most full-featured framework you find (although don't discard such options either); think long and hard about what your app will actually do (more on that below), and choose an appropriate framework for your use-case; and make liberal use of online resources such as reviews (I also found <a href="http://todomvc.com/">TodoMVC</a> extremely useful, plus I used its well-written code samples as the foundation for my own code).
+
+<h2>What seems to be the problem?</h2>
+
+[thumbnail problem-officer.jpg Nothing to see here, people.<br><em>Image source:</em> <a href="http://www.funnyjunk.com/funny_pictures/4299787/is+there+a+problem+officer/">Funny Junk</a> (originally from South Park).]
+
+Ok, so you're going to write a single-page JS app. What will your app actually do? "Single-page JS app" can mean anything; and if we're trying to find the appropriate tool for the job, then the job itself needs to be clearly defined. So, let's break it down a bit.
+
+<strong>Is the app (mainly) read-write, or is it read-only?</strong> This is a critical question, possibly more so than anything else. One of the biggest challenges with rich JS apps, is synchronising data between client and server. If data is only flowing one day (downstream), that's a whole lot less complexity than if data is flowing upstream as well.
+
+Turns out that JS frameworks, in general, have dedicated a lot of their feature set to supporting read-write apps. They usually do this by having "models" (the "M" in "MVC"), which are the "source of truth" on the client-side; and by "binding" these models to elements in the DOM. When the value of a DOM element changes, that triggers a model data change, which in turn (often) triggers a server-side data update. Conversely, when new data arrives from the server, the model data is updated accordingly, and that update then propagates automatically to a value in the DOM.
+
+Even the quintessential "Todo app" example has two-way data. Turns out, however, that my app only has one-way data. My app is all about sending queries to the server (with some simple filters), and receiving metric data in response. What's more, the received data is aggregate data (ready to be rendered as charts and tables), not individual entities that can easily be stored in a model. So, turns out that my life is easier without worrying about models or event bindings at all. Receive JSON, pipe it to the chart renderer (<a href="http://nvd3.org/">NVD3</a> for most charts), end of story.
+
+<strong>Can displayed data change dynamically within a single JS route, or can it only change when the route changes?</strong> Once again, the former entails a lot more complexity than the latter. In my app's case, each JS route (handled by Sammy.js, same as with other frameworks, as "the part of the URL after the hash character") is a single report (containing one or more graphs and tables). The report elements themselves aren't dynamic (except that hovering over various graph elements shows more info). Changing the filters of the current report, or going to a different report, involves executing a new JS route.
+
+So, if data isn't changing dynamically within a single JS route, why bother with complex event bindings? Some simple "old-skool" jQuery event handlers may be all that's necessary.
+
+In summary, in the case of my app, all that it really needed in a JS framework was: client-side routing (which Sammy.js provides using nice, simple callbacks); local storage (Sammy.js has a thin wrapper on top of the HTML5 local storage API); AJAX communication (Sammy.js has a thin wrapper on top of jQuery for this); and templating (out-of-the-box Sammy.js supports <a href="http://ejohn.org/blog/javascript-micro-templating/">John Resig's JS micro-templating system</a>). And that's already a whole lot of funky new client-side components to learn and use. Why complicate things further?
+
+<h2>Early days</h2>
+
+[thumbnail stormy-horizon.jpg There be dragons here.<br><em>Image source:</em> <a href="http://digital-art-gallery.com/picture/7716">Stormy Horizon Picture</a>.]
+
+All in all, I enjoyed building my first single-page JS app, and I'm reasonably happy with how it turned out to be architected. The front-end uses Sammy.js, D3.js/NVD3, and Bootstrap. The back-end uses <a href="http://flask.pocoo.org/">Flask</a> (Python) and MongoDB. Other than the login page and the admin pages, the app only has one non-JSON server-side route (the home page), and the rest is handled with client-side routes. The client-side is fairly simple, compared to many rich JS apps being built today; but then again, every app is unique.
+
+I think that right now, we're still in Wild West times as far as building single-page apps goes. In particular, there are way too many frameworks in abundance; as the space matures, no doubt most of these frameworks will die off, and only a handful will thrive in the long-term. There's also a shortage of good advice about design patterns for single-page apps so far, although <a href="http://singlepageappbook.com/single-page.html">Mixu's book</a> is a great foundation resource.
+
+Single-page JS technology has plenty of advantages: it can lead to a more responsive, more beautiful app; and, when done right, its JS component can be architected just as cleanly and correctly as everything would be (traditionally) architected on the server-side. Remember, though, that it's just one piece in the puzzle, and that it only needs to be as complex as the app you're building.

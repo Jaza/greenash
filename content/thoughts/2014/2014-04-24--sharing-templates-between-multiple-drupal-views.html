@@ -1,0 +1,93 @@
+---
+title: Sharing templates between multiple Drupal views
+date: 2014-04-24
+teaser: |-
+  Do you have multiple views on your Drupal site, where the content listing is themed to look exactly the same? For example, say you have a custom "search this site" view, a "featured articles" view, and an "articles archive" view. They all show the same fields &mdash; for example, "title", "image", and "summary". They all show the same content types &ndash; except that the first one shows "news" or "page" content, whereas the others only show "news".
+
+  If your design is sufficiently custom that you're writing theme-level Views template files, then chances are that you'll be in danger of creating duplicate templates. I've committed this sin on numerous sites over the past few years. On many occasions, my Views templates were 100% identical, and after making a change in one template, I literally copy-pasted and renamed the file, to update the other templates.
+
+  Until, finally, I decided that enough is enough &ndash; time to get <a href="http://en.wikipedia.org/wiki/Don't_repeat_yourself">DRY</a>!
+
+  Being less repetitive with your Views templates is actually dead simple. Let's say you have three identical files &ndash; <code>views-view-fields--search_this_site.tpl.php</code>, <code>views-view-fields--featured_articles.tpl.php</code>, and <code>views-view-fields--articles_archive.tpl.php</code>. Here's how you clean up your act:
+
+  <ol>
+    <li>Delete the latter two files.</li>
+    <li>Add this to your theme's <code>template.php</code> file:
+  <pre class="php"><code><?php
+  function mytheme_preprocess_views_view_fields(&$vars) {
+    if (in_array(
+      $vars['view']->name, array(
+        'search_this_site',
+        'featured_articles',
+        'articles_archive'))) {
+      $vars['theme_hook_suggestions'][] =
+        'views_view_fields__search_this_site';
+    }
+  }
+  </code></pre>
+    </li>
+    <li>Clear your cache (that being the customary final step when doing anything in Drupal, of course).</li>
+  </ol>
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/drupal
+  - thoughtstopics/words-of-wisdom
+---
+Do you have multiple views on your Drupal site, where the content listing is themed to look exactly the same? For example, say you have a custom "search this site" view, a "featured articles" view, and an "articles archive" view. They all show the same fields &mdash; for example, "title", "image", and "summary". They all show the same content types &ndash; except that the first one shows "news" or "page" content, whereas the others only show "news".
+
+If your design is sufficiently custom that you're writing theme-level Views template files, then chances are that you'll be in danger of creating duplicate templates. I've committed this sin on numerous sites over the past few years. On many occasions, my Views templates were 100% identical, and after making a change in one template, I literally copy-pasted and renamed the file, to update the other templates.
+
+Until, finally, I decided that enough is enough &ndash; time to get <a href="http://en.wikipedia.org/wiki/Don't_repeat_yourself">DRY</a>!
+
+Being less repetitive with your Views templates is actually dead simple. Let's say you have three identical files &ndash; <code>views-view-fields--search_this_site.tpl.php</code>, <code>views-view-fields--featured_articles.tpl.php</code>, and <code>views-view-fields--articles_archive.tpl.php</code>. Here's how you clean up your act:
+
+<ol>
+  <li>Delete the latter two files.</li>
+  <li>Add this to your theme's <code>template.php</code> file:
+<pre class="php"><code><?php
+function mytheme_preprocess_views_view_fields(&$vars) {
+  if (in_array(
+    $vars['view']->name, array(
+      'search_this_site',
+      'featured_articles',
+      'articles_archive'))) {
+    $vars['theme_hook_suggestions'][] =
+      'views_view_fields__search_this_site';
+  }
+}
+</code></pre>
+  </li>
+  <li>Clear your cache (that being the customary final step when doing anything in Drupal, of course).</li>
+</ol>
+
+I've found that <code>views-view-fields.tpl.php</code>-based files are the biggest culprits for duplication; but you might have some other Views templates in need of cleaning up, too, such as:
+
+<pre class="php"><code><?php
+function mytheme_preprocess_views_view(&$vars) {
+  if (in_array(
+    $vars['view']->name, array(
+      'search_this_site',
+      'featured_articles',
+      'articles_archive'))) {
+    $vars['theme_hook_suggestions'][] =
+      'views_view__search_this_site';
+  }
+}
+</code></pre>
+
+And, if your views include a search / filtering form, perhaps also:
+
+<pre class="php"><code><?php
+function mytheme_preprocess_views_exposed_form(&$vars) {
+  if (in_array(
+    $vars['view']->name, array(
+      'search_this_site',
+      'featured_articles',
+      'articles_archive'))) {
+    $vars['theme_hook_suggestions'][] =
+      'views_exposed_form__search_this_site';
+  }
+}
+</code></pre>
+
+That's it &ndash; just a quick tip from me for today. You can find out more about this technique on the <a href="https://drupal.org/node/1089656">Custom Theme Hook Suggestions</a> documentation page, although I couldn't find an example for Views there, nor anywhere else online for that matter; hence this article. Hopefully this results in a few kilobytes saved, and (more importantly) a lot of unnecessary copy-pasting of template files saved, for fellow Drupal devs and themers.
