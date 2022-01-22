@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "date": "2013-03-29T00:22:18Z",
+      "name": "pete",
+      "url": "http://www.torontowebsitedeveloper.com/",
+      "comment": "Hi Jeremy,\n\ngreat post. I use youtube to host my tutorial videos as well and pull them in for my site using the media: youtube module. Embarrassingly, I'll admit I'm still on D6 not having had the time to migrate my site to D7 but in creating a view listing all of my videos, I do have access to the youtube field for duration and I also pull in my thumbnail for the video from youtube. Granted I don't think it stores the information in the database (which would be a plus). I'm curious if you checked that out or if it just didn't meet your specific needs.\n\nRegardless, this is really helpful - I've been wanting to expand my site and pull in some other videos forking some of the other youtube drupal modules and this will definitely help.\n\npete"
+    },
+    {
+      "date": "2013-04-15T06:41:54Z",
+      "name": "dalin",
+      "url": "http://advomatic.com/",
+      "comment": "Computed Field is generally A Bad Idea (tm). Given the amount of custom code that you have here it would be far better to just inner-wrap your original <code>foobar_page_get_youtube_video_duration()</code> in a <code>cache_get()</code> / <code>cache_set()</code>, then call that function via <code>hook_field_extra_fields()</code> and use Drupal Core's internal date / time functions to format it.\n\nThat would probably be a great patch for Media: YouTube module."
+    },
+    {
+      "date": "2013-12-11T04:35:35Z",
+      "name": "Yogesh",
+      "comment": "Thanks Jeremy, its a great post and found it very useful, I used Media.vimeo module and required this same functionality to show video duration in my views and found this post very useful."
+    }
+  ]
+}

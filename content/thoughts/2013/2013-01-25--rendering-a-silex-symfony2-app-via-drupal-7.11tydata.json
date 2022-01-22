@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "date": "2013-01-25T20:08:08Z",
+      "name": "Christian Fritsch",
+      "url": "http://c-fritsch.de/",
+      "comment": "Very interesting article. Thanks for that"
+    },
+    {
+      "date": "2013-01-27T01:00:16Z",
+      "name": "Ismail Mechbal",
+      "url": "http://www.unik.ma/",
+      "comment": "Great article, very well explained, could you make some demo so that we can see the work.\n\nThanks"
+    },
+    {
+      "date": "2013-03-02T05:06:18Z",
+      "name": "brantwynn",
+      "url": "http://whaaat.com/",
+      "comment": "Would love to see this on github!"
+    },
+    {
+      "date": "2013-07-13T07:55:14Z",
+      "isAuthorReply": true,
+      "comment": "I've just finished a project similar to the one I did back in Jan (in Silex - hence this article), only this time I decided to use Symfony2 Standard Edition instead of Silex.\n\nBased on the Drupal integration code from my Silex app, this time round I built a Symfony2 bundle, which provides the integration functionality in a more convenient and more reusable form.\n\nYou can find the <a href=\"https://github.com/Jaza/DrupalIntegrationBundle\">Jaza/DrupalIntegrationBundle code</a> on GitHub (also <a href=\"https://packagist.org/packages/jaza/drupal-integration-bundle\">listed on Packagist</a>). The README has all the installation / configuration instructions you should need (let me know if anything is missing or buggy). Hope this new bundle is of use!"
+    }
+  ]
+}

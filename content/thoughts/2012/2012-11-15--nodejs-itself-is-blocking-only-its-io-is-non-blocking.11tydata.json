@@ -1,0 +1,10 @@
+{
+  "comments": [
+    {
+      "date": "2013-02-02T02:11:30Z",
+      "name": "Rhinostone",
+      "url": "http://www.rhinostone.com/",
+      "comment": "Excellent post! Thank you.\n\n<code>process.nexTick()</code> is useless, you are only going to differ the execution.\n\nBut, there is a way: by \"spawning\" your task, you can run your \"Fibonacci\" code in another thread (child_process). Just, don't forget to kill the thread. \n\nLimitation: can be expensive with memory usage if you are doing that a lot."
+    }
+  ]
+}
