@@ -1,0 +1,76 @@
+{
+  "comments": [
+    {
+      "date": "2014-04-14T02:47:58Z",
+      "name": "Rad",
+      "url": "http://radtek.ca/",
+      "comment": "you have to add paypal receiver email  to your settings before adding\n\n<pre class=\"python\"><code>'payments.multipayments',\n'paypal.standard.ipn',</code></pre>\n\nto installed apps or your migration will fail.\n\n<pre class=\"python\"><code>PAYPAL_BUSINESS = 'cartwpstest@blablablaaaaaaa.com'\nPAYPAL_RECEIVER_EMAIL = PAYPAL_BUSINESS</code></pre>"
+    },
+    {
+      "date": "2014-04-17T05:20:29Z",
+      "name": "Steve",
+      "comment": "Hey Jeremy,\n\nJust tried this out... orders seem to go through successfully... they're saved in the admin with the correct transaction ID... but cartridge's cart does not empty after the order has gone through... if a user then tries to purchase the item again... paypal then says the invoice has been paid..."
+    },
+    {
+      "date": "2014-04-28T09:16:10Z",
+      "isAuthorReply": true,
+      "comment": "@Rad: thanks &ndash; I've moved the adding of <code>'payments.multipayments'</code> and <code>'paypal.standard.ipn'</code> to <code>INSTALLED_APPS</code>, to the bottom of the list in the 'configure settings' section.\n\n@Steve: hmmm, sounds like the IPN callback isn't happening correctly, not sure what's going wrong for you&hellip; check that everything is configured correctly on your Django end, and on your PayPal end."
+    },
+    {
+      "date": "2014-06-22T20:42:09Z",
+      "name": "Sandeep kaur",
+      "url": "http://sandymadaan.wordpress.com/",
+      "comment": "Hey,\n\nNice share.\n\nOrders are saved successfully. But when the payment is complete in url and I click on return to site, it gives error of 404 (Page not found). Please help get out of it, so that I can successfully download the invoice.\n\nThanks."
+    },
+    {
+      "date": "2014-06-29T06:31:21Z",
+      "name": "David",
+      "comment": "Hello Jeremy! Thanks so much for taking the time to share this. I encountered one problem at the end. When purchase is finished and I click \"return to seller's shop\" Paypal redirects me to <code>http://127.0.0.1:8000/shop/checkout/complete/</code>\n\nObviously return URL is wrong but I don't know where to correct it. I guess I have to change it here:\n\n<pre class=\"python\"><code>PAYPAL_RETURN_URL = lambda cart, uuid, order_form: ('shop_complete', None, None)</code></pre>\n\nbut I don't know how.\n\nWould you help me, please?"
+    },
+    {
+      "date": "2014-07-02T15:12:55Z",
+      "name": "Kartik",
+      "comment": "When i do <code>migrate --all</code> it shows following error\n\n<pre class=\"no-highlight\"><code>django.db.utils.OperationalError: table \"pages_page\" already exists</code></pre>"
+    },
+    {
+      "date": "2014-07-02T23:40:24Z",
+      "name": "Kartik",
+      "comment": "I also get \"Page not found error\" when complete the order it save successfully but \"unprocessed\" so how we complete or process the order in cartridge"
+    },
+    {
+      "date": "2014-07-07T21:09:05Z",
+      "name": "Kartik",
+      "comment": "Hi, i follow your Blog for paypal integration but i developed a digital download site so i want to return name of product from paypal in \"complete.html\" how we done that?\n\nPlease help me,\n\nThanks in advance"
+    },
+    {
+      "date": "2014-07-12T08:44:07Z",
+      "isAuthorReply": true,
+      "comment": "@David: re: \"Paypal redirects me to <code>http://127.0.0.1:8000/shop/checkout/complete/</code>\". Please note that you can't test the checkout / payment process in your local environment (i.e. on <code>127.0.0.1</code>), you must deploy it to an online server, that has an actual URL (preferably its own domain / subdomain, although just an IP should work too).\n\nPayPal can't send the IPN back to your localhost. You don't need to configure your site's base URL (as far as I'm aware), <code>django-paypal</code> will work it out automatically based on your environment.\n\n@Sandeep, @Kartik: sounds like you may be having the same problem - if you're only trying this locally, you'll need to deploy your code to a VPS or other web-facing server in order to test the process.\n\nAlso, please make sure you're using the exact versions of all dependencies, as I specified in my <code>requirements.txt</code> in the article. While I encourage you to use the latest stable version of all packages, I haven't tested all this using versions newer than what I've indicated here, and I cannot guarantee that this whole fragile setup will work with upgraded packages. Feel free to let me know if any changes are needed to the setup for use with different versions of any of the dependencies.\n\n@Kartik: re: \"i want to return name of product from paypal in complete.html\". Sorry, not sure how you do that, please post to support forums elsewhere if you need further help. Also, can you please stop spamming - you also sent me your comments via the contact form, this is not necessary."
+    },
+    {
+      "date": "2014-07-15T21:03:05Z",
+      "name": "Kartik",
+      "comment": "Hi, Thanks for reply me, sorry for spamming,\n\nIn cartridge when perform transaction and I complete that but still cart is not empty previous item is as it is in cart so, why cart is not clear at transaction complete, and at some times transaction is complete but in admin side in order it makes no effect can't make entry of that why it happens,\n\nPlease help and quick reply I am in trouble!,\n\nThanks in advance"
+    },
+    {
+      "date": "2014-07-17T22:49:48Z",
+      "name": "David",
+      "comment": "Thanks so much Jeremy, this is a greatly helpful article. I deployed to vps. it works now. I changed\n\n<pre class=\"python\"><code>order = Order.objects.get(transaction_id=ipn_obj.invoice)</code></pre>\n\nin your <code>payment_complete()</code> function to\n\n<pre class=\"python\"><code>order = Order.objects.get(key=s_key)</code></pre>\n\nThis fixed the 404 issue"
+    },
+    {
+      "date": "2014-07-18T21:21:27Z",
+      "name": "Kartik",
+      "comment": "Hello Jeremy! i search a lot but can't find solution in cartridge when in goes in complete.html it shows a \"Http404- Page Not Found\" Error order is also not save in database, I am search in code so I found that in <code>shop/views.py</code> in <code>def complete(request, template=\"shop/complete.html\"):</code> method in this line\n\n<pre class=\"python\"><code>def complete(request, template=\"shop/complete.html\"):\n    try:\n        order = Order.objects.from_request(request)\n    except Order.DoesNotExist:\n        raise Http404  # From this line it shows 404\n    items = order.items.all()</code></pre>\n\nin above line it not get order object so how i solve this problem,\n\nPlase help!!\n\nThanks in advance!"
+    },
+    {
+      "date": "2014-07-29T22:11:15Z",
+      "name": "Jim Smith",
+      "comment": "Having a bit of trouble with this guide not getting the button to appear at all just keep getting the original card payment screen I have followed your steps apart from mezzanine set-up which I followed the official guide as yours didn't give me a shop option. Any idea what might be the issue."
+    },
+    {
+      "date": "2014-07-31T04:30:38Z",
+      "name": "Ben Brown",
+      "comment": "Thanks dude this worked first time and saved me a load of time. For anyone else that's interested there is a good way to make these changes permanent. If you use app engine it makes you put all the modules you use in your project directory if you do this for these two it will make deployment easier. But it will make upgrading harder."
+    }
+  ]
+}

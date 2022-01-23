@@ -1,0 +1,32 @@
+{
+  "comments": [
+    {
+      "date": "2014-04-24T21:20:27Z",
+      "name": "Alex Weber",
+      "url": "http://alexweber.com.br/",
+      "comment": "Nice tip! Just a side-note, you also get custom template suggestions when using the Views UI tagging feature; the tag name will be added as a suggestion. This way you can potentially re-use the same tpl for a bunch of views tagged with a common string without actually writing any code! :)"
+    },
+    {
+      "date": "2014-04-24T23:28:21Z",
+      "name": "Mike Herchel",
+      "url": "http://herchel.com/",
+      "comment": "Alex Weber: WHAT??!!! How come no one ever told me that??!! :p"
+    },
+    {
+      "date": "2014-04-25T05:43:51Z",
+      "name": "Matthew Donadio",
+      "url": "http://www.mxd120.com/",
+      "comment": "You can do all of this from the UI w/o the need for adding template suggestions in a preprocess. You just need to edit your views and give them a common tag (Edit the view, then Edit View Name/Description, then add some tags). After add you tags, you can use the Theme Information link to see the list of new suggestions."
+    },
+    {
+      "date": "2014-04-26T23:29:33Z",
+      "name": "Andy",
+      "comment": "Great article but also great comments because I certainly didn't know about the tagging feature either!"
+    },
+    {
+      "date": "2014-04-28T09:22:24Z",
+      "isAuthorReply": true,
+      "comment": "Agreed &ndash; thanks everyone who commented above about the tagging feature. I've never used Views tagging, and I didn't know that it affects template suggestions. Seems like Views tagging is actually the way to go, instead of the technique that I described in this article (although both achieve the same result, tagging is easier and cleaner)."
+    }
+  ]
+}

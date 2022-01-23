@@ -1,0 +1,10 @@
+{
+  "comments": [
+    {
+      "date": "2014-01-14T19:45:26Z",
+      "name": "Paul",
+      "url": "http://random.nu/",
+      "comment": "Hi Jeremy, thanks for this post. I wanted to use SwiftMailer for sending email using Google Mail, so I <a href=\"https://gist.github.com/shirshir/8415126\">created a small service provider</a> that configures that. Maybe useful for somebody else. Cheers!"
+    }
+  ]
+}

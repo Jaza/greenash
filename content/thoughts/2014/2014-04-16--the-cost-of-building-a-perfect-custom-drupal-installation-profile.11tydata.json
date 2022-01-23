@@ -1,0 +1,26 @@
+{
+  "comments": [
+    {
+      "date": "2014-04-16T19:43:08Z",
+      "name": "Peter Majmesku",
+      "url": "http://www.netzor.de/",
+      "comment": "Hi there,\n\ninstead of a drupal installation profile, you can use <a href=\"http://www.phing.info/\">phing</a> to install your site (all the features, modules etc.) by drush and other tools. An installation profile is good for a hard-state of a drupal-product. Phing is good for a ongoing dev-state, in my opinion.\n\nThanks!"
+    },
+    {
+      "date": "2014-04-16T23:10:07Z",
+      "name": "Alex",
+      "url": "http://alexweber.com.br/en",
+      "comment": "Nice tips, although I personally like to use the Migrate module to keep track of content changes. Using the Views Data Export module with it allows you to generate XML of your content from one environment and import it incrementally into another using Migrate!"
+    },
+    {
+      "date": "2014-04-24T18:17:16Z",
+      "name": "Rob Mumford",
+      "comment": "In my experience features is never worth the effort. For a long time I've been using ctools bulk export and the Entity API to export all my configuration (sometimes with some written into update functions).\n\nHand writing it is so much easier than features. It takes less time and is less buggy!"
+    },
+    {
+      "date": "2014-04-24T21:20:07Z",
+      "name": "Justin",
+      "comment": "Hi All,\n\nI have developed a Generic Install Profile in Drupal 6 and have now ported it over to Drupal 7.\n\nThe install profile heavily uses features and includes a bunch of custom modules.\n\nThe out of the box features it provides are all the common setup settings, modules and content types that all our sites will use as well as a few common optional features.\n\nThis was based on a site recipe that I used in the past, where I found myself spending 2-10 hours at the start of every project doing the some things and this setup process grew with time as I started at a basic level supporting more and more.\n\nI also found that I had to teach this setup to other people I work with. So eventually I caved and looked at creating an Install Profile. It very hard with Drupal 6 but is much easier now in Drupal 7, but still there are lots of small problems that require custom modules and coding.\n\nI seem to every few months do some updates and extend and add to it, when I have time.\n\nI have found that it has saved me a large amount of time and I known that every site we roll out is setup the same at basic level. From the WYSIWYG to admin menus to permissions.\n\nCreating a custom install profile for every project with upgrade paths. I would agree that it would not be worth.\n\nHaving a generic profile that you can roll out to a new site in a few min, very useful and very worth while.\n\nMy 2cents"
+    }
+  ]
+}
