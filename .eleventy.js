@@ -95,7 +95,7 @@ module.exports = function(eleventyConfig) {
   // ported to 11ty
   eleventyConfig.addFilter("autop", value => {
     // All block level tags
-    const block = "(?:table|thead|tfoot|caption|colgroup|tbody|tr|td|th|div|dl|dd|dt|ul|ol|li|pre|select|form|blockquote|address|p|h[1-6]|hr)";
+    const block = "(?:table|thead|tfoot|caption|colgroup|tbody|tr|td|th|div|dl|dd|dt|ul|ol|li|pre|select|form|blockquote|address|p|h[1-6]|hr|section)";
 
     // Split at <pre>, <script>, <style> and </pre>, </script>, </style> tags.
     // We don't apply any processing to the contents of these tags to avoid messing
@@ -175,8 +175,8 @@ module.exports = function(eleventyConfig) {
       newChunk = newChunk.replace(/<blockquote([^>]*)>/g, '<section class="wideflex-wrapper"><blockquote$1>');
       newChunk = newChunk.replace(/<\/blockquote>/g, "</blockquote></section>");
 
-      newChunk = newChunk.replace(/<blockquote([^>]*)>/g, '<section class="wideflex-wrapper"><blockquote$1>');
-      newChunk = newChunk.replace(/<\/blockquote>/g, "</blockquote></section>");
+      newChunk = newChunk.replace(/<table([^>]*)>/g, '<section class="table-wrapper"><table$1>');
+      newChunk = newChunk.replace(/<\/table>/g, "</table></section>");
 
       output += newChunk;
     }

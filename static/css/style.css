@@ -63,6 +63,9 @@ p, figcaption, li, dt, dd, table {
   font-size: 1.3em;
   letter-spacing: -0.03px;
   line-height: 1.58em;
+}
+
+p, figcaption, li, dt, dd {
   word-break: break-word;
 }
 
@@ -149,7 +152,7 @@ figcaption, .wideflex-wrapper > p {
   text-align: center;
 }
 
-pre {
+pre, .table-wrapper {
   max-width: calc(100vw - 48px);
 }
 
@@ -168,6 +171,9 @@ pre {
 code {
   font-size: 1.6em;
   line-height: 1.25em;
+}
+
+code, .table-wrapper {
   overflow: auto;
 }
 
@@ -191,7 +197,7 @@ dt {
 
 table {
   border-collapse: collapse;
-  margin: 1.5em auto;
+  margin: 1.5em 0;
 }
 
 table thead tr {
@@ -251,7 +257,7 @@ h1, h2, h3, summary, form, article > p, main > p, article > ul, article > ol, ar
   max-width: 680px;
 }
 
-.nav-wrapper, h1, h2, article > h2, h3, summary, form, article > p, main > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper {
+.nav-wrapper, h1, h2, article > h2, h3, summary, form, article > p, main > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper, .table-wrapper {
   margin-left: auto;
   margin-right: auto;
 }
@@ -289,7 +295,7 @@ article, .freshest .articles article {
 }
 
 @media (min-width: 1320px) {
-  article > figure, article > .wideflex-wrapper, .nav-wrapper {
+  article > figure, article > .wideflex-wrapper, .nav-wrapper, .table-wrapper {
     max-width: 1192px;
   }
 }
