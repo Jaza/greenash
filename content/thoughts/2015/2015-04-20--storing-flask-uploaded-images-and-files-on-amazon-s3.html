@@ -1,0 +1,376 @@
+---
+title: Storing Flask uploaded images and files on Amazon S3
+date: 2015-04-20
+teaser: |-
+  <a href="http://flask.pocoo.org/">Flask</a> is still a relative newcomer in the world of Python frameworks (it recently celebrated its fifth birthday); and because of this, it's still sometimes trailing behind its <a href="https://www.djangoproject.com/">rivals</a> in terms of plugins to scratch a given itch. I recently discovered that this was the case, with storing and retrieving user-uploaded files on <a href="http://aws.amazon.com/s3/">Amazon S3</a>.
+
+  For static files (i.e. an app's seldom-changing CSS, JS, and images), <a href="http://flask-assets.readthedocs.org/">Flask-Assets</a> and <a href="https://flask-s3.readthedocs.org/">Flask-S3</a> work together like a charm. For more dynamic files, there <a href="https://github.com/doobeh/Flask-S3-Uploader">exist</a> numerous <a href="https://github.com/sasaporta/s3multifile">snippets</a> of <a href="http://www.thefort.org/a/using-flask-flask-wtf-and-boto-to-handle-file-uploads-to-amazon-s3/">solutions</a>, but I couldn't find anything to fill in all the gaps and tie it together nicely.
+
+  Due to a pressing itch in one of my projects, I decided to rectify this situation somewhat. Over the past few weeks, I've whipped up a bunch of Python / Flask tidbits, to handle the features that I needed:
+
+  <ul>
+    <li><a href="https://github.com/Jaza/s3-saver">Local or S3-based find, save, and delete for files in Python</a></li>
+    <li><a href="https://github.com/Jaza/url-for-s3">Easy linking to S3 files</a></li>
+    <li><a href="https://github.com/Jaza/flask-thumbnails-s3">On-demand local- or S3-based image thumbnail generation in Flask</a></li>
+    <li><a href="https://github.com/Jaza/flask-admin-s3-upload">Local- or S3-based file uploading in Flask-Admin</a></li>
+  </ul>
+
+  I've also <a href="https://github.com/Jaza/flask-s3-save-example">published an example app</a>, that demonstrates how all these tools can be used together. Feel free to dive straight into the example code on GitHub; or read on for a step-by-step guide of how this Flask S3 tool suite works.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/flask
+  - thoughtstopics/python
+---
+<a href="http://flask.pocoo.org/">Flask</a> is still a relative newcomer in the world of Python frameworks (it recently celebrated its fifth birthday); and because of this, it's still sometimes trailing behind its <a href="https://www.djangoproject.com/">rivals</a> in terms of plugins to scratch a given itch. I recently discovered that this was the case, with storing and retrieving user-uploaded files on <a href="http://aws.amazon.com/s3/">Amazon S3</a>.
+
+For static files (i.e. an app's seldom-changing CSS, JS, and images), <a href="http://flask-assets.readthedocs.org/">Flask-Assets</a> and <a href="https://flask-s3.readthedocs.org/">Flask-S3</a> work together like a charm. For more dynamic files, there <a href="https://github.com/doobeh/Flask-S3-Uploader">exist</a> numerous <a href="https://github.com/sasaporta/s3multifile">snippets</a> of <a href="http://www.thefort.org/a/using-flask-flask-wtf-and-boto-to-handle-file-uploads-to-amazon-s3/">solutions</a>, but I couldn't find anything to fill in all the gaps and tie it together nicely.
+
+Due to a pressing itch in one of my projects, I decided to rectify this situation somewhat. Over the past few weeks, I've whipped up a bunch of Python / Flask tidbits, to handle the features that I needed:
+
+<ul>
+  <li><a href="https://github.com/Jaza/s3-saver">Local or S3-based find, save, and delete for files in Python</a></li>
+  <li><a href="https://github.com/Jaza/url-for-s3">Easy linking to S3 files</a></li>
+  <li><a href="https://github.com/Jaza/flask-thumbnails-s3">On-demand local- or S3-based image thumbnail generation in Flask</a></li>
+  <li><a href="https://github.com/Jaza/flask-admin-s3-upload">Local- or S3-based file uploading in Flask-Admin</a></li>
+</ul>
+
+I've also <a href="https://github.com/Jaza/flask-s3-save-example">published an example app</a>, that demonstrates how all these tools can be used together. Feel free to dive straight into the example code on GitHub; or read on for a step-by-step guide of how this Flask S3 tool suite works.
+
+<h2>Using s3-saver</h2>
+
+The key feature across most of this tool suite, is being able to use the same code for working with local and with S3-based files. Just change a single config option, or a single function argument, to switch from one to the other. This is critical to the way I need to work with files in my Flask projects: on my development environment, everything should be on the local filesystem; but on other environments (especially production), everything should be on S3. Others may have the same business requirements (in which case you're in luck). This is most evident with s3-saver.
+
+Here's a sample of the typical code you might use, when working with s3-saver:
+
+<pre class="python"><code>from io import BytesIO
+from os import path
+
+from flask import current_app as app
+from flask import Blueprint
+from flask import flash
+from flask import redirect
+from flask import render_template
+from flask import url_for
+from s3_saver import S3Saver
+
+from project import db
+from library.prefix_file_utcnow import prefix_file_utcnow
+from foo.forms import ThingySaveForm
+from foo.models import Thingy
+
+
+mod = Blueprint('foo', __name__)
+
+
+@mod.route('/', methods=['GET', 'POST'])
+def home():
+    """Displays the Flask S3 Save Example home page."""
+
+    model = Thingy.query.first() or Thingy()
+
+    form = ThingySaveForm(obj=model)
+
+    if form.validate_on_submit():
+        image_orig = model.image
+        image_storage_type_orig = model.image_storage_type
+        image_bucket_name_orig = model.image_storage_bucket_name
+
+        # Initialise s3-saver.
+        image_saver = S3Saver(
+            storage_type=app.config['USE_S3'] and 's3' or None,
+            bucket_name=app.config['S3_BUCKET_NAME'],
+            access_key_id=app.config['AWS_ACCESS_KEY_ID'],
+            access_key_secret=app.config['AWS_SECRET_ACCESS_KEY'],
+            field_name='image',
+            storage_type_field='image_storage_type',
+            bucket_name_field='image_storage_bucket_name',
+            base_path=app.config['UPLOADS_FOLDER'],
+            static_root_parent=path.abspath(
+                path.join(app.config['PROJECT_ROOT'], '..')))
+
+        form.populate_obj(model)
+
+        if form.image.data:
+            filename = prefix_file_utcnow(model, form.image.data)
+
+            filepath = path.abspath(
+                path.join(
+                    path.join(
+                        app.config['UPLOADS_FOLDER'],
+                        app.config['THINGY_IMAGE_RELATIVE_PATH']),
+                    filename))
+
+            # Best to pass in a BytesIO to S3Saver, containing the
+            # contents of the file to save. A file from any source
+            # (e.g. in a Flask form submission, a
+            # werkzeug.datastructures.FileStorage object; or if
+            # reading in a local file in a shell script, perhaps a
+            # Python file object) can be easily converted to BytesIO.
+            # This way, S3Saver isn't coupled to a Werkzeug POST
+            # request or to anything else. It just wants the file.
+            temp_file = BytesIO()
+            form.image.data.save(temp_file)
+
+            # Save the file. Depending on how S3Saver was initialised,
+            # could get saved to local filesystem or to S3.
+            image_saver.save(
+                temp_file,
+                app.config['THINGY_IMAGE_RELATIVE_PATH'] + filename,
+                model)
+
+            # If updating an existing image,
+            # delete old original and thumbnails.
+            if image_orig:
+                if image_orig != model.image:
+                    filepath = path.join(
+                        app.config['UPLOADS_FOLDER'],
+                        image_orig)
+
+                    image_saver.delete(filepath,
+                        storage_type=image_storage_type_orig,
+                        bucket_name=image_bucket_name_orig)
+
+                glob_filepath_split = path.splitext(path.join(
+                    app.config['MEDIA_THUMBNAIL_FOLDER'],
+                    image_orig))
+                glob_filepath = glob_filepath_split[0]
+                glob_matches = image_saver.find_by_path(
+                    glob_filepath,
+                    storage_type=image_storage_type_orig,
+                    bucket_name=image_bucket_name_orig)
+
+                for filepath in glob_matches:
+                    image_saver.delete(
+                        filepath,
+                        storage_type=image_storage_type_orig,
+                        bucket_name=image_bucket_name_orig)
+        else:
+            model.image = image_orig
+
+        # Handle image deletion
+        if form.image_delete.data and image_orig:
+            filepath = path.join(
+                app.config['UPLOADS_FOLDER'], image_orig)
+
+            # Delete the file. In this case, we have to pass in
+            # arguments specifying whether to delete locally or on
+            # S3, as this should depend on where the file was
+            # originally saved, rather than on how S3Saver was
+            # initialised.
+            image_saver.delete(filepath,
+                storage_type=image_storage_type_orig,
+                bucket_name=image_bucket_name_orig)
+
+            # Also delete thumbnails
+            glob_filepath_split = path.splitext(path.join(
+                app.config['MEDIA_THUMBNAIL_FOLDER'],
+                image_orig))
+            glob_filepath = glob_filepath_split[0]
+
+            # S3Saver can search for files too. When searching locally,
+            # it uses glob(); when searching on S3, it uses key
+            # prefixes.
+            glob_matches = image_saver.find_by_path(
+                glob_filepath,
+                storage_type=image_storage_type_orig,
+                bucket_name=image_bucket_name_orig)
+
+            for filepath in glob_matches:
+                image_saver.delete(filepath,
+                                   storage_type=image_storage_type_orig,
+                                   bucket_name=image_bucket_name_orig)
+
+            model.image = ''
+            model.image_storage_type = ''
+            model.image_storage_bucket_name = ''
+
+        if form.image.data or form.image_delete.data:
+            db.session.add(model)
+            db.session.commit()
+            flash('Thingy %s' % (
+                      form.image_delete.data and 'deleted' or 'saved'),
+                  'success')
+        else:
+            flash(
+                'Please upload a new thingy or delete the ' +
+                    'existing thingy',
+                'warning')
+
+        return redirect(url_for('foo.home'))
+
+    return render_template('home.html',
+                           form=form,
+                           model=model)
+
+</code></pre>
+
+(From: <a href="https://github.com/Jaza/flask-s3-save-example/blob/master/project/foo/views.py"><code>https://github.com/Jaza/flask-s3-save-example/blob/master/project/foo/views.py</code></a>).
+
+As is hopefully evident in the sample code above, the idea with s3-saver is that as little S3-specific code as possible is needed, when performing operations on a file. Just find, save, and delete files as usual, per the user's input, without worrying about the details of that file's storage back-end.
+
+s3-saver uses the excellent Python <a href="https://boto.readthedocs.org/">boto library</a>, as well as Python's built-in file handling functions, so that you don't have to. As you can see in the sample code, you don't need to directly import either <code>boto</code>, or the file-handling functions such as <code>glob</code> or <code>os.remove</code>. All you need to import is <code>io.BytesIO</code>, and <code>os.path</code>, in order to be able to pass s3-saver the parameters that it needs.
+
+<h2>Using url-for-s3</h2>
+
+This is a simple utility function, that generates a URL to a given S3-based file. It's designed to match <code>flask.url_for</code> as closely as possible, so that one can be swapped out for the other with minimal fuss.
+
+<pre class="python"><code>from __future__ import print_function
+
+from flask import url_for
+from url_for_s3 import url_for_s3
+
+from project import db
+
+
+class Thingy(db.Model):
+    """Sample model for flask-s3-save-example."""
+
+    id = db.Column(db.Integer(), primary_key=True)
+    image = db.Column(db.String(255), default='')
+    image_storage_type = db.Column(db.String(255), default='')
+    image_storage_bucket_name = db.Column(db.String(255), default='')
+
+    def __repr__(self):
+        return 'A thingy'
+
+    @property
+    def image_url(self):
+        from flask import current_app as app
+        return (self.image
+            and '%s%s' % (
+                app.config['UPLOADS_RELATIVE_PATH'],
+                self.image)
+            or None)
+
+    @property
+    def image_url_storageaware(self):
+        if not self.image:
+            return None
+
+        if not (
+                self.image_storage_type
+                and self.image_storage_bucket_name):
+            return url_for(
+                'static',
+                filename=self.image_url,
+                _external=True)
+
+        if self.image_storage_type != 's3':
+            raise ValueError((
+                'Storage type "%s" is invalid, the only supported ' +
+                'storage type (apart from default local storage) ' +
+                'is s3.') % self.image_storage_type)
+
+        return url_for_s3(
+            'static',
+            bucket_name=self.image_storage_bucket_name,
+            filename=self.image_url)
+</code></pre>
+
+(From: <a href="https://github.com/Jaza/flask-s3-save-example/blob/master/project/foo/views.py"><code>https://github.com/Jaza/flask-s3-save-example/blob/master/project/foo/models.py</code></a>).
+
+The above sample code illustrates how I typically use <code>url_for_s3</code>. For a given instance of a model, if that model's file is stored locally, then generate its URL using <code>flask.url_for</code>; otherwise, switch to <code>url_for_s3</code>. Only one extra parameter is needed: the S3 bucket name.
+
+<pre class="html"><code>  LEFTCURLYBRACKET% if model.image %RIGHTCURLYBRACKET
+  <p><a href="{{ model.image_url_storageaware }}">View original</a></p>
+  LEFTCURLYBRACKET% endif %RIGHTCURLYBRACKET
+</code></pre>
+
+(From: <a href="https://github.com/Jaza/flask-s3-save-example/blob/master/templates/home.html"><code>https://github.com/Jaza/flask-s3-save-example/blob/master/templates/home.html</code></a>).
+
+I can then easily show the "storage-aware URL" for this model in my front-end templates.
+
+<h2>Using flask-thumbnails-s3</h2>
+
+In my use case, the majority of the files being uploaded are images, and most of those images need to be resized when displayed in the front-end. Also, ideally, the dimensions for resizing shouldn't have to be pre-specified (i.e. thumbnails shouldn't only be able to get generated when the original image is first uploaded); new thumbnails of any size should get generated on-demand per the templates' needs. The front-end may change according to the design / branding whims of clients and other stakeholders, further on down the road.
+
+<a href="https://github.com/silentsokolov/flask-thumbnails">flask-thumbnails</a> handles just this workflow for local files; so, I decided to fork it and to create flask-thumbnails-s3, which works the same as flask-thumbnails when set to use local files, but which can also store and retrieve thumbnails on a S3 bucket.
+
+<pre class="html"><code>    LEFTCURLYBRACKET% if image %RIGHTCURLYBRACKET
+    <div>
+    <img src="LEFTCURLYBRACKETLEFTCURLYBRACKET image|thumbnail(size,
+                                 crop=crop,
+                                 quality=quality,
+                                 storage_type=storage_type,
+                                 bucket_name=bucket_name) RIGHTCURLYBRACKETRIGHTCURLYBRACKET"
+        alt="LEFTCURLYBRACKETLEFTCURLYBRACKET alt RIGHTCURLYBRACKETRIGHTCURLYBRACKET" title="LEFTCURLYBRACKETLEFTCURLYBRACKET title RIGHTCURLYBRACKETRIGHTCURLYBRACKET" />
+    </div>
+    LEFTCURLYBRACKET% endif %RIGHTCURLYBRACKET
+</code></pre>
+
+(From: <a href="https://github.com/Jaza/flask-s3-save-example/blob/master/templates/macros/imagethumb.html"><code>https://github.com/Jaza/flask-s3-save-example/blob/master/templates/macros/imagethumb.html</code></a>).
+
+Like its parent project, flask-thumbnails-s3 is most commonly invoked by way of a template filter. If a thumbnail of the given original file exists, with the specified size and attributes, then it's returned straightaway; if not, then the original file is retrieved, a thumbnail is generated, and the thumbnail is saved to the specified storage back-end.
+
+At the moment, flask-thumbnails-s3 blocks the running thread while it generates a thumbnail and saves it to S3. Ideally, this task would get sent to a queue, and a "dummy" thumbnail would be returned in the immediate request, until the "real" thumbnail is ready in a later request. The <a href="https://github.com/aidanlister/sorlery">Sorlery</a> plugin for Django uses the queued approach. It <a href="http://stackoverflow.com/questions/5562942/django-s3-boto-sorl-thumbnail-suggestions-for-optimisation">would be cool</a> if flask-thumbnails-s3 (optionally) did the same. Anyway, it works without this fanciness for now; extra contributions welcome!
+
+(By the way, in my testing, this is much less of a problem if your Flask app is deployed on an Amazon EC2 box, particularly if it's in the same region as your S3 bucket; unsurprisingly, there appears to be much less latency between an EC2 server and S3, than there is between a non-Amazon server and S3).
+
+<h2>Using flask-admin-s3-upload</h2>
+
+The purpose of flask-admin-s3-upload is basically to provide the same 'save' functionality as s3-saver, but automatically within <a href="https://flask-admin.readthedocs.org/">Flask-Admin</a>. It does this by providing alternatives to the <code>flask_admin.form.upload.FileUploadField</code> and <code>flask_admin.form.upload.ImageUploadField</code> classes, namely <code>flask_admin_s3_upload.S3FileUploadField</code> and <code>flask_admin_s3_upload.S3ImageUploadField</code>.
+
+(Anecdote: I actually wrote flask-admin-s3-upload before any of the other tools in this suite, because I began by working with a part of my project that has no custom front-end, only a Flask-Admin based management console).
+
+Using the utilities provided by flask-admin-s3-upload is fairly simple:
+
+<pre class="python"><code>from os import path
+
+from flask_admin_s3_upload import S3ImageUploadField
+
+from project import admin, app, db
+from foo.models import Thingy
+from library.admin_utils import ProtectedModelView
+from library.prefix_file_utcnow import prefix_file_utcnow
+
+
+class ThingyView(ProtectedModelView):
+    column_list = ('image',)
+    form_excluded_columns = ('image_storage_type',
+                             'image_storage_bucket_name')
+
+    form_overrides = dict(
+        image=S3ImageUploadField)
+
+    form_args = dict(
+        image=dict(
+            base_path=app.config['UPLOADS_FOLDER'],
+            relative_path=app.config['THINGY_IMAGE_RELATIVE_PATH'],
+            url_relative_path=app.config['UPLOADS_RELATIVE_PATH'],
+            namegen=prefix_file_utcnow,
+            storage_type_field='image_storage_type',
+            bucket_name_field='image_storage_bucket_name',
+        ))
+
+    def scaffold_form(self):
+        form_class = super(ThingyView, self).scaffold_form()
+        static_root_parent = path.abspath(
+            path.join(app.config['PROJECT_ROOT'], '..'))
+
+        if app.config['USE_S3']:
+            form_class.image.kwargs['storage_type'] = 's3'
+
+        form_class.image.kwargs['bucket_name'] = \
+            app.config['S3_BUCKET_NAME']
+        form_class.image.kwargs['access_key_id'] = \
+            app.config['AWS_ACCESS_KEY_ID']
+        form_class.image.kwargs['access_key_secret'] = \
+            app.config['AWS_SECRET_ACCESS_KEY']
+        form_class.image.kwargs['static_root_parent'] = \
+            static_root_parent
+
+        return form_class
+
+
+admin.add_view(ThingyView(Thingy, db.session, name='Thingies'))
+</code></pre>
+
+(From: <a href="https://github.com/Jaza/flask-s3-save-example/blob/master/project/foo/admin.py"><code>https://github.com/Jaza/flask-s3-save-example/blob/master/project/foo/admin.py</code></a>).
+
+Note that flask-admin-s3-upload only handles saving, not deleting (the same as the regular Flask-Admin file / image upload fields only handle saving). If you wanted to handle deleting files in the admin as well, you could (for example) use s3-saver, and hook it in to one of the Flask-Admin event callbacks.
+
+<h2>In summary</h2>
+
+I'd also like to mention: one thing that others have implemented in Flask, is <a href="http://philfreo.com/blog/how-to-allow-direct-file-uploads-from-javascript-to-amazon-s3-signed-by-python/">direct JavaScript-based</a> upload <a href="https://devcenter.heroku.com/articles/s3-upload-python">to S3</a>. Implementing this sort of functionality in my tool suite would be a great next step; however, it would have to play nice with everything else I've built (particularly with flask-thumbnails-s3), and it would have to work for local- and for S3-based files, the same as all the other tools do. I don't have time to address those hurdles right now &ndash; another area where contributions are welcome.
+
+I hope that this article serves as a comprehensive guide, of how to use the Flask S3 tools that I've recently built and contributed to the community. Any questions or concerns, please drop me a line.

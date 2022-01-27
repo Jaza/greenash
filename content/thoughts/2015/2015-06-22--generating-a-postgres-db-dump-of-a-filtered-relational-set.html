@@ -1,0 +1,256 @@
+---
+title: Generating a Postgres DB dump of a filtered relational set
+date: 2015-06-22
+teaser: |-
+  <a href="http://www.postgresql.org/">PostgreSQL</a> is my favourite RDBMS, and it's the fave of many others too. And rightly so: it's a good database! Nevertheless, nobody's perfect.
+
+  When it comes to exporting Postgres data (as SQL <code>INSERT</code> statements, at least), the tool of choice is the standard <a href="http://www.postgresql.org/docs/devel/static/app-pgdump.html"><code>pg_dump</code></a> utility. Good ol' <code>pg_dump</code> is rock solid but, unfortunately, it doesn't allow for any row-level filtering. Turns out that, for a recent project of mine, a filtered SQL dump is exactly what the client ordered.
+
+  On account of this shortcoming, I spent some time whipping up a lil' Python script to take care of this functionality. I've converted the original code (written for a client-specific data set) to a more generic example script, which I've put up <a href="https://github.com/Jaza/pg-dump-filtered">on GitHub under the name "PG Dump Filtered"</a>. If you're just after the code, then feel free to head over to the repo without further ado. If you'd like to stick around for the tour, then read on.
+tags:
+  - thoughtstopics/databases
+  - thoughtstopics/postgres
+  - thoughtstopics/programming
+  - thoughtstopics/python
+---
+<a href="http://www.postgresql.org/">PostgreSQL</a> is my favourite RDBMS, and it's the fave of many others too. And rightly so: it's a good database! Nevertheless, nobody's perfect.
+
+When it comes to exporting Postgres data (as SQL <code>INSERT</code> statements, at least), the tool of choice is the standard <a href="http://www.postgresql.org/docs/devel/static/app-pgdump.html"><code>pg_dump</code></a> utility. Good ol' <code>pg_dump</code> is rock solid but, unfortunately, it doesn't allow for any row-level filtering. Turns out that, for a recent project of mine, a filtered SQL dump is exactly what the client ordered.
+
+On account of this shortcoming, I spent some time whipping up a lil' Python script to take care of this functionality. I've converted the original code (written for a client-specific data set) to a more generic example script, which I've put up <a href="https://github.com/Jaza/pg-dump-filtered">on GitHub under the name "PG Dump Filtered"</a>. If you're just after the code, then feel free to head over to the repo without further ado. If you'd like to stick around for the tour, then read on.
+
+<h2>Worlds apart</h2>
+
+For the example script, I've set up a simple schema of four entities: worlds, countries, cities, and people. This schema happens to be purely hierarchical (i.e. each world has zero or more countries, each country has zero or more cities, and each city has zero or more people), for the sake of simplicity; but the script could be adapted to any valid set of foreign-key based relationships.
+
+<pre class="sql"><code>CREATE TABLE world (
+    name character varying(255) NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone,
+    active boolean NOT NULL,
+    uuid bytea,
+    id integer NOT NULL
+);
+
+ALTER TABLE ONLY world
+    ADD CONSTRAINT world_pkey PRIMARY KEY (id);
+
+CREATE TABLE country (
+    name character varying(255) NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone,
+    active boolean NOT NULL,
+    uuid bytea,
+    id integer NOT NULL,
+    world_id integer,
+    bigness numeric(10,2)
+);
+
+ALTER TABLE ONLY country
+    ADD CONSTRAINT country_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY country
+    ADD CONSTRAINT country_world_id_fkey FOREIGN KEY (world_id)
+    REFERENCES world(id);
+
+CREATE TABLE city (
+    name character varying(255) NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone,
+    active boolean NOT NULL,
+    uuid bytea,
+    id integer NOT NULL,
+    country_id integer,
+    weight integer,
+    is_big boolean DEFAULT false NOT NULL,
+    pseudonym character varying(255) DEFAULT ''::character varying
+        NOT NULL,
+    description text DEFAULT ''::text NOT NULL
+);
+
+ALTER TABLE ONLY city
+    ADD CONSTRAINT city_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY city
+    ADD CONSTRAINT city_country_id_fkey FOREIGN KEY (country_id)
+    REFERENCES country(id);
+
+CREATE TABLE person (
+    name character varying(255) NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone,
+    active boolean NOT NULL,
+    uuid bytea,
+    id integer NOT NULL,
+    city_id integer,
+    person_type character varying(255) NOT NULL
+);
+
+ALTER TABLE ONLY person
+    ADD CONSTRAINT person_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY person
+    ADD CONSTRAINT person_city_id_fkey FOREIGN KEY (city_id)
+    REFERENCES city(id);
+</code></pre>
+
+Using this schema, data belonging to two different worlds can co-exist in the same database. For example, we can have data for the world "Krypton" co-exist with data for the world "Romulus":
+
+<pre class="sql"><code>INSERT INTO world (name, created_at, updated_at, active, uuid, id)
+VALUES ('Krypton', '2015-06-01 09:00:00.000000',
+        '2015-06-06 09:00:00.000000', true,
+        '\x478a43577ebe4b07ba8631ca228ee42a', 1);
+INSERT INTO world (name, created_at, updated_at, active, uuid, id)
+VALUES ('Romulus', '2015-06-01 10:00:00.000000',
+        '2015-06-05 13:00:00.000000', true,
+        '\x82e2c0ac3ba84a34a1ad3bbbb2063547', 2);
+
+INSERT INTO country (name, created_at, updated_at, active, uuid, id,
+                     world_id, bigness)
+VALUES ('Crystalland', '2015-06-02 09:00:00.000000',
+        '2015-06-08 09:00:00.000000', true,
+        '\xcd0338cf2e3b40c3a3751b556a237152', 1, 1, 3.86);
+INSERT INTO country (name, created_at, updated_at, active, uuid, id,
+                     world_id, bigness)
+VALUES ('Greenbloodland', '2015-06-03 11:00:00.000000',
+        '2015-06-07 13:00:00.000000', true,
+        '\x17591321d1634bcf986d0966a539c970', 2, 2, NULL);
+
+INSERT INTO city (name, created_at, updated_at, active, uuid, id,
+                  country_id, weight, is_big, pseudonym, description)
+VALUES ('Kryptonopolis', '2015-06-05 09:00:00.000000',
+        '2015-06-11 09:00:00.000000', true,
+        '\x13659f9301d24ea4ae9c534d70285edc', 1, 1, 100, true,
+        'Pointyville',
+        'Nice place, once you get used to the pointiness.');
+
+INSERT INTO city (name, created_at, updated_at, active, uuid, id,
+                  country_id, weight, is_big, pseudonym, description)
+VALUES ('Rom City', '2015-06-04 09:00:00.000000',
+        '2015-06-13 09:00:00.000000', true,
+        '\xc45a9fb0a92a43df91791b11d65f5096', 2, 2, 200, false,
+        '',
+        'Gakkkhhhh!');
+
+INSERT INTO person (name, created_at, updated_at, active, uuid,
+                    city_id, person_type)
+VALUES ('Superman', '2015-06-14 09:00:00.000000',
+        '2015-06-15 22:00:00.000000', true,
+        '\xbadd1ca153994deca0f78a5158215cf6', 1,
+        'Awesome Heroic Champ');
+INSERT INTO person (name, created_at, updated_at, active, uuid,
+                    city_id, person_type)
+VALUES ('General Zod', '2015-06-14 10:00:00.000000',
+        '2015-06-15 23:00:00.000000', true,
+        '\x796031428b0a46c2a9391eb5dc45008a', 1,
+        'Bad Bloke');
+
+INSERT INTO person (name, created_at, updated_at, active, uuid,
+                    city_id, person_type)
+VALUES ('Mister Funnyears', '2015-06-14 11:00:00.000000',
+        '2015-06-15 22:30:00.000000', false,
+        '\x22380f6dc82d47f488a58153215864cb', 2,
+        'Mediocre Dude');
+INSERT INTO person (name, created_at, updated_at, active, uuid,
+                    city_id, person_type)
+VALUES ('Captain Greeny', '2015-06-15 05:00:00.000000',
+        '2015-06-16 08:30:00.000000', true,
+        '\x485e31758528425dbabc598caaf86fa4', 2,
+        'Weirdo');
+</code></pre>
+
+In this case, our two key stakeholders &ndash; the Kryptonians and the Romulans &ndash; have been good enough to agree to their respective data records being stored in the same physical database. After all, they're both storing the same type of data, and they accept the benefits of a shared schema in terms of cost-effectiveness, maintainability, and scalability.
+
+However, these two stakeholders aren't exactly the best of friends. In fact, they're not even on speaking terms (have you even seen them both feature in the same franchise, let alone the same movie?). Plus, for legal reasons (and in the interests of intergalactic peace), there can be no possibility of Kryptonian records falling into Romulan hands, or vice versa. So, it really is critical that, as far as these two groups are concerned, the data appears to be completely partitioned.
+
+(It's also lucky that we're using Postgres and Python, which all parties appear to be cool with &ndash; the Klingons are mad about Node.js and MongoDB these days, so the Romulans would never have come on board if we'd gone down that path&hellip;).
+
+Fortunately, thanks to the wondrous script that's now been written, these unlikely DB room-mates can have their dilithium and eat it, too. The Romulans, for example, can simply specify their World ID of 2:
+
+<pre class="bash"><code>./pg_dump_filtered.py \
+"postgresql://pg_dump_test:pg_dump_test@localhost:5432/pg_dump_test" 2 \
+> ~/pg_dump_test_output.sql
+</code></pre>
+
+And they'll get a DB dump of what is (as far as they're concerned) &hellip; well, the whole world! (Note: please do not change your dietary habits per above innuendo, dilithium can harm your unborn baby).
+
+And all thanks to a lil' bit of Python / SQL trickery, to filter things according to their world:
+
+<pre class="python"><code># ...
+
+# Thanks to:
+# http://bytes.com/topic/python/answers/438133-find-out-schema-psycopg
+t_cur.execute((
+    "SELECT        column_name "
+    "FROM          information_schema.columns "
+    "WHERE         table_name = '%s' "
+    "ORDER BY      ordinal_position") % table)
+
+t_fields_str = ', '.join([x[0] for x in t_cur])
+d_cur = conn.cursor()
+
+# Start constructing the query to grab the data for dumping.
+query = (
+    "SELECT        x.* "
+    "FROM          %s x ") % table
+
+# The rest of the query depends on which table we're at.
+if table == 'world':
+    query += "WHERE         x.id = %(world_id)s "
+elif table == 'country':
+    query += "WHERE         x.world_id = %(world_id)s "
+elif table == 'city':
+    query += (
+        "INNER JOIN    country c "
+        "ON            x.country_id = c.id ")
+    query += "WHERE         c.world_id = %(world_id)s "
+elif table == 'person':
+    query += (
+        "INNER JOIN    city ci "
+        "ON            x.city_id = ci.id "
+        "INNER JOIN    country c "
+        "ON            ci.country_id = c.id ")
+    query += "WHERE         c.world_id = %(world_id)s "
+
+# For all tables, filter by the top-level ID.
+d_cur.execute(query, {'world_id': world_id})
+</code></pre>
+
+With a bit more trickery thrown in for good measure, to more-or-less emulate <code>pg_dump</code>'s export of values for different data types:
+
+<pre class="python"><code># ...
+
+# Start constructing the INSERT statement to dump.
+d_str = "INSERT INTO %s (%s) VALUES (" % (table, t_fields_str)
+d_vals = []
+
+for i, d_field in enumerate(d_row):
+    d_type = type(d_field).__name__
+
+    # Rest of the INSERT statement depends on the type of
+    # each field.
+    if d_type == 'datetime':
+        d_vals.append("'%s'" % d_field.isoformat().replace('T', ' '))
+    elif d_type == 'bool':
+        d_vals.append('%s' % (d_field and 'true' or 'false'))
+    elif d_type == 'buffer':
+        d_vals.append(r"'\x" + ("%s'" % hexlify(d_field)))
+    elif d_type == 'int':
+        d_vals.append('%d' % d_field)
+    elif d_type == 'Decimal':
+        d_vals.append('%f' % d_field)
+    elif d_type in ('str', 'unicode'):
+        d_vals.append("'%s'" % d_field.replace("'", "''"))
+    elif d_type == 'NoneType':
+        d_vals.append('NULL')
+
+d_str += ', '.join(d_vals)
+d_str += ');'
+</code></pre>
+
+(Above code samples from: <a href="https://github.com/Jaza/pg-dump-filtered/blob/master/pg_dump_filtered.py">pg_dump_filtered.py</a>).
+
+And that's the easy part done! Now, on to working out how to efficiently do Postgres master-slave replication over a distance of several thousand light years, without disrupting the space-time continuum.
+
+<h2>(livelong AND prosper);</h2>
+
+Hope my little example script comes in handy, for anyone else needing a version of <code>pg_dump</code> that can do arbitrary filtering on inter-related tables. As I said in the <code>README</code>, with only a small amount of tweaking, this script should be able to produce a dump of virtually any relational data set, filtered by virtually any criteria that you might fancy.
+
+Also, this script is for Postgres: the <code>pg_dump</code> utility lacks any query-level filtering functionality, so using it in this way is simply not an option. The script could also be quite easily adapted to other DBMSes (e.g. MySQL, SQL Server, Oracle), although most of Postgres' competitors have a dump utility with at least some filtering capability.

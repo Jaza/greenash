@@ -1,0 +1,304 @@
+---
+title: Splitting a Python codebase into dependencies for fun and profit
+date: 2015-06-30
+teaser: |-
+  When the Python codebase for a project (let's call the project <em>LasagnaFest</em>) starts getting big, and when you feel the urge to re-use a chunk of code (let's call that chunk <code>foodutils</code>) in multiple places, there are a variety of steps at your disposal. The most obvious step is to move that <code>foodutils</code> code into its own file (thus making it a <a href="http://docs.python-guide.org/en/latest/writing/structure/">Python <em>module</em></a>), and to then import that module wherever else you want in the codebase.
+
+  Most of the time, doing that is enough. The Python module importing system is powerful, yet simple and elegant.
+
+  <strong>But&hellip;</strong> what happens a few months down the track, when you're working on two new codebases (let's call them <em>TortelliniFest</em> and <em>GnocchiFest</em> &ndash; perhaps they're for new clients too), that could also benefit from re-using <code>foodutils</code> from your old project? What happens when you make some changes to <code>foodutils</code>, for the new projects, but those changes would break compatibility with the old <em>LasagnaFest</em> codebase?
+
+  What happens when you want to give a super-charged boost to your open source karma, by contributing <code>foodutils</code> to the public domain, but separated from the cruft that ties it to <em>LasagnaFest</em> and Co? And what do you do with <code>secretfoodutils</code>, which for licensing reasons (it contains super-yummy but super-secret sauce) can't be made public, but which should ideally also be separated from the <em>LasagnaFest</em> codebase for easier re-use?
+
+  [thumbnail python-caged.jpg Some bits of Python need to be locked up securely as private dependencies.<br><em>Image source:</em> <a href="http://blog.hesc.co.za/2012/09/python-intruder-found-at-hesc/">Hoedspruit Endangered Species Centre</a>.]
+
+  Or &ndash; not to be forgotten &ndash; what happens when, on one abysmally rainy day, you take a step back and audit the <em>LasagnaFest</em> codebase, and realise that it's got no less than 38 different <code>*utils</code> chunks of code strewn around the place, and you ponder whether surely keeping all those utils within the <em>LasagnaFest</em> codebase is really the best way forward?
+
+  Moving <code>foodutils</code> to its own module file was a great first step; but it's clear that in this case, a more drastic measure is needed. In this case, it's time to split off <code>foodutils</code> into a separate, independent codebase, and to make it an external <em>dependency</em> of the <em>LasagnaFest</em> project, rather than an internal component of it.
+
+  This article is an introduction to the how and the why of cutting up parts of a Python codebase into dependencies. I've just explained a fair bit of the why. As for the how: in a nutshell, <a href="https://pip.pypa.io/"><code>pip</code></a> (for installing dependencies), the <a href="https://pypi.python.org/">public PyPI</a> repo (for hosting open-sourced dependencies), and a <a href="https://gist.github.com/Jaza/fcea493dd0ba6ebf09d3">private PyPI repo</a> (for hosting proprietary dependencies). Read on for more details.
+tags:
+  - thoughtstopics/innovations
+  - thoughtstopics/programming
+  - thoughtstopics/python
+---
+When the Python codebase for a project (let's call the project <em>LasagnaFest</em>) starts getting big, and when you feel the urge to re-use a chunk of code (let's call that chunk <code>foodutils</code>) in multiple places, there are a variety of steps at your disposal. The most obvious step is to move that <code>foodutils</code> code into its own file (thus making it a <a href="http://docs.python-guide.org/en/latest/writing/structure/">Python <em>module</em></a>), and to then import that module wherever else you want in the codebase.
+
+Most of the time, doing that is enough. The Python module importing system is powerful, yet simple and elegant.
+
+<strong>But&hellip;</strong> what happens a few months down the track, when you're working on two new codebases (let's call them <em>TortelliniFest</em> and <em>GnocchiFest</em> &ndash; perhaps they're for new clients too), that could also benefit from re-using <code>foodutils</code> from your old project? What happens when you make some changes to <code>foodutils</code>, for the new projects, but those changes would break compatibility with the old <em>LasagnaFest</em> codebase?
+
+What happens when you want to give a super-charged boost to your open source karma, by contributing <code>foodutils</code> to the public domain, but separated from the cruft that ties it to <em>LasagnaFest</em> and Co? And what do you do with <code>secretfoodutils</code>, which for licensing reasons (it contains super-yummy but super-secret sauce) can't be made public, but which should ideally also be separated from the <em>LasagnaFest</em> codebase for easier re-use?
+
+[thumbnail python-caged.jpg Some bits of Python need to be locked up securely as private dependencies.<br><em>Image source:</em> <a href="http://blog.hesc.co.za/2012/09/python-intruder-found-at-hesc/">Hoedspruit Endangered Species Centre</a>.]
+
+Or &ndash; not to be forgotten &ndash; what happens when, on one abysmally rainy day, you take a step back and audit the <em>LasagnaFest</em> codebase, and realise that it's got no less than 38 different <code>*utils</code> chunks of code strewn around the place, and you ponder whether surely keeping all those utils within the <em>LasagnaFest</em> codebase is really the best way forward?
+
+Moving <code>foodutils</code> to its own module file was a great first step; but it's clear that in this case, a more drastic measure is needed. In this case, it's time to split off <code>foodutils</code> into a separate, independent codebase, and to make it an external <em>dependency</em> of the <em>LasagnaFest</em> project, rather than an internal component of it.
+
+This article is an introduction to the how and the why of cutting up parts of a Python codebase into dependencies. I've just explained a fair bit of the why. As for the how: in a nutshell, <a href="https://pip.pypa.io/"><code>pip</code></a> (for installing dependencies), the <a href="https://pypi.python.org/">public PyPI</a> repo (for hosting open-sourced dependencies), and a <a href="https://gist.github.com/Jaza/fcea493dd0ba6ebf09d3">private PyPI repo</a> (for hosting proprietary dependencies). Read on for more details.
+
+<h2>Levels of modularity</h2>
+
+One of the (many) joys of coding in Python is the way that it encourages modularity. For example, let's start with this snippet of completely non-modular code:
+
+<strong><code>foodgreeter.py:</code></strong>
+
+<pre class="python"><code>dude_name = 'Johnny'
+food_today = 'lasagna'
+print("Hey {dude_name}! Want a {food_today} today?".format(
+    dude_name=dude_name,
+    food_today=food_today))
+</code></pre>
+
+There are, in my opinion, three different levels of re-factoring that you can apply, in order to make it more modular. You can think of these levels like the layers of a lasagna, if you want. Or not.
+
+Each successive level of re-factoring involves a bit more work in the short-term, but results in more convenient re-use in the long-term. So, which level is appropriate, depends on the likelihood that you (or others) will want to re-use a given chunk of code in the future.
+
+First, you can split the logic out of the procedural blurg, and into a function in the same file:
+
+<strong><code>foodgreeter.py:</code></strong>
+
+<pre class="python"><code>def greet_dude_with_food(dude_name, food_today):
+    return "Hey {dude_name}! Want a {food_today} today?".format(
+        dude_name=dude_name,
+        food_today=food_today)
+
+dude_name = 'Johnny'
+food_today = 'lasagna'
+print(greet_dude_with_food(
+    dude_name=dude_name,
+    food_today=food_today))
+</code></pre>
+
+Second, you can move that functionality into a separate file, and import it using Python's module imports system:
+
+<strong><code>foodutils.py:</code></strong>
+
+<pre class="python"><code>def greet_dude_with_food(dude_name, food_today):
+    return "Hey {dude_name}! Want a {food_today} today?".format(
+        dude_name=dude_name,
+        food_today=food_today)
+</code></pre>
+
+<strong><code>foodgreeter.py:</code></strong>
+
+<pre class="python"><code>from foodutils import greet_dude_with_food
+
+dude_name = 'Johnny'
+food_today = 'lasagna'
+print(greet_dude_with_food(
+    dude_name=dude_name,
+    food_today=food_today))
+</code></pre>
+
+And, finally, you can move that file out of your codebase, upload it to a Python package repository (the most common such repository being PyPI), and then declare it as a dependency of your codebase using <code>pip</code>:
+
+<strong><code>requirements.txt:</code></strong>
+
+<pre><code>foodutils==1.0.0
+</code></pre>
+
+<strong>Run command:</strong>
+
+<pre class="bash"><code>pip install -r requirements.txt
+</code></pre>
+
+<strong><code>foodgreeter.py:</code></strong>
+
+<pre class="python"><code>from foodutils import greet_dude_with_food
+
+dude_name = 'Johnny'
+food_today = 'lasagna'
+print(greet_dude_with_food(
+    dude_name=dude_name,
+    food_today=food_today))
+</code></pre>
+
+[thumbnail lego-figure-display.jpg How to keep your building blocks organised.<br><em>Image source:</em> <a href="http://organizeanddecorateeverything.com/wordpress/lego-mini-figure-display">Organize and Decorate Everything</a>.]
+
+As I said, achieving this last level of modularity isn't always necessary or appropriate, due to the overhead involved. For a given chunk of code, there are always going to be trade-offs to consider, and as a developer it's always going to be your judgement call.
+
+<h2>Splitting out code</h2>
+
+For the times when it <em>is</em> appropriate to go that "last mile" and split code out as an external dependency, there are (in my opinion) insufficient resources regarding how to go about it. I hope, therefore, that this section serves as a decent guide on the matter.
+
+<h3>Factor out coupling</h3>
+
+The first step in making until-now "project code" an external dependency, is removing any <a href="https://en.wikipedia.org/wiki/Coupling_(computer_programming)">coupling</a> that the chunk of code may have to the rest of the codebase. For example, the <code>foodutils</code> code shown above is nice and de-coupled; but what if it instead looked like so:
+
+<strong><code>foodutils.py:</code></strong>
+
+<pre class="python"><code>from mysettings import NUM_QUESTION_MARKS
+
+def greet_dude_with_food(dude_name, food_today):
+    return "Hey {dude_name}! Want a {food_today} today{q_marks}".format(
+        dude_name=dude_name,
+        food_today=food_today,
+        q_marks='?'*NUM_QUESTION_MARKS)
+</code></pre>
+
+This would be problematic, because this code relies on the assumption that it lives in a codebase containing a <code>mysettings</code> module, and that the configuration value <code>NUM_QUESTION_MARKS</code> is defined within that module.
+
+We can remove this coupling by changing <code>NUM_QUESTION_MARKS</code> to be a parameter passed to <code>greet_dude_with_food</code>, like so:
+
+<strong><code>foodutils.py:</code></strong>
+
+<pre class="python"><code>def greet_dude_with_food(dude_name, food_today, num_question_marks):
+    return "Hey {dude_name}! Want a {food_today} today{q_marks}".format(
+        dude_name=dude_name,
+        food_today=food_today,
+        q_marks='?'*num_question_marks)
+</code></pre>
+
+The dependent code in this project could then pass in the required config value when it calls <code>greet_dude_with_food</code>, like so:
+
+<strong><code>foodgreeter.py:</code></strong>
+
+<pre class="python"><code>from foodutils import greet_dude_with_food
+from mysettings import NUM_QUESTION_MARKS
+
+dude_name = 'Johnny'
+food_today = 'lasagna'
+print(greet_dude_with_food(
+    dude_name=dude_name,
+    food_today=food_today,
+    num_question_marks=NUM_QUESTION_MARKS))
+</code></pre>
+
+Once the code we're re-factoring no longer depends on anything elsewhere in the codebase, it's ready to be made an external dependency.
+
+<h3>New repo for dependency</h3>
+
+Next comes the step of physically moving the given chunk of code out of the project's codebase. In most cases, this means deleting the given file(s) from the project's version control repository (you are <a href="http://www.git-tower.com/learn/git/ebook/command-line/basics/why-use-version-control">using version control</a>, right?), and creating a new repo for those file(s) to live in.
+
+For example, if you're using Git, the steps would be something like this:
+
+<pre class="bash"><code>mkdir /path/to/foodutils
+cd /path/to/foodutils
+git init .
+
+mv /path/to/lasagnafest/project/foodutils.py .
+git add .
+git commit -m "Initial commit"
+
+cd /path/to/lasagnafest
+git rm project/foodutils.py
+git commit -m "Moved foodutils to external dependency"
+</code></pre>
+
+<h3>Add some metadata</h3>
+
+The given chunk of code now has its own dedicated repo. But it's not yet a project, in its own right, and it can't yet be referenced as a dependency. To do that, we'll need to add some more files to the new repo, mainly consisting of metadata describing "who" this project is, and what it does.
+
+First up, add a <code>.gitignore</code> file &ndash; I recommend the <a href="https://github.com/github/gitignore/blob/master/Python.gitignore">default Python <code>.gitignore</code> on GitHub</a>. Feel free to customise as needed.
+
+Next, add a version number to the code. The best way to do this, is to add it at the top of the main Python file, e.g. by adding this to the top of <code>foodutils.py</code>:
+
+<pre class="python"><code>__version__ = '0.1.0'
+</code></pre>
+
+After that, we're going to add the standard metadata files that almost all <a href="http://www.jeffknupp.com/blog/2013/08/16/open-sourcing-a-python-project-the-right-way/">open-source Python projects have</a>. Most importantly, a <code>setup.py</code> file that looks something like this:
+
+<pre class="python"><code>import os
+
+import setuptools
+
+module_path = os.path.join(os.path.dirname(__file__), 'foodutils.py')
+version_line = [line for line in open(module_path)
+                if line.startswith('__version__')][0]
+
+__version__ = version_line.split('__version__ = ')[-1][1:][:-2]
+
+setuptools.setup(
+    name="foodutils",
+    version=__version__,
+    url="https://github.com/misterfoo/foodutils",
+
+    author="Mister foo",
+    author_email="mister@foo.com",
+
+    description="Utils for handling food.",
+    long_description=open('README.rst').read(),
+
+    py_modules=['foodutils'],
+    zip_safe=False,
+    platforms='any',
+
+    install_requires=[],
+
+    classifiers=[
+        'Development Status :: 2 - Pre-Alpha',
+        'Environment :: Web Environment',
+        'Intended Audience :: Developers',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+    ],
+)
+</code></pre>
+
+And also, a <code>README.rst</code> file:
+
+<pre class="no-highlight"><code>foodutils
+=========
+
+Utils for handling food.
+</code></pre>
+
+Once you've created those files, commit them to the new repo.
+
+<h3>Push the repo</h3>
+
+Great &ndash; the chunk of code now lives in its own repo, and it contains enough metadata for other projects to see what its name is, what version(s) of it there are, and what function(s) it performs. All that needs to be done now, is to decide where this repo will be hosted. But to do this, you first need to answer an important non-technical question: to open-source the code, or to keep it proprietary?
+
+In general, you should open-source your dependencies whenever possible. You get <a href="http://www.catb.org/~esr/writings/cathedral-bazaar/cathedral-bazaar/ar01s04.html">more eyeballs</a> (for free). Famous hairy people like <a href="https://stallman.org/">Richard Stallman</a> will send you flowers. If nothing else, you'll at least be able to always easily find your code, guaranteed (if you can't remember where it is, just Google it!). You get the drift. If open-sourcing the code, then the most obvious choice for where to host the repo is GitHub. (However, I'm not evangelising GitHub here, remember there are other options, kids).
+
+Open source is kool, but sometimes you can't or you don't want to go down that route. That's fine, too &ndash; I'm not here to judge anyone, and I can't possibly be aware of anyone else's business / ownership / philosophical situation. So, if you want to keep the code all to your little self (or all to your little / big company's self), you're still going to have to host it somewhere. And no, "on my laptop" does <em>not</em> count as your code being hosted somewhere (well, technically you could just keep the repo on your own PC, and still reference it as a dependency, but that's a Bad Idea&trade;). There are a number of hosting options: for example, on a VPS that you control; or using a managed service such as <a href="https://github.com/pricing">GitHub private</a>, <a href="https://bitbucket.org/">Bitbucket</a>, or <a href="https://www.assembla.com/">Assembla</a> (note: once again, not promoting any specific service provider, just listing the main players as options).
+
+So, once you've decided whether or not to open-source the code, and once you've settled on a hosting option, push the new repo to its hosted location.
+
+<h3>Upload to PyPI</h3>
+
+Nearly there now. The chunk of code has been de-coupled from its dependent project; it's been put in a new repo with the necessary metadata; and that repo is now hosted at a permanent location somewhere online. All that's left, is to make it known to the universe of Python projects, so that it can be easily listed as a dependency of other Python projects.
+
+If you've developed with Python before (and if you've read this far, then I assume you have), then no doubt you've heard of <code>pip</code>. Being the Python package manager of choice these days, <code>pip</code> is the tool used to manage Python dependencies. <code>pip</code> can find dependencies from a variety of locations, but the place it looks first and foremost (by default) is on the Python Package Index (PyPI).
+
+If your dependency is public and open-source, then you should add it to PyPI. Each time you release a new version, then (along with committing and tagging that new version in the repo) you should also upload it to PyPI. I won't go into the details in this article; please refer to the <a href="https://packaging.python.org/en/latest/distributing.html">official docs for registering and uploading packages on PyPI</a>. When following the instructions there, you'll generally want to package your code as a "universal wheel", you'll generally use the PyPI website form to register a new package, and you'll generally use <code>twine</code> to upload the package.
+
+If your dependency is private and proprietary, then PyPI is not an option. The easiest way to deal with private dependencies (also the easiest way to deal with public dependencies, for that matter), is to not worry about proper Python packaging at all, and simply to use <code>pip</code>'s ability to directly reference a source repo (including a specific commit / tag), e.g:
+
+<pre class="bash"><code>pip install -e \
+git+http://git.myserver.com/foodutils.git@0.1.0#egg=foodutils
+</code></pre>
+
+However, <a href="http://carljm.github.io/tamingdeps/">that has a number of disadvantages</a>, the most visible disadvantage being that <code>pip install</code> will run much slower, because it has to do a <code>git pull</code> every time you ask it to check that <code>foodutils</code> is installed (even if you specify the same commit / tag each time).
+
+A better way to deal with private dependencies, is to create your own "private PyPI". Same as with public packages: each time you release a new version, then (along with committing and tagging that new version in the repo) you should also upload it to your private PyPI. For instructions regarding this, please refer to my <a href="https://gist.github.com/Jaza/fcea493dd0ba6ebf09d3">guide for how to set up and use a private PyPI repo</a>. Also, note that my guide is for quite a minimal setup, although it contains links to some alternative setup options, including more advanced and full-featured options. (And if using a private PyPI, then take note of my guide's instructions for what to put in your local <code>~/.pip/pip.conf</code> file).
+
+<h3>Reference the dependency</h3>
+
+The chunk of code is now ready to be used as an external dependency, by any project. To do this, you simply list the package in your project's <code>requirements.txt</code> file; whether the package is on the public PyPI, or on a private PyPI of your own, the syntax is the same:
+
+<pre class="no-highlight"><code>foodutils==0.1.0 # From pypi.myserver.com
+</code></pre>
+
+Then, just run your dependencies through <code>pip</code> as usual:
+
+<pre class="bash"><code>pip install -r requirements.txt
+</code></pre>
+
+And there you have it: <code>foodutils</code> is now an external dependency. You can list it as a requirement for <em>LasagnaFest</em>, <em>TortelliniFest</em>, <em>GnocchiFest</em>, and as many other projects as you need.
+
+<h2>Final thoughts</h2>
+
+This article was born out of a series of projects that I've been working on over the past few months (and that I'm still working on), written mainly in <a href="http://flask.pocoo.org/">Flask</a> (these apps are still in alpha; ergo, sorry, can't talk about their details yet). The size of the projects' codebases grew to be rather unwieldy, and the projects have quite a lot of shared functionality.
+
+I started out by re-using chunks of code between the different projects, with the hacky solution of sym-linking from one codebase to another. This quickly became unmanageable. Once I could stand the symlinks no longer (and once I had some time for clean-up), I moved these shared chunks of code into separate repos, and referenced them as dependencies (with some being open-sourced and put on the public PyPI). Only in the last week or so, after losing patience with slow <code>pip install</code>s, and after getting sick of seeing far too many <code>-e git+http://git&hellip;</code> strings in my <code>requirements.txt</code> files, did I finally get around to setting up a private PyPI, for better dealing with the proprietary dependencies of these codebases.
+
+I hope that this article provides some clear guidance regarding what can be quite a confusing task, i.e. that of creating and maintaining a private Python package index. Aside from being a technical guide, though, my aim in penning this piece is to explain how you can split off component parts of a monolithic codebase into re-usable, independent separate codebases; and to convey the advantages of doing so, in terms of code quality and maintainability.
+
+Flask, my framework of choice these days, strives to consist of a series of independent projects (Flask, <a href="http://werkzeug.pocoo.org/">Werkzeug</a>, <a href="http://jinja.pocoo.org/">Jinja</a>, <a href="http://wtforms.readthedocs.org/">WTForms</a>, and the myriad Flask-* add-ons), which are compatible with each other, but which are also useful stand-alone or with other systems. I think that this is a great example for everyone to follow, even humble "custom web-app" developers like myself. Bearing that in mind, devoting some time to splitting code out of a big bad client-project codebase, and creating more atomic packages (even if not open-source) upon whose shoulders a client-project can stand, is a worthwhile endeavour.

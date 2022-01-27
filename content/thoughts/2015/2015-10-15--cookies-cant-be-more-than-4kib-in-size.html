@@ -1,0 +1,33 @@
+---
+title: Cookies can't be more than 4KiB in size
+date: 2015-10-15
+permalink: /thoughts/2015/10/cookies-cant-be-more-than-4kib-in-size/
+teaser: |-
+  Did you know: you <a href="http://tools.ietf.org/html/rfc2965">can't reliably store more than 4KiB</a> (4096 bytes) of data in a single browser cookie? I didn't until this week.
+
+  [thumbnail bigcookie.jpg What, I can't have my giant cookie and eat it too? Outrageous!<br><em>Image source:</em> <a href="https://www.youtube.com/watch?v=WPVb8fYLFUM">Giant Chocolate chip cookie recipe</a>.]
+
+  I'd never before stopped to think about whether or not there was a limit to how much you can put in a cookie. Usually, cookies only store very small string values, such as a session ID, a tracking code, or a browsing preference (e.g. "tile" or "list" for search results). So, usually, there's no need to consider its size limits.
+
+  However, while working on a new <a href="https://github.com/Jaza/flask-editablesite">side project of mine that heavily uses session storage</a>, I discovered this limit the hard (to debug) way. Anyway, now I've got one more adage to add to my developer's phrasebook: <em>if you're trying to store more than 4KiB in a cookie, you're doing it wrong.</em>
+tags:
+  - thoughtstopics/flask
+  - thoughtstopics/hackery
+  - thoughtstopics/python
+  - thoughtstopics/words-of-wisdom
+---
+Did you know: you <a href="http://tools.ietf.org/html/rfc2965">can't reliably store more than 4KiB</a> (4096 bytes) of data in a single browser cookie? I didn't until this week.
+
+[thumbnail bigcookie.jpg What, I can't have my giant cookie and eat it too? Outrageous!<br><em>Image source:</em> <a href="https://www.youtube.com/watch?v=WPVb8fYLFUM">Giant Chocolate chip cookie recipe</a>.]
+
+I'd never before stopped to think about whether or not there was a limit to how much you can put in a cookie. Usually, cookies only store very small string values, such as a session ID, a tracking code, or a browsing preference (e.g. "tile" or "list" for search results). So, usually, there's no need to consider its size limits.
+
+However, while working on a new <a href="https://github.com/Jaza/flask-editablesite">side project of mine that heavily uses session storage</a>, I discovered this limit the hard (to debug) way. Anyway, now I've got one more adage to add to my developer's phrasebook: <em>if you're trying to store more than 4KiB in a cookie, you're doing it wrong.</em>
+
+Actually, according to the web site <a href="http://browsercookielimits.squawky.net/">Browser Cookie Limits</a>, the safe "lowest common denominator" maximum size to stay below is 4093 bytes. Also check out the Stack Overflow discussion, <a href="http://stackoverflow.com/questions/640938/what-is-the-maximum-size-of-a-web-browsers-cookies-key">What is the maximum size of a web browser's cookie's key?</a>, for more commentary regarding the limit.
+
+In my case &ndash; working with <a href="http://flask.pocoo.org/">Flask</a>, which depends on <a href="http://werkzeug.pocoo.org/">Werkzeug</a> &ndash; trying to store an oversized cookie doesn't throw any errors, it simply fails silently. I've submitted a patch to Werkzeug, to <a href="https://github.com/mitsuhiko/werkzeug/pull/780">make oversized cookies raise an exception</a>, so hopefully it will be more obvious in future when this problem occurs.
+
+It appears that this is not an isolated issue; many web frameworks and libraries fail silently with storage of too-big cookies. It's the case with Django, where the <a href="https://code.djangoproject.com/ticket/22242">decision was made to not fix it</a>, for technical reasons. <a href="https://github.com/bcit-ci/CodeIgniter/issues/2085">Same story with CodeIgniter</a>. Seems that <a href="http://stackoverflow.com/questions/28322158/cookie-possibly-not-set-or-overflowed-because-it-was-too-large">Ruby on Rails is well-behaved and raises exceptions</a>. Basically, your mileage may vary: don't count on your framework of choice alerting you, if you're being a cookie monster.
+
+Also, as several <a href="http://stackoverflow.com/questions/640938/what-is-the-maximum-size-of-a-web-browsers-cookies-key#comment22003663_640963">others have pointed out</a>, trying to store too much data in cookies is a bad idea anyway, because that data travels with every HTTP request and response, so it should be as small as possible. As I learned, if you find that you're dealing with non-trivial amounts of session data, then ditch client-side storage for the app in question, and switch to server-side session data storage (preferably using something like Memcached or Redis).
