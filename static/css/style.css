@@ -315,6 +315,26 @@ article, .freshest .articles article {
   display: none;
 }
 
+ul li.listitem-yes, ul li.listitem-no, ul li.listitem-warning, p.listitem-yes, p.listitem-no, p.listitem-warning {
+  background-position: 0 0.2em;
+  background-repeat: no-repeat;
+  padding: 0 0 10px 35px;
+  list-style-type: none;
+  margin-left: 0;
+}
+
+.listitem-yes {
+  background-image: url(../img/tick-icon.png);
+}
+
+.listitem-no {
+  background-image: url(../img/cross-icon.png);
+}
+
+.listitem-warning {
+  background-image: url(../img/warning-icon.png);
+}
+
 /* Thanks to: https://codepen.io/tomhodgins/pen/zqZeqv */
 
 .pagination,
