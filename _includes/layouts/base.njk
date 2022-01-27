@@ -18,21 +18,8 @@
     {% include 'components/footer.njk' %}
   </body>
   <script type="text/javascript" src="/js/highlight.pack.js"></script>
-  <script type="text/javascript">
-    // Thanks to: https://tobiasahlin.com/blog/move-from-jquery-to-vanilla-javascript/
-    const ready = (callback) => {
-      if (document.readyState != "loading") callback();
-      else document.addEventListener("DOMContentLoaded", callback);
-    }
-
-    ready(() => {
-      hljs.tabReplace = '    ';
-      hljs.initHighlightingOnLoad();
-
-      document.getElementById("menu-icon").addEventListener("click", e => {
-        document.querySelector("header").classList.toggle("expand");
-        return false;
-      });
-    });
-  </script>
+  <script type="text/javascript" src="/js/ready.js"></script>
+  <script type="text/javascript" src="/js/inithighlight.js"></script>
+  <script type="text/javascript" src="/js/nav.js"></script>
+  <script type="text/javascript" src="/js/expandablecells.js"></script>
 </html>
