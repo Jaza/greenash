@@ -1,0 +1,15 @@
+{
+  "comments": [
+    {
+      "date": "2015-10-15T19:19:30Z",
+      "name": "Mirosław Zalewski",
+      "url": "http://miroslaw-zalewski.eu/blog/",
+      "comment": "Well, there is always <a href=\"http://caniuse.com/#search=localstorage\">localstorage</a> available. Amount of space varies across browsers and is user-configurable, but usually you have 5-10 MB to work with. One problem is that you have to use JavaScript to access it, so it's not readily available for server-side processing."
+    },
+    {
+      "date": "2015-10-19T08:31:21Z",
+      "name": "Kws",
+      "comment": "Same here, but we knew about this 4K limit in advance.\n\nWhat was new is that, the spec states that you can have at least 20 on the same domain but in practice it depends on the server and the total size of them.\n\nReal limit is around 10. Above that your cookies start disappearing in request."
+    }
+  ]
+}

@@ -19,6 +19,32 @@
       "date": "2014-11-12T16:08:17Z",
       "name": "Rachel",
       "comment": "Life saver thankyou! Just what I needed for a tender :)"
+    },
+    {
+      "date": "2015-01-08T16:26:01Z",
+      "name": "Neil",
+      "comment": "You are the best."
+    },
+    {
+      "date": "2015-02-24T13:46:46Z",
+      "name": "vealmince",
+      "comment": "Some pivot table goodness:\n\n<ul>\n<li>40% of postcodes are contained in a single LGA, the rest cross multiple LGAs.</li>\n<li>The average LGA covers 12 postcodes (the median is 10).</li>\n<li>Brisbane LGA covers 90 postcodes.</li>\n<li>Postcode 4871 is included in 19 LGAs: Aurukun, Cairns, Carpentaria, Cassowary Coast, Charters Towers, Cook, Croydon, Etheridge, Flinders, Hope Vale, Kowanyama, Lockhart River, McKinlay, Mornington, Napranum, Pormpuraaw, Richmond, Tablelands, Yarrabah.</li>\n<li>Only 10 LGAs comprise a single postcode: Palm Island, Tiwi Islands, Weipa, Mornington, Pormpuraaw, Mapoon, Torres Strait Island, Deniliquin, Broken Hill, King Island.</li>\n</ul>"
+    },
+    {
+      "date": "2015-04-21T10:25:17Z",
+      "name": "G",
+      "comment": "Hi,\n\nThis is brilliant, just what I was looking for.\n\nJust one question, though: some postcodes are in more than one LGA. How do you select the appropriate one?"
+    },
+    {
+      "date": "2015-04-21T10:39:16Z",
+      "isAuthorReply": true,
+      "comment": "@G. Re: \"some postcodes are in more than one LGA. How do you select the appropriate one?\" Well, that's the whole point - many of those postcodes really do belong to multiple LGAs. Officially and on the ground. So, for those postcodes, there is no \"appropriate one\", there's only an \"appropriate many\".\n\nIf you have more information, e.g. an exact street address, which yields a geographical point (not an area), then you can of course always map that to a single LGA. But with just a postcode, all you have is a (possibly large) geographical area, which may overlap with the areas of multiple LGAs."
+    },
+    {
+      "date": "2015-06-18T12:08:22Z",
+      "name": "Liz",
+      "url": "http://www.fosteringnsw.com.au/",
+      "comment": "Thanks so much, this is brilliant! I wonder why there is no official doc of this info available??"
     }
   ]
 }
