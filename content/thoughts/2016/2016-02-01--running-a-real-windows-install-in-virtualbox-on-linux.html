@@ -1,0 +1,60 @@
+---
+title: Running a real Windows install in VirtualBox on Linux
+date: 2016-02-01
+teaser: |-
+  Having a complete Windows (or Mac) desktop running within Linux has been possible for some time now, thanks to the wonders of <a href="http://www.makeuseof.com/tag/virtual-machine-makeuseof-explains/">Virtual Machine</a> (VM) technology. However, the typical approach is to mount and boot a VM image, where the guest OS and hard disk are just files on the host filesystem. In this case, the guest OS can't be natively booted and run, because it doesn't occupy its own disk or partition on the physical hardware, and therefore it can't be picked up by the BIOS / boot manager.
+
+  I've been installing Windows and Linux on the same machine, in a <a href="https://help.ubuntu.com/community/WindowsDualBoot">dual-boot setup</a>, for many years now. In this case, I boot natively into either one or the other of the installed OSes. However, I haven't run one "real" OS (i.e. an OS that's installed on a physical disk or partition) inside the other via a VM. At least, not until now.
+
+  At <a href="http://www.iress.com.au/">my new job</a> this year, I discovered that it's possible to do such a thing, using a feature of <a href="https://www.virtualbox.org/">VirtualBox</a> called "<a href="http://www.rajatarya.com/wp-content/plugins/really-static/static/website/taming-windows-virtualbox-vm/">Raw Disk Access</a>". With surprisingly few hiccups, I got this running with <a href="http://www.linuxmint.com/">Linux Mint</a> 17.3 as the host, and with Windows 8.1 as the guest. Each OS is installed on a separate physical hard disk. I run Windows inside the VM most of the time, but I can still boot natively into the very same install of Windows at any time, if necessary.
+tags:
+  - thoughtstopics/computing
+  - thoughtstopics/miscellaneous
+---
+Having a complete Windows (or Mac) desktop running within Linux has been possible for some time now, thanks to the wonders of <a href="http://www.makeuseof.com/tag/virtual-machine-makeuseof-explains/">Virtual Machine</a> (VM) technology. However, the typical approach is to mount and boot a VM image, where the guest OS and hard disk are just files on the host filesystem. In this case, the guest OS can't be natively booted and run, because it doesn't occupy its own disk or partition on the physical hardware, and therefore it can't be picked up by the BIOS / boot manager.
+
+I've been installing Windows and Linux on the same machine, in a <a href="https://help.ubuntu.com/community/WindowsDualBoot">dual-boot setup</a>, for many years now. In this case, I boot natively into either one or the other of the installed OSes. However, I haven't run one "real" OS (i.e. an OS that's installed on a physical disk or partition) inside the other via a VM. At least, not until now.
+
+At <a href="http://www.iress.com.au/">my new job</a> this year, I discovered that it's possible to do such a thing, using a feature of <a href="https://www.virtualbox.org/">VirtualBox</a> called "<a href="http://www.rajatarya.com/wp-content/plugins/really-static/static/website/taming-windows-virtualbox-vm/">Raw Disk Access</a>". With surprisingly few hiccups, I got this running with <a href="http://www.linuxmint.com/">Linux Mint</a> 17.3 as the host, and with Windows 8.1 as the guest. Each OS is installed on a separate physical hard disk. I run Windows inside the VM most of the time, but I can still boot natively into the very same install of Windows at any time, if necessary.
+
+<h2>Instructions</h2>
+
+<ol>
+  <li>This should go without saying, but please <strong>back up</strong> all your data before proceeding. What I'm explaining here is dangerous, and if anything goes wrong, you are likely to lose data on your PC.</li>
+  <li>If installing the two OSes on the same physical disk, then wipe the disk and <a href="http://www.howtogeek.com/214571/how-to-dual-boot-linux-on-your-pc/">create partitions for each OS</a> as necessary (as is standard for dual-boot installs). (You can also shrink an existing Windows partition and then create the Linux partitions with the resulting free space, but this is more dangerous). If installing on different physical disks, then just keep reading.</li>
+  <li>Install Windows on its respective disk or partition (if it's not installed already, e.g. included with a home PC, SOE configured copy on a corporate PC). Windows should boot by default.</li>
+  <li>Go into your PC's BIOS setup (e.g. by pressing F12 when booting up), and ensure that "Secure Boot" and "Fast Boot" are disabled (if present), and ensure that <a href="http://superuser.com/questions/692821/how-to-boot-from-usb-on-asus-x551ca">"Launch CSM" / "Launch PXE OpROM"</a> (or similar) are enabled (if present).</li>
+  <li>Install your preferred flavour of Linux on the other disk or partition. After doing this, GRUB should boot on startup, and it should let you choose to load Windows or Linux.</li>
+  <li>Install VirtualBox on Debian-based systems (e.g. Mint, Ubuntu) with:
+  <pre class="bash"><code>sudo apt-get install virtualbox
+sudo apt-get install virtualbox-dkms
+</code></pre></li>
+  <li>Use a tool such as <code>fdisk</code> or <code>parted</code> to determine the partitions that the VM will need to access. In my case, for my Windows disk, it was partitions 1 (boot / EFI), 4 (recovery), and 5 (OS / "C drive").</li>
+<ol>
+
+[thumbnail gparted-cdrive-partitions.png Partition table of my Windows disk as shown in GParted.]
+
+<ol start="8">
+  <li>Use this command (with your own filename / disk / partitions specified) to create the "raw disk", which is effectively a file that acts as a pointer to a disk / partition on which an OS is installed:
+  <pre class="bash"><code>sudo VBoxManage internalcommands createrawvmdk \
+-filename "/path/to/win8.vmdk" -rawdisk /dev/sda \
+-partitions 1,4,5
+</code></pre></li>
+  <li>Create a new VM in the VirtualBox GUI, with the OS and version that correspond to your install of Windows. In the "Storage" settings for the VM, add a hard disk (when prompted, click "Choose existing disk"), and point it to the <code>.vmdk</code> file that you created.</li>
+<ol>
+
+[thumbnail virtualbox-harddisk-vmdk.png VirtualBox treats the "raw" .vmdk file as if it were a virtual disk contained in a file.]
+
+<ol start="10">
+  <li>Start up your VM. You should see the same desktop that you have when you boot Windows natively!</li>
+  <li>Install VirtualBox Guest Additions as you would for a normal Windows VM, in order to get the usual VM bells and whistles (i.e. resizable window, mouse / clipboard integration, etc).</li>
+  <li>After you've been running your "real" Windows in the VM for a while, it will ask you to "Activate Windows". It will do this even if your Windows install is already activated when running natively. This is because Windows sees itself running within the VM, and sees "different hardware" (i.e. it thinks it's been installed on a second physical machine). You will have to activate Windows a second time within the VM (e.g. using a corporate bulk license key, by calling Microsoft, etc).</li>
+</ol>
+
+<h2>Done</h2>
+
+That's all there is to it. I should acknowledge that this guide is based on various <a href="http://www.serverwatch.com/server-tutorials/using-a-physical-hard-drive-with-a-virtualbox-vm.html">other guides</a> with similar instructions. Most online sources seem to very strongly warn that <a href="http://askubuntu.com/questions/168156/how-to-use-a-real-partition-with-windows-7-installed-in-a-virtualbox-vm">running Windows in this way is dangerous</a> and <a href="http://fds-team.de/cms/articles/2013-12/use-a-real-windows-7-partition-in-virtualbox-kvm-vmware-player-u.html">can corrupt your system</a>. Personally, I've now been running "raw" Windows in a VM like this every day for several weeks, with no major issues. The VM does crash sometimes (once every few days for me), as VMs do, and as Windows does. But nothing more serious than that.
+
+I guess I should also warn readers of the potential dangers of this setup. It worked for me, but <abbr title="Your Mileage May Vary">YMMV</abbr>. I've also heard rumour that on Windows 8 and higher, the problems of Windows not being able to adapt itself to boot on "different hardware" each startup (the real physical hardware, vs the hardware presented by VirtualBox) are much less than they used to be. Certainly doesn't seem to be an issue for me.
+
+At any rate, I'm now happy; at least, as happy as someone who runs Windows in a VM all day can physically be. Hey, at least it's Linux outside that box on my screen. Good luck in having your cake and eating it, too.
