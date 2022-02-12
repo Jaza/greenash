@@ -4,6 +4,16 @@
       "date": "2015-12-14T08:27:42Z",
       "name": "Daniel Rubio",
       "comment": "This is some good S#$t. Much appreciated for writing and demonstrating how this works."
+    },
+    {
+      "date": "2016-01-19T02:48:56Z",
+      "name": "Daniel Rubio",
+      "comment": "Hey Jaza, I wanted to note that <code>flask_admin_s3</code> has all the code necessary to incorporate file editing and deletion without <code>S3Saver</code>. I have worked my way around the code to make it work in my example application."
+    },
+    {
+      "date": "2016-01-19T14:30:02Z",
+      "isAuthorReply": true,
+      "comment": "Daniel: by <code>flask_admin_s3</code>, do you mean <code>flask_admin_s3_upload</code>? If so, then yes, it does indeed incorporate everything by itself, no need for <code>S3Saver</code>. However, it only works with <code>Flask-Admin</code>, whereas <code>S3Saver</code> is a stand-alone library (doesn't even need Flask, its only dependency is Boto). Also, if you think it would be of use, then could you post a link to your example application, or provide relevant code snippets from it?"
     }
   ]
 }
