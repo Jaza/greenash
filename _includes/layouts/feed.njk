@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  {%- block header -%}{%- endblock -%}
+  <updated>{{ items | getNewestCollectionItemDate | dateToRfc3339 }}</updated>
+  <author>
+    <name>{{ params.authorName }}</name>
+    <email>{{ params.authorEmail }}</email>
+  </author>
+  {%- asyncEach item in items %}
+  {% set absolutePostUrl %}{{ item.url | url | absoluteUrl(params.baseURL) }}{% endset %}
+  <entry>
+    <title>{{ item.data.title }}</title>
+    <link href="{{ absolutePostUrl }}"/>
+    <updated>{{ item.date | dateToRfc3339 }}</updated>
+    <id>{{ absolutePostUrl }}</id>
+    <content type="html">
+      <![CDATA[
+        {{ item.data.content | autop | inlineThumbnails | htmlToAbsoluteUrls(absolutePostUrl) | safe }}
+      ]]>
+    </content>
+  </entry>
+  {%- endeach %}
+</feed>

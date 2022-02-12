@@ -1,0 +1,11 @@
+{% extends 'layouts/feed.njk' %}
+
+{% set items = collections.thoughts | reverse %}
+
+{% block header %}
+  <title>{{ metadata.title }}</title>
+  <subtitle>All-natural web development, poignant wit, and hippie ramblings since 2004</subtitle>
+  <link href="{{ params.baseURL }}/feed.xml" rel="self"/>
+  <link href="{{ params.baseURL }}/"/>
+  <id>{{ params.baseURL }}/</id>
+{% endblock %}

@@ -2,6 +2,7 @@ const { DateTime } = require("luxon");
 const eleventyNavigationPlugin = require("@11ty/eleventy-navigation");
 const Image = require("@11ty/eleventy-img");
 const Nunjucks = require("nunjucks");
+const pluginRss = require("@11ty/eleventy-plugin-rss");
 
 const params = require("./_data/params");
 
@@ -33,6 +34,8 @@ module.exports = function(eleventyConfig) {
 
   // Eleventy Navigation https://www.11ty.dev/docs/plugins/navigation/
   eleventyConfig.addPlugin(eleventyNavigationPlugin);
+
+  eleventyConfig.addPlugin(pluginRss);
 
   // Merge data instead of overriding
   // https://www.11ty.dev/docs/data-deep-merge/
@@ -318,6 +321,41 @@ module.exports = function(eleventyConfig) {
   };
 
   eleventyConfig.addCollection("thoughtsByYear", thoughtsByYear);
+
+  const thoughtsByTopic = (collection) => {
+    let contentByTopic = {};
+
+    collection.getAllSorted().forEach(function(item) {
+      let tags = item.data.tags;
+
+      if (typeof tags === "string") {
+        tags = [tags];
+      }
+
+      if (tags) {
+        for (const tag of tags) {
+          if (tag.startsWith('thoughtstopics/')) {
+            const topic = tag.replace('thoughtstopics/', '');
+            if (!(topic in contentByTopic)) {
+              contentByTopic[topic] = [];
+            }
+
+            contentByTopic[topic].push(item);
+          }
+        }
+      }
+    });
+
+    for (const [key, value] of Object.entries(contentByTopic)) {
+      contentByTopic[key] = value.sort((a, b) => {
+        return b.date - a.date;
+      });
+    }
+
+    return contentByTopic;
+  };
+
+  eleventyConfig.addCollection("thoughtsByTopic", thoughtsByTopic);
 
   eleventyConfig.addCollection("thoughtsYears", (collection) => {
     let thoughtsYears = [];
