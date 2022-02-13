@@ -1,0 +1,224 @@
+---
+title: Using Python's namedtuple for mock objects in tests
+date: 2017-08-13
+permalink: /thoughts/2017/08/using-pythons-namedtuple-for-mock-objects-in-tests/
+teaser: |-
+  I have become quite a fan of Python's built-in <a href="https://docs.python.org/3/library/collections.html#collections.namedtuple"><code>namedtuple</code></a> collection lately. As others have already written, despite having been available in Python 2.x and 3.x for a long time now, <a href="https://dbader.org/blog/writing-clean-python-with-namedtuples"><code>namedtuple</code> continues to be under-appreciated</a> and under-utilised by many programmers.
+
+  <pre class="python"><code># The ol'fashioned tuple way
+  fruits = [
+      ('banana', 'medium', 'yellow'),
+      ('watermelon', 'large', 'pink')]
+
+  for fruit in fruits:
+      print('A {0} is coloured {1} and is {2} sized'.format(
+          fruit[0], fruit[2], fruit[1]))
+
+  # The nicer namedtuple way
+  from collections import namedtuple
+
+  Fruit = namedtuple('Fruit', 'name size colour')
+
+  fruits = [
+      Fruit(name='banana', size='medium', colour='yellow'),
+      Fruit(name='watermelon', size='large', colour='pink')]
+
+  for fruit in fruits:
+      print('A {0} is coloured {1} and is {2} sized'.format(
+          fruit.name, fruit.colour, fruit.size))
+  </code></pre>
+
+  <code>namedtuple</code>s can be used in <a href="http://locallyoptimal.com/blog/2012/09/08/why-namedtuples/">a few obvious situations</a> in Python. I'd like to present a new and less obvious situation, that I haven't seen any examples of elsewhere: using a <code>namedtuple</code> instead of <a href="https://docs.python.org/3/library/unittest.mock.html#unittest.mock.MagicMock"><code>MagicMock</code></a> or <a href="http://flexmock.readthedocs.io/"><code>flexmock</code></a>, for mocking objects in unit tests.
+tags:
+  - thoughtstopics/programming
+  - thoughtstopics/python
+---
+I have become quite a fan of Python's built-in <a href="https://docs.python.org/3/library/collections.html#collections.namedtuple"><code>namedtuple</code></a> collection lately. As others have already written, despite having been available in Python 2.x and 3.x for a long time now, <a href="https://dbader.org/blog/writing-clean-python-with-namedtuples"><code>namedtuple</code> continues to be under-appreciated</a> and under-utilised by many programmers.
+
+<pre class="python"><code># The ol'fashioned tuple way
+fruits = [
+    ('banana', 'medium', 'yellow'),
+    ('watermelon', 'large', 'pink')]
+
+for fruit in fruits:
+    print('A {0} is coloured {1} and is {2} sized'.format(
+        fruit[0], fruit[2], fruit[1]))
+
+# The nicer namedtuple way
+from collections import namedtuple
+
+Fruit = namedtuple('Fruit', 'name size colour')
+
+fruits = [
+    Fruit(name='banana', size='medium', colour='yellow'),
+    Fruit(name='watermelon', size='large', colour='pink')]
+
+for fruit in fruits:
+    print('A {0} is coloured {1} and is {2} sized'.format(
+        fruit.name, fruit.colour, fruit.size))
+</code></pre>
+
+<code>namedtuple</code>s can be used in <a href="http://locallyoptimal.com/blog/2012/09/08/why-namedtuples/">a few obvious situations</a> in Python. I'd like to present a new and less obvious situation, that I haven't seen any examples of elsewhere: using a <code>namedtuple</code> instead of <a href="https://docs.python.org/3/library/unittest.mock.html#unittest.mock.MagicMock"><code>MagicMock</code></a> or <a href="http://flexmock.readthedocs.io/"><code>flexmock</code></a>, for creating fake objects in unit tests.
+
+<h2><code>namedtuple</code> vs the competition</h2>
+
+<code>namedtuple</code>s have a number of advantages over regular tuples and <code>dict</code>s in Python. First and foremost, a <code>namedtuple</code> is (by defintion) more semantic than a tuple, because you can define and access elements by name rather than by index. A <code>namedtuple</code> is also more semantic than a <code>dict</code>, because its structure is strictly defined, so you can be guaranteed of exactly which elements are to be found in a given <code>namedtuple</code> instance. And, similarly, a <code>namedtuple</code> is often more useful than a custom class, because it gives more of a guarantee about its structure than a regular Python class does.
+
+A <code>namedtuple</code> can craft an object similarly to the way that <code>MagicMock</code> or <code>flexmock</code> can. The <code>namedtuple</code> object is more limited, in terms of what attributes it can represent, and in terms of how it can be swapped in to work in a test environment. But it's also simpler, and that makes it easier to define and easier to debug.
+
+Compared with all the alternatives listed here (<code>dict</code>, a custom class, <code>MagicMock</code>, and <code>flexmock</code> &ndash; all except tuple), <code>namedtuple</code> has the advantage of being immutable. This is generally not such an important feature, for the purposes of mocking and running tests, but nevertheless, <a href="https://codehabitude.com/2013/12/24/python-objects-mutable-vs-immutable/">immutability always provides advantages</a> &ndash; such as elimination of side-effects via parameters, and more thread-safe code.
+
+Really, for me, the biggest "quick win" that you get from using <code>namedtuple</code> over any of its alternatives, is the lovely built-in string representation that the former provides. Chuck any <code>namedtuple</code> in a debug statement or a logging call, and you'll see everything you need (all the fields and their values) and nothing you don't (other internal attributes), right there on the screen.
+
+<pre class="python"><code># Printing a tuple
+f1 = ('banana', 'medium', 'yellow')
+
+# Shows all attributes ordered nicely, but no field names
+print(f1)
+# ('banana', 'medium', 'yellow')
+
+
+# Printing a dict
+f1 = {'name': 'banana', 'size': 'medium', 'colour': 'yellow'}
+
+# Shows all attributes with field names, but ordering is wrong
+print(f1)
+# {'colour': 'yellow', 'size': 'medium', 'name': 'banana'}
+
+
+# Printing a custom class instance
+class Fruit(object):
+    """It's a fruit, yo"""
+
+f1 = Fruit()
+f1.name = 'banana'
+f1.size = 'medium'
+f1.colour = 'yellow'
+
+# Shows nothing useful by default! (Needs a __repr__() method for that)
+print(f1)
+# <__main__.Fruit object at 0x7f1d55400e48>
+
+# But, to be fair, can print its attributes as a dict quite easily
+print(f1.__dict__)
+# {'size': 'medium', 'name': 'banana', 'colour': 'yellow'}
+
+
+# Printing a MagicMock
+from mock import MagicMock
+
+class Fruit(object):
+    name = None
+    size = None
+    colour = None
+
+f1 = MagicMock(spec=Fruit)
+f1.name = 'banana'
+f1.size = 'medium'
+f1.colour = 'yellow'
+
+# Shows nothing useful by default! (and f1.__dict__ is full of a tonne
+# of internal cruft, with the fields we care about buried somewhere
+# amongst it all)
+print(f1)
+# <MagicMock spec='Fruit' id='140682346494552'>
+
+
+# Printing a flexmock
+from flexmock import flexmock
+
+f1 = flexmock(name='banana', size='medium', colour='yellow')
+
+# Shows nothing useful by default!
+print(f1)
+# <flexmock.MockClass object at 0x7f691ecefda0>
+
+# But, to be fair, printing f1.__dict__ shows minimal cruft
+print(f1.__dict__)
+# {
+#     'name': 'banana',
+#     '_object': <flexmock.MockClass object at 0x7f691ecefda0>,
+#     'colour': 'yellow', 'size': 'medium'}
+
+
+# Printing a namedtuple
+from collections import namedtuple
+
+Fruit = namedtuple('Fruit', 'name size colour')
+f1 = Fruit(name='banana', size='medium', colour='yellow')
+
+# Shows exactly what we need: what it is, and what all of its
+# attributes' values are. Sweeeet.
+print(f1)
+# Fruit(name='banana', size='medium', colour='yellow')
+</code></pre>
+
+As the above examples show, without any special configuration, <code>namedtuple</code>'s string configuration Just Works&trade;.
+
+<h2><code>namedtuple</code> and fake objects</h2>
+
+Let's say you have a simple function that you need to test. The function gets passed in a superhero, which it expects is a <a href="https://www.sqlalchemy.org/">SQLAlchemy</a> model instance. It queries all the items of clothing that the superhero uses, and it returns a list of clothing names. The function might look something like this:
+
+<pre class="python"><code># myproject/superhero.py
+
+
+def get_clothing_names_for_superhero(superhero):
+    """List the clothing for the specified superhero"""
+    clothing_names = []
+
+    clothing_list = superhero.clothing_items.all()
+
+    for clothing_item in clothing_list:
+        clothing_names.append(clothing_item.name)
+
+    return clothing_names
+</code></pre>
+
+Since this function does all its database querying via the superhero object that's passed in as a parameter, there's no need to mock anything via <a href="http://mauveweb.co.uk/posts/2014/09/every-mock-patch-is-a-little-smell.html">funky <code>mock.patch</code> magic</a> or similar. You can simply follow <a href="http://haacked.com/archive/2014/01/04/duck-typing/">Python's preferred pattern of duck typing</a>, and pass in something &ndash; anything &ndash; that looks like a superhero (and, unless he takes his cape off, nobody need be any the wiser).
+
+You could write a test for that function, using <code>namedtuple</code>-based fake objects, like so:
+
+<pre class="python"><code># myproject/superhero_test.py
+
+
+from collections import namedtuple
+
+from myproject.superhero import get_clothing_names_for_superhero
+
+
+FakeSuperhero = namedtuple('FakeSuperhero', 'clothing_items name')
+FakeClothingItem = namedtuple('FakeClothingItem', 'name')
+FakeModelQuery = namedtuple('FakeModelQuery', 'all first')
+
+
+def get_fake_superhero_and_clothing():
+    """Get a fake superhero and clothing for test purposes"""
+    superhero = FakeSuperhero(
+        name='Batman',
+        clothing_items=FakeModelQuery(
+            first=lambda: None,
+            all=lambda: [
+                FakeClothingItem(name='cape'),
+                FakeClothingItem(name='mask'),
+                FakeClothingItem(name='boots')]))
+
+    return superhero
+
+
+def test_get_clothing_for_superhero():
+    """Test listing the clothing for a superhero"""
+    superhero = get_fake_superhero_and_clothing()
+
+    clothing_names = set(get_clothing_names_for_superhero(superhero))
+
+    # Verify that list of clothing names is as expected
+    assert clothing_names == {'cape', 'mask', 'boots'}
+</code></pre>
+
+The same setup could be achieved using one of the alternatives to <code>namedtuple</code>. In particular, a <code>FakeSuperhero</code> custom class would have done the trick. Using <code>MagicMock</code> or <code>flexmock</code> would have been fine too, although they're really overkill in this situation. In my opinion, for a case like this, using <code>namedtuple</code> is really the simplest and the most painless way to test the logic of the code in question.
+
+<h2>In summary</h2>
+
+I believe that <code>namedtuple</code> is a great choice for fake test objects, when it fits the bill, and I don't know why it isn't used or recommended for this in general. It's a choice that has some limitations: most notably, you can't have any attribute that starts with an underscore (the "<code>_</code>" character) in a <code>namedtuple</code>. It's also not particularly nice (although it's perfectly valid) to chuck functions into <code>namedtuple</code> fields, especially <code>lambda</code> functions.
+
+Personally, I have used <code>namedtuple</code>s in this way quite a bit recently, however I'm still ambivalent about it being the best approach. If you find yourself starting to craft very complicated <code>FakeFoo</code> <code>namedtuple</code>s, then perhaps that's a sign that you're doing it wrong. As with everything, I think that this is an approach that can really be of value, if it's used with a degree of moderation. At the least, I hope you consider adding it to your tool belt.

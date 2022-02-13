@@ -1,0 +1,25 @@
+{
+  "comments": [
+    {
+      "date": "2017-08-14T17:25:16Z",
+      "name": "Test property",
+      "comment": "it's slow man"
+    },
+    {
+      "date": "2017-08-14T20:06:22Z",
+      "name": "Henrick",
+      "comment": "What do you think about <a href=\"https://attrs.readthedocs.io/en/stable/overview.html\">attrs</a>?"
+    },
+    {
+      "date": "2017-08-16T21:53:59Z",
+      "name": "Andrew Dalke",
+      "comment": "I want to use <code>namedtuple</code> more generally, as a way to generate simple constant classes. What I don't like, and what keeps me from using it, is that the instances also include indexing behavior. <code>superhero</code> returns the name, even though I don't want my objects to support index lookup.\n\nYet I know downstream users will likely use that indexing API, even if it's not documented. In the future I might want to replace it with a standard class, but to avoid breaking compatibility that class will need to implement <code>__getitem__</code> and <code>__len__</code> as if it were a tuple.\n\nFor example, some might do things like <code>for (clothing_items, name) in superhero_list</code>, which is shorter than using attribute lookup for the same.\n\nAnd once people start using unpacking like this, I can't change the attributes. If I add <code>fake_identity</code> to the <code>FakeSuperhero</code> <code>namedtuple</code> attribute list then I'll break code which expects to unpack into only two elements.\n\nSo there's a tradeoff. Either I have to worry about backwards compatibility issues in the future, or I take a few minutes to write the class definition, including <code>__slots__</code> and <code>__repr__</code>.\n\nOf course, for testing this isn't a problem as the test suite is the only user of the API, and you control it entirely. I agree that this is a good example of appropriate use."
+    },
+    {
+      "date": "2017-08-21T21:15:42Z",
+      "name": "Matyas",
+      "url": "https://github.com/matyasfodor",
+      "comment": "I recently ran into the limitations of namedtuple. Immutability can come handy but can be a cause of headaches. Here's <a href=\"https://medium.com/@MTYS_FDR/reverse-engineer-a-python-object-3fd365b6c0d0\">my blogpost about it</a>."
+    }
+  ]
+}

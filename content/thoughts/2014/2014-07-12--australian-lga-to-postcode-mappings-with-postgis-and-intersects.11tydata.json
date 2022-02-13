@@ -45,6 +45,11 @@
       "name": "Liz",
       "url": "http://www.fosteringnsw.com.au/",
       "comment": "Thanks so much, this is brilliant! I wonder why there is no official doc of this info available??"
+    },
+    {
+      "date": "2017-02-17T12:21:39Z",
+      "isAuthorReply": true,
+      "comment": "UPDATE: due to a request that I received, I've created a new spreadsheet based on the latest ABS data sets (released in 2016). You can now access the new file <a href=\"https://docs.google.com/spreadsheets/d/1oRgqNZ8CJ4G9otnAr1x6CgSuYolzC1chud9kRpjmofM\">Australian LGA postcode mappings (2016 data)</a>. Main changes, as far as I can see: areas that have no LGA are now included (listed as \"Unincorporated\"), including all of the ACT; the controversial NSW council amalgamations have happened, and this is now reflected in the data sets.\n\nAlso, when trying to generate the new mapping with PostGIS, I got an \"ERROR: GEOSIntersects: TopologyException: side location conflict\" for the polygons for the Circular Head LGA / the 7330 postcode in Tasmania. So, I excluded these problem areas from the auto-generated mapping, and per the info at http://www.geopostcodes.com/Circular_Head (and a few other similar web sites), I manually added \"Tasmania,Circular Head,7321\", \"Tasmania,Circular Head,7330\", and \"Tasmania,Circular Head,7331\" to the spreadsheet."
     }
   ]
 }
