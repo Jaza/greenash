@@ -1,4 +1,8 @@
 ---
 layout: layouts/base.njk
 ---
-<h1>{{ renderData.title or title }}</h1>
+<h1>Portfolio: showing <em>{{ renderData.title or title }}</em>&nbsp;&nbsp;work</h1>
+
+{%- set items = collections['portfoliotype/' + page.fileSlug] | reverse %}
+
+{% include "components/portfolio/listing.njk" %}

@@ -448,6 +448,41 @@ module.exports = function(eleventyConfig) {
       });
   });
 
+  const portfolioByYear = (collection) => {
+    let contentByDate = {};
+
+    collection.getAllSorted().forEach(function(item) {
+      if ("date" in item.data) {
+        let tags = item.data.tags;
+
+        if (typeof tags === "string") {
+          tags = [tags];
+        }
+
+        if (tags && tags.includes("portfolio")) {
+          let itemDate = item.data.date;
+          const date = DateTime.fromJSDate(itemDate).toFormat("yyyy");
+
+          if (!(date in contentByDate)) {
+            contentByDate[date] = [];
+          }
+
+          contentByDate[date].push(item);
+        }
+      }
+    });
+
+    for (const [key, value] of Object.entries(contentByDate)) {
+      contentByDate[key] = value.sort((a, b) => {
+        return b.date - a.date;
+      });
+    }
+
+    return contentByDate;
+  };
+
+  eleventyConfig.addCollection("portfolioByYear", portfolioByYear);
+
   // Don't process folders with static assets e.g. images
   eleventyConfig.addPassthroughCopy({"static/favicon.ico": "favicon.ico"});
   eleventyConfig.addPassthroughCopy({"static/_redirects": "_redirects"});
