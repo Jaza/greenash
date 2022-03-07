@@ -13,6 +13,9 @@ module.exports = function(eleventyConfig) {
   const PORTFOLIO_TYPE_PREFIX = "portfoliotype/";
   const PORTFOLIO_TYPE_PATH = "/portfolio/type/";
 
+  const PORTFOLIO_PAY_PREFIX = "portfoliopay/";
+  const PORTFOLIO_PAY_PATH = "/portfolio/pay/";
+
   const TAG_CLOUD_MIN_SIZE = 0.75;
   const TAG_CLOUD_ROUNDING_FACTOR = 10e6;
 
@@ -423,12 +426,12 @@ module.exports = function(eleventyConfig) {
     return value.replace(/JAZA_AGE/g, `${JAZA_AGE}`);
   });
 
-  eleventyConfig.addFilter("getTagsForPortfolio", (tags, portfoliotypeCollection) => {
+  eleventyConfig.addFilter("getTagsForPortfolio", (tags, portfoliotypeCollection, portfoliopayCollection) => {
     if (!tags) {
       return [];
     }
 
-    return tags
+    const typeTags = tags
       .filter(tag => tag.startsWith(PORTFOLIO_TYPE_PREFIX))
       .map(tag => tag.replace(PORTFOLIO_TYPE_PREFIX, ""))
       .map(tag => {
@@ -446,6 +449,27 @@ module.exports = function(eleventyConfig) {
           title: page.data.title
         };
       });
+
+    const payTags = tags
+      .filter(tag => tag.startsWith(PORTFOLIO_PAY_PREFIX))
+      .map(tag => tag.replace(PORTFOLIO_PAY_PREFIX, ""))
+      .map(tag => {
+        const page = getPageByUrl(portfoliopayCollection, PORTFOLIO_PAY_PATH + tag + "/");
+
+        if (!page) {
+          throw new Error(
+            `No page found for tag ${tag}, please create a page for it at ` +
+            `content/${PORTFOLIO_PAY_PREFIX}${tag}.html`
+          );
+        }
+
+        return {
+          url: PORTFOLIO_PAY_PATH + tag + "/",
+          title: page.data.title
+        };
+      });
+
+    return [ ...typeTags, ...payTags ];
   });
 
   const portfolioByYear = (collection) => {

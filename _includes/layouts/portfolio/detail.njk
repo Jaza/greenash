@@ -2,7 +2,7 @@
 layout: layouts/base.njk
 ---
 <article>
-  <h1>{{ renderData.title or title }}</h1>
+  <h1>Portfolio: {{ renderData.title or title }}</h1>
 
   <p class="date">
     <time datetime="{{ date | dateISO }}">{{ date | dateM }} <a href="/portfolio/year/{{ date | dateY }}/">{{ date | dateY }}</a></time>
@@ -12,7 +12,7 @@ layout: layouts/base.njk
     {% endif %}
   </p>
 
-  {%- set items = tags | getTagsForPortfolio(collections.portfoliotype) %}
+  {%- set items = tags | getTagsForPortfolio(collections.portfoliotype, collections.portfoliopay) %}
   {% include 'components/portfolio/tags.njk' %}
 
   {% if teaser %}

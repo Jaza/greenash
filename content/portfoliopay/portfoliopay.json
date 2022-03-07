@@ -1,0 +1,7 @@
+{
+  "layout": "layouts/portfolio/portfolio_pay.njk",
+  "permalink": "/portfolio/pay/{{ title | slug }}/",
+  "tags": [
+    "portfoliopay"
+  ]
+}
