@@ -451,6 +451,7 @@ ul li.listitem-yes, ul li.listitem-no, ul li.listitem-warning, p.listitem-yes, p
 .portfolio-listing {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .portfolio-listing article {
