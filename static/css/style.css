@@ -77,7 +77,7 @@ li li, li p, td p, td li {
   margin-bottom: 2em;
 }
 
-a, summary {
+a, summary, h1 > a.portfolio-title-link {
   text-decoration: underline;
 }
 
@@ -85,7 +85,7 @@ h1 > a {
   text-decoration: none;
 }
 
-a:hover, .summary-inner:hover {
+a:hover, .summary-inner:hover, h1 > a.portfolio-title-link:hover {
   background: rgba(0, 102, 0, .1);
 }
 
@@ -257,7 +257,7 @@ h1, h2, h3, summary, form, article > p, main > p, article > ul, article > ol, ar
   max-width: 680px;
 }
 
-.nav-wrapper, h1, h2, article > h2, h3, summary, form, article > p, main > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper, .table-wrapper {
+.nav-wrapper, h1, h2, article > h2, h3, summary, form, article > p, main > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper, .table-wrapper, .portfolio-listing {
   margin-left: auto;
   margin-right: auto;
 }
@@ -295,7 +295,7 @@ article, .freshest .articles article {
 }
 
 @media (min-width: 1320px) {
-  article > figure, article > .wideflex-wrapper, .nav-wrapper, .table-wrapper {
+  article > figure, article > .wideflex-wrapper, .nav-wrapper, .table-wrapper, .portfolio-listing {
     max-width: 1192px;
   }
 }

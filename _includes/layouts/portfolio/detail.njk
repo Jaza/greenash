@@ -2,7 +2,7 @@
 layout: layouts/base.njk
 ---
 <article>
-  <h1>Portfolio: {{ renderData.title or title }}</h1>
+  <h1><a href="/portfolio/" class="portfolio-title-link">Portfolio</a>: {{ renderData.title or title }}</h1>
 
   <p class="date">
     <time datetime="{{ date | dateISO }}">{{ date | dateM }} <a href="/portfolio/year/{{ date | dateY }}/">{{ date | dateY }}</a></time>
