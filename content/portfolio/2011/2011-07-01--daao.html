@@ -1,0 +1,14 @@
+---
+title: DAAO
+date: 2011-07-01
+siteUrl: daao.org.au
+teaser: Django / MongoDB data importing.
+teaserImage: daao-icon.png
+contentImage: daao-shot.jpg
+tags:
+  - portfoliotype/not-for-profit
+  - portfoliopay/paid
+---
+DAAO (Design and Art Australia Online) is a new online Australian artwork and artist database. It's funded and supported by a number of government and educational bodies, including the Australian Research Council, and the UNSW College of Fine Arts. The site was designed by <a href="http://houseoflaudanum.com/">House of Laudanum</a>, and developed by <a href="http://interaction.net.au/">The Interaction Consortium</a> (both of whom I worked closely with). In my capacity as a full-time contractor at <a href="http://www.unsw.edu.au/">UNSW</a>, I was tasked with developing several scripts to import large custom data sets into the DAAO.
+
+DAAO is built with Django, and it uses MongoDB (primarily) as its back-end. As such, I came to learn <a href="http://mongoengine.org/">MongoEngine</a> quite intimately. The majority of the import scripts that I wrote were for feeding in CSV data, although some also queried JSON data from custom web service APIs. Many of the scripts performed low-level data cleanup as part of their import routine.

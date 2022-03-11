@@ -257,7 +257,7 @@ h1, h2, h3, summary, form, article > p, main > p, article > ul, article > ol, ar
   max-width: 680px;
 }
 
-.nav-wrapper, h1, h2, article > h2, h3, summary, form, article > p, main > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper, .table-wrapper, .portfolio-listing {
+.nav-wrapper, h1, h2, article > h2, h3, summary, form, article > p, main > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper, .table-wrapper {
   margin-left: auto;
   margin-right: auto;
 }
@@ -295,7 +295,7 @@ article, .freshest .articles article {
 }
 
 @media (min-width: 1320px) {
-  article > figure, article > .wideflex-wrapper, .nav-wrapper, .table-wrapper, .portfolio-listing {
+  article > figure, article > .wideflex-wrapper, .nav-wrapper, .table-wrapper {
     max-width: 1192px;
   }
 }
