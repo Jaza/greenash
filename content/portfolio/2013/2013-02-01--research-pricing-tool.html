@@ -1,0 +1,16 @@
+---
+title: Research Pricing Tool
+date: 2013-02-01
+siteUrl: research.unsw.edu.au
+teaser: Symfony2 custom app development / Drupal integration.
+teaserImage: rpt-icon.jpg
+contentImage: rpt-shot.jpg
+tags:
+  - portfoliotype/business
+  - portfoliopay/paid
+---
+The Research Pricing Tool allows researchers at UNSW to calculate the budget for a given project. The UNSW Grants Management Office decided to rebuild the tool that they had previously developed, which consisted of a collection of custom PHP scripts, and which depended upon an ageing FileMaker database back-end. In my capacity as a full-time contractor at <a href="http://www.unsw.edu.au/">UNSW</a>, I was the lead developer on this project.
+
+The new tool is built in Silex (a Symfony2 distribution). It allows for the entry of basic project information, of a project's internal and external personnel needs, and of a project's non-personnel costs. It also stores various items of data used in budget calculation, including UNSW annual salary rates, salary on-cost rates, and indirect cost rates (all editable via an administration interface). For a given project, it calculates the project's total budget, and it allows the project's budget data to be exported as an Excel spreadsheet (using PHPExcel).
+
+The tool is integrated into the <a href="http://research.unsw.edu.au/">UNSW Research Gateway</a>, via a <a href="http://greenash.net.au/thoughts/2013/01/rendering-a-silex-symfony2-app-via-drupal-7/">Silex-Drupal integration system</a> that I developed. So, the tool's pages are rendered via Drupal, and access is restricted to UNSW staff via the Research Gateway's Drupal-based authentication.
