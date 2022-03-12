@@ -1,0 +1,14 @@
+---
+title: UNSW Pulse
+date: 2014-10-01
+siteUrl: fmpulse.unsw.edu.au
+teaser: Complete Flask app development and deployment.
+teaserImage: unsw-pulse-icon.jpg
+contentImage: unsw-pulse-shot.jpg
+tags:
+  - portfoliotype/business
+  - portfoliopay/paid
+---
+Pulse is an initiative of UNSW Facilities Management, to publish and visualise the level of WiFi usage across the University's main campus by building over time. The app is built with Flask. In my capacity as a full-time employee at <a href="http://vector5.com.au/">Vector 5</a>, I was the lead developer on this project. This was done in collaboration with <a href="http://www.thefarmdigital.com/">The Farm Digital</a>, who were responsible for the front-end design and implementation.
+
+The app has a custom script (running as a cron job), which imports the WiFi usage data from the University's <a href="http://www.cisco.com/c/en/us/products/wireless/mobility-services-engine/">Cisco MSE</a> API endpoints. This data is piped to the front-end via a simple JSON API. The front-end is powered by OpenStreetMap and Leaflet, and the building polygons are rendered using GeoJSON.
