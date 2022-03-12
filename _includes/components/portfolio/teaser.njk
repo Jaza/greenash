@@ -1,3 +1,3 @@
 <article>
-  <a href="{{ item.url | url }}">{% if item.data.teaserImage %}<img src="{{ params. uploadsBaseURL }}portfolio_teaser_images/{{ item.data.teaserImage }}" alt="{{ item.data.title }}" title="{{ item.data.title }}" width="60" height="60">{% endif %}</a>
+  <a href="{{ item.url | url }}">{% if item.data.teaserImage %}<img src="{{ params. uploadsBaseURL }}portfolio_teaser_images/{{ item.data.teaserImage }}" alt="{{ item.data.title }}" title="{{ item.data.title }}" width="60" height="60" loading="lazy">{% endif %}</a>
 </article>
