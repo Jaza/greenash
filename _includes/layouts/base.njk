@@ -9,11 +9,11 @@
     <link rel="stylesheet" href="/css/highlight.css" type="text/css" media="all">
 
     {%- if isFront or page.url == '/thoughts/' %}
-    <link rel="alternate" type="application/atom+xml" href="/feed.xml">
+    <link rel="alternate" type="application/atom+xml" title="GreenAsh latest thoughts - Atom" href="/atom/">
     {%- endif %}
 
     {%- if r/^\/thoughts\/topics\/.+/g.test(page.url) %}
-    <link rel="alternate" type="application/atom+xml" href="{{ page.url }}feed.xml">
+    <link rel="alternate" type="application/atom+xml" title="GreenAsh thoughts filed in {{ title }} - Atom" href="{{ page.url }}atom/">
     {%- endif %}
   </head>
   <body>

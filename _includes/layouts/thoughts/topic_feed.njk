@@ -10,8 +10,8 @@ pagination:
 
 {% block header %}
   <title>{{ topic }} - {{ metadata.title }}</title>
-  <subtitle>Thoughts filed in: {{ topic }}</subtitle>
-  <link href="{{ params.baseURL }}/thoughts/topics/{{ topic }}/feed.xml" rel="self"/>
-  <link href="{{ params.baseURL }}/thoughts/topics/{{ topic }}/"/>
+  <subtitle>Poignant wit and hippie ramblings that are pertinent to {{ topic }}</subtitle>
+  <link rel="self" href="{{ params.baseURL }}/thoughts/topics/{{ topic }}/atom/"/>
+  <link rel="alternate" href="{{ params.baseURL }}/thoughts/topics/{{ topic }}/"/>
   <id>{{ params.baseURL }}/thoughts/topics/{{ topic }}/</id>
 {% endblock %}
