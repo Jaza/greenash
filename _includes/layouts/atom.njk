@@ -8,6 +8,10 @@
     <title>{{ item.data.title }}</title>
     <link rel="alternate" href="{{ absolutePostUrl }}"/>
     <published>{{ item.date | dateToRfc3339 }}</published>
+    <updated>{{ item.date | dateToRfc3339 }}</updated>
+    <author>
+      <name>{{ params.authorName }}</name>
+    </author>
     <id>{{ absolutePostUrl }}</id>
     <summary type="html">
       <![CDATA[
