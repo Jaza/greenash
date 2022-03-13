@@ -1,0 +1,24 @@
+---
+title: Private photo collections with AWSPics
+date: 2021-02-02
+teaser: |-
+  I've created a new online home for my formidable collection of 25,000 personal photos. They now all live in an <a href="https://aws.amazon.com/s3/">S3</a> bucket, and are viewable in a private gallery powered by the open-source <a href="https://github.com/jpsim/AWSPics">AWSPics</a>. In general, I'm happy with the new setup.
+tags:
+  - thoughtstopics/cloud
+  - thoughtstopics/nodejs
+  - thoughtstopics/photography
+  - thoughtstopics/programming
+---
+I've created a new online home for my formidable collection of 25,000 personal photos. They now all live in an <a href="https://aws.amazon.com/s3/">S3</a> bucket, and are viewable in a private gallery powered by the open-source <a href="https://github.com/jpsim/AWSPics">AWSPics</a>. In general, I'm happy with the new setup.
+
+For the past 15 years, I have painstakingly curated and organised my photos on Flickr. I have no complaints or regrets: Flickr was and still is a fantastic service, and in its heyday it was ahead of its time. However, after 15 years as a loyal Pro member, it's with bittersweet reluctance that I've decided to cancel my Flickr account. The main reason for my parting ways with Flickr, is that its price has increased (and is continuing to increase), quite significantly of late, after being set in stone for many years.
+
+I also just wanted to build (and felt that I was quite overdue in building) a photo solution crafted (at least partially) with my own hands, and that I fully control, rather than just letting <a href="https://en.wikipedia.org/wiki/Software_as_a_service">SaaS</a> do all the work for me. Similarly, even though I've always trusted and I still trust Flickr with my data, I wanted to migrate my photos to a storage back-end that I own and manage myself, and an S3 bucket is just that (at the least, <a href="https://en.wikipedia.org/wiki/Infrastructure_as_a_service">IaaS</a> is closer to that ideal than SaaS is).
+
+I had never made any of my personal photos private, although I always could have, back in the Flickr days. I never felt that it was necessary. I was young and free, and the photos were all of me hanging out with my friends, and/or gallivanting around the world with other carefree backpackers. But I'm at a different stage of my life now. These days, the photos are all of my kids, and so publishing them for the whole world to see is somewhat less appropriate. And AWSPics makes them all private by default. So, private it is.
+
+Many thanks to <a href="https://github.com/jpsim">jpsim</a> for building AWSPics, it's a great little stack. AWSPics had nearly everything I needed, when I stumbled across it about 3 months ago, and I certainly could have used it as-is, no yours-truly dev required. But, me being a fastidious ol' dev, and it being open-source, naturally I couldn't help but add a few bells and whistles to it. In particular, I scratched my own itch by building <a href="https://github.com/jpsim/AWSPics/pull/37">support for collections of albums</a>, so that I could preserve the three-level hierarchy of Collections -> Albums -> Pictures that I used religiously on Flickr. I also wrote a whole lot of <a href="https://github.com/jpsim/AWSPics/pull/36">unit tests for the AWSPics site builder</a> (which is a Node.js <a href="https://aws.amazon.com/lambda/">Lambda</a> function), before making any changes, to ensure that I didn't break existing functionality. Other than that, I just submitted a few minor bug fixes.
+
+I'm not planning on enhancing AWSPics a whole lot more. It works for my humble needs. I'm a dev, not a designer, nor a photographer. Although 25,000 photos is a lot (and growing), and I feel like I'm pushing the site builder Lambda a bit close to its limits at the moment (it takes over a minute to run, and ideally a Lambda function completes within a few seconds). Adding support for partial site rebuilds (i.e. only rebuild specific albums or collections) would resolve that. Plus I'm sure there are a few more minor bits and pieces I could work on, should I have the time and the inclination.
+
+Well, <a href="https://quotes.yourdictionary.com/author/forrest-gump/625511">that's all I have to say about that</a>. Just wanted to formally announce that shift that my photo collection has made, and to give kudos where it's deserved.

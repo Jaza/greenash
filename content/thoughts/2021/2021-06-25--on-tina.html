@@ -1,0 +1,51 @@
+---
+title: On Tina
+date: 2021-06-25
+teaser: |-
+  Continuing my foray into the world of Static Site Generators (SSGs), this time I decided to try out one that's quite different: <a href="https://tina.io/">TinaCMS</a> (although Tina itself isn't actually an SSG, it's just an editing toolkit; so, strictly speaking, the SSG that I took for a spin is <a href="https://nextjs.org/">Next.js</a>). Shiny new toys. The latest and greatest that the <a href="https://jamstack.wtf/">JAMstack</a> has to offer. Very much all alpha (I encountered quite a few bugs, and there are still some important features missing entirely). But wow, it really does let you have your cake and eat it too: a fast, dumb, static site when logged out, that transforms into a rich, <a href="https://forestry.io/blog/why-we-created-a-git-backed-content-manager/">Git-backed</a>, inline CMS when logged in!
+
+  Fellow Australians, enjoy!
+tags:
+  - thoughtstopics/javascript
+  - thoughtstopics/programming
+  - thoughtstopics/tinacms
+---
+Continuing my foray into the world of Static Site Generators (SSGs), this time I decided to try out one that's quite different: <a href="https://tina.io/">TinaCMS</a> (although Tina itself isn't actually an SSG, it's just an editing toolkit; so, strictly speaking, the SSG that I took for a spin is <a href="https://nextjs.org/">Next.js</a>). Shiny new toys. The latest and greatest that the <a href="https://jamstack.wtf/">JAMstack</a> has to offer. Very much all alpha (I encountered quite a few bugs, and there are still some important features missing entirely). But wow, it really does let you have your cake and eat it too: a fast, dumb, static site when logged out, that transforms into a rich, <a href="https://forestry.io/blog/why-we-created-a-git-backed-content-manager/">Git-backed</a>, inline CMS when logged in!
+
+[thumbnail tina-you-fat-lard.png Yes, it's named after that Tina, from Napoleon Dynamite.<br><em>Image source:</em> <a href="https://www.pinterest.com.au/pin/678425131341882950/">Pinterest</a>]
+
+Pressing on with my <a href="/thoughts/2021/02/on-hugo/">recent tradition</a> of <a href="/thoughts/2021/04/on-eleventy/">converting old sites</a> of mine from dynamic to static, this time I converted <a href="https://daydreambelievers.greenash.net.au/">Daydream Believers</a>. I deliberately chose that site, because its original construction with <a href="/thoughts/2015/10/introducing-flask-editable-site/">Flask Editable Site</a> had been an experiment, trying to achieve much the same dynamic inline editing experience as that provided by Tina. Plus, the site has been pretty much abandoned by its owners for quite a long time, so (much like my personal sites) there was basically no risk involved in touching it.
+
+To give you a quick run-down of the history, <a href="https://github.com/Jaza/flask-editablesite">Flask Editable Site</a> was a noble endeavour of mine, about six years ago &ndash; the blurb from <a href="https://flask-editablesite.herokuapp.com/">the demo</a> sums it up quite well:
+
+<blockquote>The aim of this app is to demonstrate that, with the help of modern JS libraries, and with some well-thought-out server-side snippets, it's now perfectly possible to "bake in" live in-place editing for virtually every content element in a typical brochureware site.
+
+This app is not a CMS. On the contrary, think of it as a proof-of-concept alternative to a CMS. An alternative where there's no "admin area", there's no "editing mode", and there's no "preview button".
+
+There's only direct manipulation.</blockquote>
+
+That sounds eerily similar to "the acronym TinaCMS standing for <a href="https://tina.io/docs/getting-started/faq/#why-do-you-say-tina-is-not-a-cms">Tina Is Not A CMS</a>" (yes, yet another recursive acronym in the IT world, in the grand tradition of <a href="https://en.wikipedia.org/wiki/GNU">GNU</a>), as explained in the Tina FAQ:
+
+<blockquote>Tina introduces an entirely new paradigm to the content management space, which can make it difficult to grasp. In short, Tina is a toolkit for making your website its own CMS. It's a suite of packages that enables developers to build a customized content management system into the website itself.</blockquote>
+
+(Who knows, maybe Flask Editable Site was one of the things that inspired the guys behind Tina &ndash; if so, I'd be flattered &ndash; although I don't believe they've heard of it).
+
+Flask Editable Site boasted essentially the same user experience &ndash; i.e. that as soon as you log in, everything is editable inline. But the content got saved the old-skool CMS way, in a relational database. And the page(s) got rendered the old-skool CMS way, dynamically at run-time. And all of that required an old-skool deployment, on an actual server running Nginx / PostgreSQL / gunicorn (or equivalents). Plus, the Flask Editable Site inline components didn't look as good as Tina's do out-of-the-box (although I tried my best, I thought they looked half-decent).
+
+So, I rebuilt Daydream Believers in what is currently the recommended Tina way (it's the way the <a href="https://tinacms.org/">tinacms.org website itself</a> is currently built): TinaCMS running on top of Next.js, and saving content directly to GitHub via its API. Although I didn't use Tina's GitHub media store (which is currently the easiest way to manage images and other media with Tina), I instead wrote an <a href="https://github.com/tinacms/tinacms/pull/1838">S3 media store for Tina</a> &ndash; something that Tina is sorely lacking, and that many other SSGs / headless CMSes already have. I hope to keep working on that draft PR and to get it merged sometime soon. The current draft works, I'm running it in production, but it has some rough edges.
+
+[thumbnail daydream-believers-tinacms.png Daydream Believers with TinaCMS editing mode enabled.]
+
+The biggest hurdle for me, in building my first Tina site, was the fact that a Tina website must be built in <a href="https://reactjs.org/">React</a>. I've dabbled in React over the past few years, mainly in my full-time job, not particularly by choice. It's rather ironic that this is my first full project built in React, and it's a static website! It's not that I don't like <a href="https://medium.com/javascript-scene/the-missing-introduction-to-react-62837cb2fd76">the philosophy</a> or <a href="https://facebook.github.io/jsx/">the syntax</a> of React, I'm actually pretty on board with all that (and although I <a href="/thoughts/2011/10/dont-trust-facebook-with-your-data/">loathe Facebook</a>, I've never held that against React).
+
+It's just that: React is quite a big learning curve; it bloats a web front-end with its gazillion dependencies; and every little thing in the front-end has to be built (or rebuilt) in React, because it doesn't play nicely with any non-React code (e.g. old-skool jQuery) that touches the DOM directly. Anyway, I've now learnt a fair bit of React (still plenty more learning to go); and the finished site seems to load reasonably fast; and I managed to get the JS from the old site playing reasonably nicely with the new site (some via a hacky plonking of old jQuery-based code inside the main React "app" component, and some via rewriting it as actual React code).
+
+TinaCMS isn't really production-ready just yet: I had to fix <a href="https://github.com/tinacms/tinacms/pull/1852">some issues</a> just <a href="https://github.com/kendallstrautman/tina-open-auth/pull/18">to get started</a> with it, including bugs <a href="https://github.com/tinacms/tinacms.org/pull/854">in the official docs</a> and <a href="https://github.com/tinacms/inline-blocks-demo/pull/8">in the beginner guides</a>.
+
+Nevertheless, I'm super impressed with it. This is the kind of delightful user experience that I and many others were trying to build 15+ years ago in <a href="https://drupal.org/">Drupal</a>. I've cared about making awesome editable websites for an awfully long time now, and I really am overjoyed to see that awesomeness evolving to a whole new level with Tina.
+
+Compared to the other SSGs that I've used lately &ndash; <a href="https://gohugo.io/">Hugo</a> and <a href="https://11ty.dev/">Eleventy</a> &ndash; Tina (slash Next.js) does have some drawbacks. It's far less mature. It has a slower build time. It doesn't scale as well. The built front-end is fatter. You can't just copy-paste legacy JS into it. You have to accept the complexity cost of React (just to build a static site!). You have to concern yourself with how everything looks in edit mode. Quite a lot of boilerplate code is required for even the simplest site.
+
+You can also accompany traditional SSGs, such as Hugo and Eleventy, with a pretty user-friendly (and free, and SaaS) git-based CMS, such as <a href="https://forestry.io/">Forestry</a> (PS: the Forestry guys created Tina) or <a href="https://www.netlifycms.org/">Netlify CMS</a>. They don't provide any inline editing UI, they just give you a more traditional "admin site". However, they do have pretty good "live preview" functionality. Think of them as a middle ground between a traditional SSG with no editing UI, and Tina with its rich inline editing.
+
+So, would I use Tina again? For a smaller brochureware site, where editing by non-devs needs to be as user-friendly as possible, and where I have the time / money / passion (pick approximately two!) to craft a great experience, sure, I'd love to (once it's matured a bit more). For larger sites (100+ pages), and/or for sites where user-friendly editing isn't that important, I'd probably look elsewhere. Regardless, I'm happy to be on board for the Tina journey ahead.

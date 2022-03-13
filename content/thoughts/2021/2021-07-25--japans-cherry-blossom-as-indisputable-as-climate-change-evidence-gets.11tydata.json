@@ -1,0 +1,24 @@
+{
+  "comments": [
+    {
+      "date": "2021-07-28T06:45:32Z",
+      "name": "A",
+      "comment": "What caused the decline 1800-1900?"
+    },
+    {
+      "date": "2021-07-28T06:56:09Z",
+      "name": "Dan",
+      "comment": "The fact that so many red flags regarding the source of the data exist should really have produced a lot more doubt. It seems that someone who considers themselves a green radical or whatever cannot be objective in this kind of topic even when just evaluating the data source. The question also remains whether, assuming all the known sources are accurate and correct, that the sources that would have provided the upper bound of the scatter plot are simply not available or even just not discovered, which would explain the stark drool on the trend line. The trees could have been felled or destroyed, the people who tended to record those kind of things could have moved out or died, or the records just haven’t been uncovered.\n\nJust look at the most recent proof on the graph, there are also seemingly far fewer dots, presumably meaning less data.\n\nThis whole thing screams \"dubious\" to me."
+    },
+    {
+      "date": "2021-07-28T08:02:11Z",
+      "name": "D",
+      "comment": "The above comment reads like a poor quality review for a conference submission. I especially like how they argue the post is 'dubious' because there might be some different variable causing the change in recent years as if there is some other more likely latent factor.\n\nAnother gem: 'maybe the upper bound isn't caught by the historic records.' Perhaps that reader could ask what are the odds that this isn't captured given the rest of the data and assuming a normal distribution?\n\nSomeone who wants to reject can always reject a paper. I enjoyed the read."
+    },
+    {
+      "date": "2021-07-29T00:19:11Z",
+      "name": "B",
+      "comment": "When your range is 4 days either way (as per original paper), how do you trust a specific date as being \"peak bloom\"? 8 days within a monthly scale seems quite a margin of error."
+    }
+  ]
+}
