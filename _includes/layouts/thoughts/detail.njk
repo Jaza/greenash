@@ -40,13 +40,14 @@ layout: layouts/base.njk
   {% for comment in comments %}
 
 <article class="comment{% if comment.isAuthorReply %} author-comment{% endif %}">
+  <a name="comment-{{ comment.date }}"></a>
     {% if comment.isAuthorReply %}
   <h3>{{ params.authorName }}</h3>
     {% else %}
   <h3>{% if comment.url %}<a href="{{ comment.url | url }}" rel="nofollow">{% endif %}{{ comment.name }}{% if comment.url %}</a>{% endif %}</h3>
     {% endif %}
 
-  <p class="date"><time datetime="{{ comment.date }}">{{ comment.date | parseISODate | dateDMY }}</time></p>
+  <p class="date"><time datetime="{{ comment.date }}"><a href="{{ page.url | url }}#comment-{{ comment.date }}" title="Permanent link to this comment">{{ comment.date | parseISODate | dateDMY }}</a></time></p>
 
   {{ comment.comment | autop | safe }}
 </article>
