@@ -257,7 +257,7 @@ h1, h2, h3, summary, form, article > p, main > p, article > ul, article > ol, ar
   max-width: 680px;
 }
 
-.nav-wrapper, h1, h2, article > h2, h3, summary, form, article > p, main > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper, .table-wrapper {
+.nav-wrapper, h1, h2, article > h2, h3, summary, form, article > p, main > p, article > ul, article > ol, article > dl, .tags, article > figure, article > .wideflex-wrapper, .prev-next-wrapper, .table-wrapper {
   margin-left: auto;
   margin-right: auto;
 }
@@ -295,7 +295,7 @@ article, .freshest .articles article {
 }
 
 @media (min-width: 1320px) {
-  article > figure, article > .wideflex-wrapper, .nav-wrapper, .table-wrapper {
+  article > figure, article > .wideflex-wrapper, .nav-wrapper, .table-wrapper, .prev-next-wrapper {
     max-width: 1192px;
   }
 }
@@ -446,6 +446,26 @@ ul li.listitem-yes, ul li.listitem-no, ul li.listitem-warning, p.listitem-yes, p
 
 .button a {
   display: inline-block;
+}
+
+.prev-next-wrapper {
+  margin-top: 2em;
+}
+
+.prev-next-wrapper > p.prev-link, .prev-next-wrapper > p.prev-link {
+  text-align: left;
+}
+
+@media (min-width: 728px) {
+  .prev-next-wrapper {
+    display: flex;
+    justify-content: space-between;
+    gap: 1em;
+  }
+
+  .prev-next-wrapper > p.next-link {
+    text-align: right;
+  }
 }
 
 .portfolio-listing {

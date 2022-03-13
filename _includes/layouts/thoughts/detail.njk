@@ -29,6 +29,22 @@ layout: layouts/base.njk
     {% endfor %}
   </ul>
   {% endif %}
+
+  {% set prevThought = collections.thoughts | reverse | getNextCollectionItem(page) %}
+  {% set nextThought = collections.thoughts | reverse | getPreviousCollectionItem(page) %}
+
+  {% if prevThought or nextThought %}
+  <section class="prev-next-wrapper">
+    {% if prevThought %}
+    <p class="prev-link">&#8592;&nbsp;&nbsp;<a href="{{ prevThought.url }}" title="Go to previous thought">{{ prevThought.data.title }}</a></p>
+    {% endif %}
+
+    {% if nextThought %}
+    <p class="next-link"><a href="{{ nextThought.url }}" title="Go to next thought">{{ nextThought.data.title }}</a>&nbsp;&nbsp;&#8594;</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
 </article>
 
 {% include 'components/thoughts/comment_form.njk' %}
