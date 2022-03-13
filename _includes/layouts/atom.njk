@@ -8,9 +8,7 @@
     <title>{{ item.data.title }}</title>
     <link rel="alternate" href="{{ absolutePostUrl }}"/>
     <published>{{ item.date | dateToRfc3339 }}</published>
-    <updated>{{ item.date | dateToRfc3339 }}</updated>
     <id>{{ absolutePostUrl }}</id>
-    <author>{{ params.authorName }}</author>
     <summary type="html">
       <![CDATA[
         {{ item.template.frontMatter.content | autop | inlineThumbnails | htmlToAbsoluteUrls(absolutePostUrl) | safe }}
