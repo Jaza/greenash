@@ -32,4 +32,8 @@
   <script type="text/javascript" src="/js/inithighlight.js"></script>
   <script type="text/javascript" src="/js/nav.js"></script>
   <script type="text/javascript" src="/js/expandablecells.js"></script>
+
+  {%- if params.cloudflareAnalyticsToken %}
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "{{ params.cloudflareAnalyticsToken }}"}'></script>
+  {%- endif %}
 </html>
