@@ -1,1 +1,4 @@
-
+https://greenash.netlify.app/* https://greenash.net.au/:splat 301!
+https://www.greenash.net.au/* https://greenash.net.au/:splat 301!
+https://greenash.com.au/* https://greenash.net.au/:splat 301!
+https://www.greenash.com.au/* https://greenash.net.au/:splat 301!
