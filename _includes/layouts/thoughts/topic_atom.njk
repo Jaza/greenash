@@ -4,7 +4,7 @@ pagination:
   size: 1
   alias: topic
 ---
-{% extends 'layouts/feed.njk' %}
+{% extends 'layouts/atom.njk' %}
 
 {%- set items = collections.thoughtsByTopic[topic] %}
 

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    {%- block header -%}{%- endblock -%}
+    <language>en-au</language>
+    <lastBuildDate>{{ items | getNewestCollectionItemDate | dateToRfc2822 }}</lastBuildDate>
+    {%- asyncEach item in items %}
+    {% set absolutePostUrl %}{{ item.url | url | absoluteUrl(params.baseURL) }}{% endset %}
+    <item>
+      <title>{{ item.data.title }}</title>
+      <link>{{ absolutePostUrl }}</link>
+      <pubDate>{{ item.date | dateToRfc2822 }}</pubDate>
+      <guid>{{ absolutePostUrl }}</guid>
+      <description>
+        <![CDATA[
+          {{ item.template.frontMatter.content | autop | inlineThumbnails | htmlToAbsoluteUrls(absolutePostUrl) | safe }}
+        ]]>
+      </description>
+    </item>
+    {%- endeach %}
+  </channel>
+</rss>

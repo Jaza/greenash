@@ -1,0 +1,16 @@
+---
+pagination:
+  data: collections.thoughtsByTopic
+  size: 1
+  alias: topic
+---
+{% extends 'layouts/atom.njk' %}
+
+{%- set items = collections.thoughtsByTopic[topic] %}
+
+{% block header %}
+  <title>{{ topic }} - {{ metadata.title }}</title>
+  <description>Poignant wit and hippie ramblings that are pertinent to {{ topic }}</description>
+  <atom:link rel="self" href="{{ params.baseURL }}/thoughts/topics/{{ topic }}/atom/"></atom:link>
+  <link>{{ params.baseURL }}/thoughts/topics/{{ topic }}/</link>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'layouts/rss.njk' %}
+
+{% set items = collections.thoughts | reverse %}
+
+{% block header %}
+  <title>{{ metadata.title }}</title>
+  <description>All-natural web development, poignant wit, and hippie ramblings since 2004</description>
+  <atom:link rel="self" href="{{ params.baseURL }}/rss/"></atom:link>
+  <link>{{ params.baseURL }}/</link>
+{% endblock %}
