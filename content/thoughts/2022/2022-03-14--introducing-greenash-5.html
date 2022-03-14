@@ -1,0 +1,42 @@
+---
+title: Introducing GreenAsh 5
+date: 2022-03-14
+teaser: |-
+  After a solid run of twelve years, I've put <a href="/thoughts/2010/05/introducing-greenash-4/">GreenAsh v4</a> out to pasture, and I've launched v5 to fill its plush shoes.
+
+  [thumbnail greenash-v5.png Sporting a simple, readable, mobile-friendly design.]
+
+  GreenAsh v5 marks the culmination of my <a href="https://www.clivebanks.co.uk/Next%20Generation%20Intro.htm">continuing mission</a>, to convert over all of my personal sites, and all of the other sites that I still host slash maintain, to use a <a href="https://jamstack.org/generators/">Static Site Generator (SSG)</a>. As with <a href="/thoughts/2021/04/on-eleventy/">some other sites</a> of mine, GreenAsh is now powered by <a href="https://www.11ty.dev/">Eleventy</a>, and is now hosted on <a href="https://www.netlify.com/">Netlify</a>.
+
+  As was the case with v4, this new version isn't a complete redesign, <a href="https://alistapart.com/article/redesignrealign/">it's a realign</a>. First and foremost, the new design's aim is for the thought-reading experience to be a delightful one, with improved text legibility and better formatting of in-article elements. The new design is also (long overdue for GreenAsh!) fully responsive from the ground up, catering for mobile display just as much as desktop.
+tags:
+  - thoughtstopics/eleventy
+  - thoughtstopics/web-design
+---
+After a solid run of twelve years, I've put <a href="/thoughts/2010/05/introducing-greenash-4/">GreenAsh v4</a> out to pasture, and I've launched v5 to fill its plush shoes.
+
+[thumbnail greenash-v5.png Sporting a simple, readable, mobile-friendly design.]
+
+GreenAsh v5 marks the culmination of my <a href="https://www.clivebanks.co.uk/Next%20Generation%20Intro.htm">continuing mission</a>, to convert over all of my personal sites, and all of the other sites that I still host slash maintain, to use a <a href="https://jamstack.org/generators/">Static Site Generator (SSG)</a>. As with <a href="/thoughts/2021/04/on-eleventy/">some other sites</a> of mine, GreenAsh is now powered by <a href="https://www.11ty.dev/">Eleventy</a>, and is now hosted on <a href="https://www.netlify.com/">Netlify</a>.
+
+As was the case with v4, this new version isn't a complete redesign, <a href="https://alistapart.com/article/redesignrealign/">it's a realign</a>. First and foremost, the new design's aim is for the thought-reading experience to be a delightful one, with improved text legibility and better formatting of in-article elements. The new design is also (long overdue for GreenAsh!) fully responsive from the ground up, catering for mobile display just as much as desktop.
+
+After nearly 18 years, this is the first ever version of GreenAsh to lack a database-powered back-end. 'Tis a bittersweet parting for me. The initial years of GreenAsh, powered by the One True&trade; <a href="https://stackify.com/what-is-lamp-stack/">LAMP Stack</a> &ndash; originally, albeit briefly, using a home-grown PHP app, and then, for much longer, using <a href="https://www.drupal.org/">Drupal</a> &ndash; were (for me) exciting times that I will always remember fondly.
+
+The past decade (and a bit) of the GreenAsh chronicles, powered by <a href="https://www.djangoproject.com/">Django</a>, has seen the site mature, both technology-wise and content-wise. In this, the latest chapter of <a href="https://www.rottentomatoes.com/m/monty_pythons_life_of_brian">The Life of</a> GreenAsh, I hope not just to find some <a href="https://www.ceh.ac.uk/news-and-media/blogs/juniper-plant-health-research">juniper bushes</a>, but also to continue nurturing the site, particularly by penning thoughts of an ever higher calibre.
+
+The most noteworthy feature that I've built in this new version, is a comment moderation and publishing system powered mainly by <a href="https://docs.netlify.com/functions/overview/">Netlify Functions</a>. I'm quite proud of what I've cobbled together, and I'll be expounding upon it, in prose coming soon to a thought near you. Watch this space!
+
+Some of the things that I had previously whinged about as <a href="/thoughts/2021/02/on-hugo/">being a real pain</a> in <a href="https://gohugo.io/">Hugo</a>, such as a tag cloud and a monthly / yearly archive, I've gotten built quite nicely here, using Eleventy, just as I had hoped I would. Some of the functionality that I had manually ported from Drupal to Django (i.e. from PHP to Python), back in the day, such as the <a href="/thoughts/2010/05/an-autop-django-template-filter/">autop filter</a>, and the <a href="/thoughts/2010/06/an-inline-image-django-template-filter/">inline image filter</a>, I have now ported from Django to Eleventy (i.e. from Python to Node.js).
+
+As a side effect of the site now being hosted on Netlify, the site's source code is (for the first time) <a href="https://github.com/Jaza/greenash">publicly available on GitHub</a>, and even has an open-source license. So feel free to use it as you will.
+
+All of the SSG-powered sites that I've built over the past year, have their media assets (mainly consisting of images) stored in S3 and served by CloudFront (and, in some cases, the site itself is also stored in S3 and is served by CloudFront, rather than being hosted on Netlify). GreenAsh v5 is no exception.
+
+On account of the source code now being public, and of there no longer being any traditional back-end server, I've had to move some functionality out of GreenAsh, that I previously had bundled in to Django. In particular, I migrated my invoice data for freelance work &ndash; which had been defined as Django models, and stored in the sites's database, and exposed in the Django admin &ndash; to a simple Google Sheet, which, honestly (considering how little work I do on the side these days), will do, for the foreseeable future. And I migrated my résumé &ndash; which had been a password-protected Django view &ndash; to its own little password-protected S3 / CloudFront site.
+
+The only big feature of v4 that's currently missing in v5, is site search. This is, of course, much easier to implement for a traditional back-end-powered site, than it is for an SSG-powered site. I previously used <a href="https://github.com/mchaput/whoosh">Whoosh</a> with Django. Anyway, site search is only a nice-to-have feature, and this is only a small site that's easily browsable, and (in the meantime) folks can just <a href="https://developers.google.com/search/docs/advanced/debug/search-operators/all-search-site">use Google with the site: operator</a> instead. And I hear it's <a href="https://www.raymondcamden.com/2021/06/02/using-lunr-with-eleventy-via-netlify-serverless-functions">not that hard</a> to implement search for Eleventy these days, so maybe I'll whack that on to GreenAsh v5 sometime soon too.
+
+I've been busy, SSG-ifying all my old sites, and GreenAsh is the lucky last. Now that GreenAsh v5 is live (and now that I've migrated various other non-web-facing things &ndash; mainly migrating backups of things to S3 buckets), that means I don't need a <a href="https://en.wikipedia.org/wiki/Virtual_private_server">VPS</a> anymore! I'll be writing a separate thought, sometime soon, about the pros and cons of still having a VPS in this day and age.
+
+Hope y'all like the new décor.
