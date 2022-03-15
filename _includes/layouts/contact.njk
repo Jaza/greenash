@@ -27,9 +27,9 @@ layout: layouts/base.njk
       <label for="message">Message:</label>
       <textarea name="message" id="message" cols="40" rows="10" maxlength="3000" required></textarea>
     </p>
-    <div data-netlify-recaptcha></div>
+    {% include 'components/recaptcha.njk' %}
     <p>
-      <button type="submit">Send</button>
+      <button type="submit" id="submit-form-button">Send</button>
     </p>
   </form>
 

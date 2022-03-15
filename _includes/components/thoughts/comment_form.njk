@@ -24,9 +24,9 @@
       <label for="comment">Comment:</label>
       <textarea name="comment" id="comment" cols="40" rows="10" maxlength="3000" required></textarea>
     </p>
-    <div data-netlify-recaptcha></div>
+    {% include 'components/recaptcha.njk' %}
     <p>
-      <button type="submit">Post</button>
+      <button type="submit" id="submit-form-button">Post</button>
     </p>
   </form>
 </details>
