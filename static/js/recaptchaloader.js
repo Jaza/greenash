@@ -1,5 +1,10 @@
 ready(() => {
-  const submitButton = document.getElementById('submit-form-button');
+  const submitButton = document.getElementById('submit-after-recaptcha');
+
+  if (submitButton == null) {
+    return;
+  }
+
   window.originalSubmitFormButtonText = submitButton.textContent;
   submitButton.textContent = 'Prepare to ' + window.originalSubmitFormButtonText;
 
