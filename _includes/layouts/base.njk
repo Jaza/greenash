@@ -37,6 +37,10 @@
   <script type="text/javascript" src="/js/nav.js"></script>
   <script type="text/javascript" src="/js/expandablecells.js"></script>
 
+  {%- if params.recaptchaKey %}
+  <script type="text/javascript" src="/js/recaptchaloader.js"></script>
+  {%- endif %}
+
   {%- if params.cloudflareAnalyticsToken %}
   <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "{{ params.cloudflareAnalyticsToken }}"}'></script>
   {%- endif %}

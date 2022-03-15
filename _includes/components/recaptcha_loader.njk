@@ -1,0 +1,9 @@
+{%- if params.recaptchaKey %}
+<div id="recaptcha-wrapper"></div>
+<script type="text/javascript">
+window.recaptchaOnloadCallback = () => {
+  document.getElementById('submit-form-button').textContent = window.originalSubmitFormButtonText;
+  grecaptcha.render('recaptcha-wrapper', {'sitekey': '{{ params.recaptchaKey }}'});
+};
+</script>
+{%- endif %}
