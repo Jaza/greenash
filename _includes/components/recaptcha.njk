@@ -12,12 +12,17 @@
     const submitButton = document.getElementById('submit-form-button');
     originalSubmitFormButtonText = submitButton.textContent;
     submitButton.textContent = 'Prepare to ' + originalSubmitFormButtonText;
+
     submitButton.addEventListener("click", e => {
       const agreeToCookiesMessage =
         'This will load Google reCAPTCHA, which will set cookies. Sadly, you will ' +
         'not be able to submit this form unless you agree. GDPR, not to mention ' +
         'basic human decency, dictates that you have a choice and a right to protect ' +
         'your privacy from the corporate overlords. Do you agree?';
+
+      if (submitButton.textContent === originalSubmitFormButtonText) {
+        return true;
+      }
 
       if (window.confirm(agreeToCookiesMessage)) {
         const recaptchaScript = document.createElement('script');
@@ -28,6 +33,8 @@
         script.setAttribute('defer', '');
         document.head.appendChild(script);
       }
+
+      return false;
     });
   });
 </script>
