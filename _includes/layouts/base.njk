@@ -17,11 +17,6 @@
     <link rel="alternate" type="application/rss+xml" title="GreenAsh thoughts filed in {{ title }} - RSS" href="{{ page.url }}rss/">
     <link rel="alternate" type="application/atom+xml" title="GreenAsh thoughts filed in {{ title }} - Atom" href="{{ page.url }}atom/">
     {%- endif %}
-
-    <script type="text/javascript">
-    // Thanks to: https://tobiasahlin.com/blog/move-from-jquery-to-vanilla-javascript/
-    const ready = (callback) => { if (document.readyState != "loading") callback(); else document.addEventListener("DOMContentLoaded", callback); };
-    </script>
   </head>
   <body>
     {% include 'components/header.njk' %}
@@ -33,6 +28,7 @@
     {% include 'components/footer.njk' %}
   </body>
   <script type="text/javascript" src="/js/highlight.pack.js"></script>
+  <script type="text/javascript" src="/js/ready.js"></script>
   <script type="text/javascript" src="/js/inithighlight.js"></script>
   <script type="text/javascript" src="/js/nav.js"></script>
   <script type="text/javascript" src="/js/expandablecells.js"></script>
