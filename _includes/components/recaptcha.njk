@@ -3,7 +3,7 @@
 <script type="text/javascript">
   let originalSubmitFormButtonText = '';
 
-  const recaptchaOnloadCallback = () => {
+  window.recaptchaOnloadCallback = () => {
     document.getElementById('submit-form-button').textContent = originalSubmitFormButtonText;
     grecaptcha.render('recaptcha-wrapper', {'sitekey': '{{ params.recaptchaKey }}'});
   };
