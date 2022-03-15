@@ -26,12 +26,12 @@
 
       if (window.confirm(agreeToCookiesMessage)) {
         const recaptchaScript = document.createElement('script');
-        script.setAttribute(
+        recaptchaScript.setAttribute(
           'src',
           'https://www.google.com/recaptcha/api.js?onload=recaptchaOnloadCallback&render=explicit');
-        script.setAttribute('async', '');
-        script.setAttribute('defer', '');
-        document.head.appendChild(script);
+        recaptchaScript.setAttribute('async', '');
+        recaptchaScript.setAttribute('defer', '');
+        document.head.appendChild(recaptchaScript);
       }
 
       return false;
