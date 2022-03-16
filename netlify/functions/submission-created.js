@@ -1,6 +1,7 @@
 const https = require("https");
 
 const {
+  GREENASH_BASE_URL,
   NOTIFY_FROM_EMAIL,
   NOTIFY_TO_EMAIL,
   SPARKPOST_AUTH_TOKEN
@@ -131,9 +132,9 @@ const getCommonVars = event => {
     return null;
   }
 
-  const siteDomain = site.default_domain;
+  const siteDomain = GREENASH_BASE_URL;
   if (!siteDomain) {
-    console.error("Unable to send comment notification because site.default_domain is empty");
+    console.error("Unable to send comment notification because GREENASH_BASE_URL is empty");
     return null;
   }
 
