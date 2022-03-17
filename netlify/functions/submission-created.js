@@ -207,7 +207,7 @@ const getNotifyMailSubject = (siteName, title) => {
 
 const getModerateUrl = (siteDomain, title, path, id, date, name, url, comment) => {
   return (
-    `https://${siteDomain}/.netlify/functions/comment-moderate` +
+    `${siteDomain}/.netlify/functions/comment-moderate` +
     `?title=${encodeURIComponent(title)}` +
     `&id=${encodeURIComponent(id)}` +
     `&path=${encodeURIComponent(path)}` +
