@@ -1,0 +1,194 @@
+---
+title: Email-based comment moderation with Netlify Functions
+date: 2022-03-17
+teaser: |-
+  The most noteworthy feature of the <a href="/thoughts/2022/03/introducing-greenash-5/">recently-launched GreenAsh v5</a>, programming-wise, is its comment submission system. I enjoyed the luxury of the robust batteries-included comment engines of <a href="https://www.drupal.org/">Drupal</a> and <a href="https://www.djangoproject.com/">Django</a>, back in the day; but dynamic functionality like that isn't as straight-forward in the brave new world of <a href="https://jamstack.org/generators/">SSG's</a>. I promised that I'd provide a detailed run-down of what I built, so here goes.
+
+  [thumbnail greenash-comment-listing-v5.png Some of GreenAsh's oldest published comments, looking mighty fine in v5.]
+tags:
+  - thoughtstopics/cloud
+  - thoughtstopics/netlify
+  - thoughtstopics/nodejs
+---
+The most noteworthy feature of the <a href="/thoughts/2022/03/introducing-greenash-5/">recently-launched GreenAsh v5</a>, programming-wise, is its comment submission system. I enjoyed the luxury of the robust batteries-included comment engines of <a href="https://www.drupal.org/">Drupal</a> and <a href="https://www.djangoproject.com/">Django</a>, back in the day; but dynamic functionality like that isn't as straight-forward in the brave new world of <a href="https://jamstack.org/generators/">SSG's</a>. I promised that I'd provide a detailed run-down of what I built, so here goes.
+
+[thumbnail greenash-comment-listing-v5.png Some of GreenAsh's oldest published comments, looking mighty fine in v5.]
+
+In a nutshell, the way it works is as follows:
+
+<ol>
+  <li>The user submits their comment via a simple HTML form powered by <a href="https://www.netlify.com/products/forms/">Netlify Forms</a></li>
+  <li>The submission gets saved to the Netlify Forms data store</li>
+  <li>The <a href="https://docs.netlify.com/functions/trigger-on-events/">submission-created event</a> handler sends the site admin (me!) an email containing the submission data and a URL</li>
+  <li>The site admin opens the URL, which displays an HTML form populated with the submission data</li>
+  <li>After eyeballing the submission data, the site admin enters a secret token to authenticate</li>
+  <li>The site admin clicks "Approve", which writes the new comment to a JSON file, pushes the code change to the site's repo via the <a href="https://docs.github.com/en/rest/reference/repos#contents">GitHub Contents API</a>, and deletes the submission from the data store via the <a href="https://docs.netlify.com/api/get-started/#delete-submissions">Netlify Forms API</a> (or the site admin clicks "Delete", in which case it just deletes the submission from the data store)</li>
+  <li>Netlify rebuilds the site in response to a GitHub code change as usual, thus publishing the comment</li>
+</ol>
+
+The initial form submission is basically handled for me, by Netlify Forms. The bit where I had to write code only begins at the <code>submission-created</code> event handler. I could have <code>POST</code>ed form submissions directly to a serverless function, and that would have allowed me a lot more usage for free. Netlify Forms is a premium product, with a <a href="https://www.netlify.com/pricing/">not-particularly-generous free tier</a> of only 100 (non-spam) submissions per site per month. However, I'd rather use it, and live with its limits, because:
+
+<ul>
+  <li>It has solid built-in spam protection, and defence against spam is something that was my problem for nearly the past 20 years, and I'd really really like for it to be <a href="https://hitchhikers.fandom.com/wiki/Somebody_Else%27s_Problem_Field">Somebody Else's Problem</a> from now on</li>
+  <li>It has its own data store of submissions, which I don't strictly need (because I'm emailing myself each submission), but which I consider really nice to have, if for any reason the email notifications don't reach me (and I also have many years of experience with unreliable email delivery), and which would be a pain (and totally not worth it) to build myself in a serverless way (would need something like DynamoDB, API Gateway, various lambda's, it would be a whole project in itself)</li>
+  <li>I can interact with that data store via a nice API</li>
+  <li>I can review spam submissions in the Netlify Forms UI (which is good, because I don't get notified of them, so otherwise I'd have no visibility over them)</li>
+  <li>Even if I bypassed Netlify Forms, I'd still have to send myself a customised email notification, which I do, using the <a href="https://developers.sparkpost.com/api/transmissions/">SparkPost Transmissions API</a>, which has a <a href="https://support.sparkpost.com/docs/faq/update-on-pricing">free tier limit</a> of 500 emails per month anyway</li>
+</ul>
+
+So, the way the event handler works, is that all you have to do, in order to hook up a function, is to create a file in your repo with the correct magic name <code>netlify/functions/submission-created.js</code> (that's magic that isn't as well-documented as it could be, if you ask me, which is why I'm pointing it out here as explicitly as possible). You can see my <a href="https://github.com/Jaza/greenash/blob/master/netlify/functions/submission-created.js">full event handler code</a> on GitHub. Here's the meat of it:
+
+<pre class="javascript"><code>// Loosely based on:
+// https://www.seancdavis.com/posts/netlify-function-sends-conditional-email/
+const sendMail = async (
+  sparkpostToken,
+  fromEmail,
+  toEmail,
+  siteName,
+  siteDomain,
+  title,
+  path,
+  id,
+  date,
+  name,
+  email,
+  url,
+  comment,
+) => {
+  const options = {
+    hostname: SPARKPOST_API_HOSTNAME,
+    port: HTTPS_PORT,
+    path: SPARKPOST_TRANSMISSION_API_ENDPOINT,
+    method: "POST",
+    headers: {
+      Authorization: sparkpostToken,
+      "Content-Type": "application/json",
+    }
+  };
+
+  const commentSafe = escapeHtml(comment);
+  const moderateUrl = getModerateUrl(
+    siteDomain, title, path, id, date, name, url, commentSafe
+  );
+
+  let data = {
+    options: {
+      open_tracking: false,
+      click_tracking: false,
+    },
+    recipients: [
+      {
+        address: {
+          email: toEmail,
+        },
+      },
+    ],
+    content: {
+      from: {
+        email: fromEmail,
+      },
+      subject: getNotifyMailSubject(siteName, title),
+      text: getNotifyMailText(name, email, url, comment, moderateUrl),
+    },
+  };
+
+  try {
+    return await doRequest(options, JSON.stringify(data));
+  } catch (e) {
+    console.error(`SparkPost create transmission call failed: ${e}`);
+    throw e;
+  }
+};</code></pre>
+
+The way I'm crafting the notification email, is pretty similar to the way my comment notification emails worked before in Django. That is, the email includes the commenter's name and email, and the comment body, in readable plain text. And it includes a URL that you can follow, to go and moderate the comment. In Django, that was simply a URL to the relevant page in the admin. But this is a static site, it has no admin. So it's a URL to a form, and the URL includes all of the submission data, encoded into it as <code>GET</code> parameters.
+
+[thumbnail greenash-comment-notification-email.png How the comment notification email looks in GMail]
+
+Clicking the URL then displays an HTML form, which is generated by another serverless function, the code for which <a href="https://github.com/Jaza/greenash/blob/master/netlify/functions/comment-moderate.js">you can find here</a>. That HTML form doesn't actually need to be generated by a function, it could itself be a static page (containing some client-side JS to populate the form fields from GET parameters), but it was just as easy to make it a function, and it effectively costs me no money either way, and I thought, meh, I'm in functions land anyway.
+
+All the data in that form gets populated from what's encoded in the clicked-on URL, except for <code>token</code>, which I have to enter in manually. But, because it's a standard HTML password field, I can tell my browser to "remember password for this site", so it gets populated for me most of the time. And it's dead-simple HTML, so I was able to make it responsive with minimal effort, which is good, because it means I can moderate comments on my phone if I'm out and about.
+
+[thumbnail greenash-comment-moderate-form.png The comment moderation form]
+
+Having this intermediary HTML form is necessary, because a clickable URL in an email can't <code>POST</code> directly (and I certainly don't want to actually write comments to the repo in a <code>GET</code> request). It's also good, because it means that the secret token has to be entered manually in the browser, which is more secure, and less mistake-prone, than the alternative, which would be sending the secret token in the notification email, and including it in the URL. And it gives me a slightly nicer UI (slightly nicer than email, that is) in which to eyeball the comment, and it gives me the opportunity to edit the comment before publishing it (which I sometimes do, usually just to fix formatting, not to censor or distort what people have to say!).
+
+Next, we get to the business of actually approving or rejecting the comment. You can see my full <a href="https://github.com/Jaza/greenash/blob/master/netlify/functions/comment-action.js">comment action code</a> on GitHub. Here's where the approval happens:
+
+<pre class="javascript"><code>const approveComment = async (
+  githubToken,
+  githubUser,
+  githubRepo,
+  netlifyToken,
+  id,
+  path,
+  title,
+  date,
+  name,
+  url,
+  comment,
+) => {
+  try {
+    let existingSha;
+    let existingJson;
+    let existingComments;
+
+    try {
+      const existingFile = await getExistingCommentsFile(
+        githubToken, githubUser, githubRepo, path
+      );
+      existingSha = existingFile.sha;
+      existingJson = getExistingJson(existingFile);
+      existingComments = getExistingComments(existingJson);
+    } catch (e) {
+      existingSha = null;
+      existingJson = {};
+      existingComments = [];
+    }
+
+    const newComments = getNewComments(existingComments, date, name, url, comment);
+    const newJson = getNewJson(existingJson, newComments);
+
+    await putNewCommentsFile(
+      githubToken, githubUser, githubRepo, path, title, date, name, newJson, existingSha
+    );
+
+    await purgeComment(id, netlifyToken);
+
+    return { statusCode: 200, body: "Comment approved" };
+  }
+  catch (e) {
+    return { statusCode: 400, body: "Failed to approve comment" };
+  }
+};</code></pre>
+
+I'm using <a href="https://www.11ty.dev/docs/data-template-dir/">Eleventy's template data files</code></a> (i.e. <code>posts/subdir/my-first-blog-post.11tydata.json</code> style files) to store the comments, in simple JSON files alongside the thought content files themselves, in the repo. So the comment approval function has to append to the relevant JSON file if it already exists, otherwise it has to create the relevant JSON file from scratch. That's why the first thing the function does, is try to get the existing JSON file and its comments, and if none exists, then it sets the list of existing comments to an empty array.
+
+The function appends the new comment to the existing comments array, it serializes the new array to JSON, and it writes the new JSON file to the repo. Both interactions with the repo &ndash; reading the existing comments file, and writing the new file &ndash; are done using the GitHub Contents API, as simple HTTP calls (the <code>PUT</code> call results in a new commit on the repo's default branch). This way, the function doesn't have to actually interact with Git, i.e. it doesn't have to clone the repo, read from the filesystem, perform a commit, or push the change (and, therefore, nor does it need an SSH key, it just needs a GitHub API key).
+
+[thumbnail greenash-github-commit-new-comment.png The newly-approved comment in the GitHub UI's commit details screen]
+
+From that point on, just like for any other commit pushed to the repo's default branch, Netlify receives a webhook notification from GitHub, and that triggers a standard Netlify deploy, which builds the latest version of the site using Eleventy.
+
+[thumbnail netlify-deploying-new-comment.png Netlify re-deploying the site with the new comment]
+
+The only other thing that the comment approval function does, is the same thing (and the only thing) that the comment rejection function does, which is to delete the submission via the Netlify Forms API. This isn't strictly necessary: I could just let the comments sit in the Netlify Forms data store forever (and as far as I know, Netlify has no limit on how many submissions it will store indefinitely for free, only on how many submissions it will process per month for free).
+
+But by deleting each comment from there after I've moderated it, the Netlify Forms data store becomes a nice "todo queue", should I ever need one to refer to (i.e. should my inbox not be a good enough such queue). And I figure that a comment really doesn't need to be stored anywhere else, once it's approved and committed in Git (and, conversely, it really doesn't need to be stored anywhere at all, once it's rejected).
+
+[thumbnail comment-netlify-submissions-ui.png The new comment can be seen in the Netlify UI before it gets approved or rejected]
+
+The old Django-powered site was set up to immediately publish comments (i.e. no moderation) on thoughts that were less than one month old; and to publish comments after they'd been moderated, for thoughts that were up to one year old; and to close comment submission, for thoughts that were more than one year old.
+
+Publishing comments immediately upon submission (or, at least, within a minute or two of submission, allowing for Eleventy build time / Netlify deploy time) would be possible in the new site, but personally I'm not comfortable with letting actual Git commits (as opposed to just database inserts) get triggered directly like that. So all comments will now be moderated. And, for now, I'm keeping comment submission open for all thoughts, old or new, and hopefully Netlify's spam protection will prove tougher than my old defences (the only reason why I'd closed comments for older thoughts, in the past, was due to a deluge of spam).
+
+I should also note that the comment form on the new site has a (mandatory) "email" field, same as on the old site. However, on the old site, I was able to store the emails of commenters in the Django database indefinitely, but to not render them in the front-end, thus keeping them confidential. In the new site, I don't have that luxury, because if the emails are in Git, then (even if they're not rendered in the front-end) they're publicly visible on GitHub (unless I were to make the whole repo private, which I specifically don't want to do, I want the site itself to be open source!).
+
+So, in the new site, emails of commenters are included in the notification email that gets sent to me (so that I can contact the commenter should I want to or need to), and they're stored (usually only temporarily) in the Netlify Forms data store, but they don't make it anywhere else. Rest assured, commenters, I respect your privacy, I will never publish your email address.
+
+[thumbnail school-strike-4-climate-action.jpg Commenting: because everyone's voice deserves to be heard!<br><em>Image source:</em> <a href="https://www.illawarramercury.com.au/story/6388038/democracy-guarantees-our-right-to-protest/">Illawarra Mercury</a>]
+
+Well, there you have it, my answer to "what about comments" in the static serverless SaaS web of 2022. For your information, there's another, <a href="https://github.com/philhawksworth/jamstack-comments-engine">more official solution for powering comments</a> with Netlify and Eleventy, with a <a href="https://css-tricks.com/jamstack-comments/">great accompanying article.</a>. And, full disclosure, I copied quite a few bits and pieces from that project. My main gripe with the approach taken there, is that it uses Slack, instead of email, for the notifications. It's not that I don't like Slack &ndash; I've been using it every day for work, across several jobs, for many years now (albeit not by choice) &ndash; but, call me old-fashioned if you will, I prefer good ol' email.
+
+More credit where it's due: thanks to this article that shows <a href="https://healeycodes.com/adding-comments-to-gatsby-with-netlify-and-github">how to push a comments JSON file directly to GitHub</a> (which I also much prefer, compared to the official solution's approach of using the Netlify Forms data store as the source of truth, and querying it for approved comments during each site build); this one that shows <a href="https://www.seancdavis.com/posts/netlify-function-sends-conditional-email/">how to send notification emails</a> from Netlify Functions; and this one that shows <a href="https://css-tricks.com/using-netlify-forms-and-netlify-functions-to-build-an-email-sign-up-widget/">how to connect a form to a submission-created.js function</a>. I couldn't have built what I did, without standing on the shoulders of giants.
+
+You've read this far, all about my whiz bang new comments system. Now, the least you can do is try it out, the form's directly below. :D
