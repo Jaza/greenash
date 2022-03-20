@@ -20,7 +20,7 @@ layout: layouts/base.njk
   {% endif %}
 
   {% if contentImage %}
-  <figure>{% if siteUrl %}<a href="//{{ siteUrl }}" title="{{ title }}">{% endif %}<img src="{{ params.uploadsBaseURL }}portfolio_content_images/{{ contentImage }}" width="720" height="432" alt="{{ title }}">{% if siteUrl %}</a>{% endif %}</figure>
+  <figure>{% if siteUrl %}<a href="//{{ siteUrl }}" title="{{ title }}">{% endif %}<img src="{{ params.uploadsBaseURL }}portfolio_content_images/{{ contentImage }}" alt="{{ title }}">{% if siteUrl %}</a>{% endif %}</figure>
   {% endif %}
 
   {{ content | autop | safe }}
