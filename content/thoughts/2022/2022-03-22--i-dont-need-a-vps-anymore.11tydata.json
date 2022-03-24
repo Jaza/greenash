@@ -4,6 +4,11 @@
       "date": "2022-03-24T04:23:45.248Z",
       "name": "too long",
       "comment": "tldr.\r\n"
+    },
+    {
+      "date": "2022-03-24T08:02:21.698Z",
+      "name": "SomeRandomDudeOnTheInternet",
+      "comment": "I think you exaggerate the security challenges. A firewall/DDoS protection is nice but not necessary for personal websites. You really have to actively configure a service to listen on a public port. Also 99.99% of the maintenance is `apt update &amp;&amp; apt upgrade` - certificates are updated automatically.\r\n\r\nBut I am not denying your use case. You have a point"
     }
   ]
 }
