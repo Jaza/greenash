@@ -3,7 +3,12 @@
     {
       "date": "2022-03-24T06:57:00.000Z",
       "name": "Privacy Pictures",
-      "comment": "I am not sure I understand this post - do you really host your <emprivate</em> pictures on a NOT encrypted S3 space in AWS? I could not believe that anybody is doing this, so I need to ask. Really?"
+      "comment": "I am not sure I understand this post - do you really host your <em>private</em> pictures on a NOT encrypted S3 space in AWS? I could not believe that anybody is doing this, so I need to ask. Really?"
+    },
+    {
+      "date": "2022-03-24T11:11:15.000Z",
+      "isAuthorReply": true,
+      "comment": "<blockquote>... do you really host your <em>private</em> pictures on a NOT encrypted S3 space in AWS?</blockquote>\n\nThe way that AWSPics sets it up, all the pictures in S3 are encrypted at rest. So I'm not sure what non-encrypted S3 space you're referring to? If you can see a security hole in the architecture, then feel free to submit a bug report (and/or a fix) to AWSPics on GitHub."
     }
   ]
 }
