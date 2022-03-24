@@ -14,6 +14,11 @@
       "date": "2022-03-24T09:43:34.978Z",
       "name": "So basically you're saying that",
       "comment": "you no longer own your stuff, right?"
+    },
+    {
+      "date": "2022-03-24T10:03:44.000Z",
+      "isAuthorReply": true,
+      "comment": "<blockquote>So basically you're saying that ... you no longer own your stuff, right?</blockquote>\n\nNo, I'm not saying that. I own my data, which is what matters. Code and text content is all in Git repos, media assets are all in S3, I have at-home backups, and I'm able to regularly sync it all.\n\nI no longer own the systems to which that data is deployed. But if those systems are taken away from me tomorrow, I've lost nothing, I can re-deploy it all elsewhere."
     }
   ]
 }
