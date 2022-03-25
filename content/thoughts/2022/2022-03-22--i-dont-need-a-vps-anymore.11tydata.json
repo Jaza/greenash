@@ -25,6 +25,11 @@
       "name": "James Campbell",
       "url": "https://www.jamescampbell.us/",
       "comment": "Why not host on github pages with custom domain as opposed to netlify / cloudflare? I moved most of mine there after moving to hugo for most things for a few years now. I would not choose s3 either, you don't need the lock-in for a cloud service provider. You could simply use github actions to create backups for you and store them anywhere that gives you free storage like dropbox etc. or keep them in a versioned releases branch."
+    },
+    {
+      "date": "2022-03-25T02:34:00.000Z",
+      "isAuthorReply": true,
+      "comment": "<blockquote>Why not host on github pages with custom domain as opposed to netlify / cloudflare?</blockquote>\n\nI could have gone with GitHub Pages instead of Netlify (and I don't use CloudFlare Pages). Maybe I got lured in by Netlify's marketing buzz (although I'm paying Netlify $0, and I don't foresee myself ever paying them any money). I like Netlify's admin UI (not that it's all that different to the admin UI's of GitHub Pages and co). I like Netlify Forms (as long as I stay under its rather small free limit), and Netlify Functions (even though they're just a thin layer on top of AWS Lambda). I appreciate that Netlify built and open-sourced Eleventy (my favourite SSG), as well as Netlify CMS (even though I prefer Forestry). There you go, my reasons for hosting with Netlify! Plus, I'm not locked in, I could switch from Netlify to GitHub Pages, or another competitor, any time, I estimate it could be done in a matter of hours."
     }
   ]
 }
