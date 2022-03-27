@@ -34,7 +34,7 @@
     {
       "date": "2022-03-27T18:46:14.762Z",
       "name": "yachris",
-      "comment": "Couldn&#039;t possibly agree more. I use different services, but the same result: I get to sleep at night without worrying about security.\r\n\r\nIf your S3 burden becomes too much, you might look at Backblaze. I use them for my backup needs, storing ~160G for $0.75 per month.\r\n\r\nThere&#039;s also CloudFlare&#039;s S3-alike which can be a proxy for S3 (your data lives on S3, but every pull past the first is served by CloudFlare at a far lower cost)"
+      "comment": "Couldn&#039;t possibly agree more. I use different services, but the same result: I get to sleep at night without worrying about security.\n\nIf your S3 burden becomes too much, you might look at Backblaze. I use them for my backup needs, storing ~160G for $0.75 per month.\n\nThere&#039;s also CloudFlare&#039;s S3-alike which can be a proxy for S3 (your data lives on S3, but every pull past the first is served by CloudFlare at a far lower cost)"
     }
   ]
 }
