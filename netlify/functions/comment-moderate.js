@@ -34,7 +34,9 @@ exports.handler = async (event, context) => {
   }
   const url = escapeHtml(event.queryStringParameters.url || "");
   const comment =
-    escapeHtml(event.queryStringParameters.comment || "").replace(/\r\n/g, "\n");
+    escapeHtml(event.queryStringParameters.comment || "")
+      .replace(/\r\n/g, "\n")
+      .replace(/%0D%0A/g, "%0A");
   if (!comment) {
     return { statusCode: 400, body: "Missing comment" };
   }
