@@ -256,7 +256,8 @@ const sendMail = async (
     }
   };
 
-  const commentSafe = escapeHtml(comment);
+  const commentNewlinesFixed = comment.replace(/\r\n/g, "\n");
+  const commentSafe = escapeHtml(commentNewlinesFixed);
   const moderateUrl = getModerateUrl(
     siteDomain, title, path, id, date, name, url, commentSafe
   );
@@ -278,7 +279,7 @@ const sendMail = async (
         email: fromEmail,
       },
       subject: getNotifyMailSubject(siteName, title),
-      text: getNotifyMailText(name, email, url, comment, moderateUrl),
+      text: getNotifyMailText(name, email, url, commentNewlinesFixed, moderateUrl),
     },
   };
 

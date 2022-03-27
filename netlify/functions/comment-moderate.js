@@ -33,7 +33,8 @@ exports.handler = async (event, context) => {
     return { statusCode: 400, body: "Missing name" };
   }
   const url = escapeHtml(event.queryStringParameters.url || "");
-  const comment = escapeHtml(event.queryStringParameters.comment || "");
+  const comment =
+    escapeHtml(event.queryStringParameters.comment || "").replace(/\r\n/g, "\n");
   if (!comment) {
     return { statusCode: 400, body: "Missing comment" };
   }
@@ -82,7 +83,7 @@ exports.handler = async (event, context) => {
     '<p><label for="url">URL:</label></p>\n' +
     `<p><input type="text" name="url" id="url" value="${url}"></p>\n` +
     '<p><label for="comment">Comment:</label></p>\n' +
-    `<p><textarea name="comment" id="comment">${comment}</textarea></p>\n` +
+    `<p><textarea name="comment" id="comment" rows="5">${comment}</textarea></p>\n` +
     `<input type="text" name="username" value="admin" style="display: none">\n` +
     '<p><label for="token">Token:</label></p>\n' +
     '<p><input type="password" name="token" id="token"></p>\n' +
