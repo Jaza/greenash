@@ -30,11 +30,6 @@
       "date": "2022-03-25T02:34:00.000Z",
       "isAuthorReply": true,
       "comment": "<blockquote>Why not host on github pages with custom domain as opposed to netlify / cloudflare?</blockquote>\n\nI could have gone with GitHub Pages instead of Netlify (and I don't use CloudFlare Pages). Maybe I got lured in by Netlify's marketing buzz (although I'm paying Netlify $0, and I don't foresee myself ever paying them any money). I like Netlify's admin UI (not that it's all that different to the admin UI's of GitHub Pages and co). I like Netlify Forms (as long as I stay under its rather small free limit), and Netlify Functions (even though they're just a thin layer on top of AWS Lambda). I appreciate that Netlify built and open-sourced Eleventy (my favourite SSG), as well as Netlify CMS (even though I prefer Forestry). There you go, my reasons for hosting with Netlify! Plus, I'm not locked in, I could switch from Netlify to GitHub Pages, or another competitor, any time, I estimate it could be done in a matter of hours."
-    },
-    {
-      "date": "2022-03-27T18:46:14.762Z",
-      "name": "yachris",
-      "comment": "Couldn&#039;t possibly agree more. I use different services, but the same result: I get to sleep at night without worrying about security.\r\n\r\nIf your S3 burden becomes too much, you might look at Backblaze. I use them for my backup needs, storing ~160G for $0.75 per month.\r\n\r\nThere&#039;s also CloudFlare&#039;s S3-alike which can be a proxy for S3 (your data lives on S3, but every pull past the first is served by CloudFlare at a far lower cost)"
     }
   ]
 }
