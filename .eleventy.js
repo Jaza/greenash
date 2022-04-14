@@ -228,6 +228,9 @@ module.exports = function(eleventyConfig) {
         widths: [1192],
         formats: [ext],
         outputDir: "./_site/img/",
+        cacheOptions: {
+          duration: '*',
+        },
       };
 
       try {
