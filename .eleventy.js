@@ -237,7 +237,7 @@ module.exports = function(eleventyConfig) {
         const metadata = await Image(src, thumbnailOptions);
 
         const imageAttributes = {
-          alt: title.split('<br>')[0],
+          alt: title.split('<br>')[0].replace(/<a href="[^"]+">([^<]+)<\/a>/g, "$1"),
           loading: "lazy",
           decoding: "async",
         };
