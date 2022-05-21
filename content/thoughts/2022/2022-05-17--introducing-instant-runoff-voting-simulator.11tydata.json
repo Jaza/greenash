@@ -1,0 +1,24 @@
+{
+  "comments": [
+    {
+      "date": "2022-05-20T05:13:00.000Z",
+      "name": "David",
+      "comment": "Hi Jeremy,\n\nJust want to let you know that there's a bug in the runoff simulator. Before Round 6, there are 5 A ballots, 2 B ballots, 6 D ballots, but after Round 6, the 6 D ballots get distributed not the B ballots.\n\nHere's the test case.\n\n<pre class=\"no-highlight\"><code>a       b       c       d       e       f       g       h\n4       7       8       5       2       6       1       3\n1       8       7       2       6       5       4       3\n3       1       8       5       6       7       2       4\n3       7       5       1       8       6       2       4\n3       2       5       1       6       7       4       8\n1       8       7       4       2       5       3       6\n2       5       3       6       7       8       1       4\n2       1       8       3       4       6       5       7\n3       8       7       1       5       4       2       6\n8       3       5       2       4       1       7       6\n8       6       7       2       5       4       3       1\n4       7       6       1       3       2       8       5\n1       8       3       7       2       5       4       6</code></pre>"
+    },
+    {
+      "date": "2022-05-20T23:29:00.000Z",
+      "isAuthorReply": true,
+      "comment": "Hi David,\n\nThanks for testing out my simulator. You're quite right, it's a bug.\n\nTurns out that the bug is entirely caused by the fact that I didn't account for candidates that receive zero \"Vote 1\"'s. Such candidates should be eliminated in the first round, at the same time as when the \"undistributed\" pile is emptied and removed.\n\nI've updated the code to do just that. And I added your sample data as another one of the built-in CSV's. You <a href=\"https://github.com/Jaza/instant-runoff-voting-simulator/commit/e1d0fcaf4b01c74048ce6192b1dcbc619969a126\">can see the code change here</a>.\n\nAppreciate you reporting this!"
+    },
+    {
+      "date": "2022-05-21T02:47:00.000Z",
+      "name": "David",
+      "comment": "Hi Jeremy,\n\nThanks for addressing it quickly. You might be interested to know that my sample data was an actual vote held amongst some expeditioners at one of the Australian Antarctic bases at the moment (where I am at). When I ran it the results looked a bit funny hence did a step through and found the bug.\n\nThanks for putting something like this online - helps our democracy / civics along!"
+    },
+    {
+      "date": "2022-05-21T07:30:00.000Z",
+      "isAuthorReply": true,
+      "comment": "Hi David,\n\nWow, are you serious, you're in Antarctica right now?! And you have internet access? And you voted? And you're test driving peoples' random coding projects and reporting bugs? That's amazing!\n\nOnly 30 minutes to go, and election results will start coming in. You never know, there might be a pleasant change by the time you get back to the Australian mainland!"
+    }
+  ]
+}
