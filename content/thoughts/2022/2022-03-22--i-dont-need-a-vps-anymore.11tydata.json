@@ -35,6 +35,11 @@
       "date": "2022-03-27T18:46:14.762Z",
       "name": "yachris",
       "comment": "Couldn&#039;t possibly agree more. I use different services, but the same result: I get to sleep at night without worrying about security.\n\nIf your S3 burden becomes too much, you might look at Backblaze. I use them for my backup needs, storing ~160G for $0.75 per month.\n\nThere&#039;s also CloudFlare&#039;s S3-alike which can be a proxy for S3 (your data lives on S3, but every pull past the first is served by CloudFlare at a far lower cost)"
+    },
+    {
+      "date": "2022-06-01T01:51:56.636Z",
+      "name": "mythischer",
+      "comment": "Yes, IMHO in some specfic areas like web page host or source code in git, they are good enough. Hence SAAS/LAAS providers ensuring security and availability. \r\n\r\nOnce it comes to storage, self-host is still most cheap option.\r\n\r\nAnd some other things like docker image coded by yourself, there is still no SAAS/LAAS to run with, cost is same to VPS but you get less control (image get a k8s service for 10$ and ingress for another 5$).\r\n\r\nSAAS/LAAS is good but vendor are only tier their hard/OS more apart and try sale more money on. Personal use might cheap, when it comes to bigger scale, things will change."
     }
   ]
 }
