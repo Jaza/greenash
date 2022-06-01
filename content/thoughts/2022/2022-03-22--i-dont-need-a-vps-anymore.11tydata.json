@@ -39,7 +39,7 @@
     {
       "date": "2022-06-01T01:51:56.636Z",
       "name": "mythischer",
-      "comment": "Yes, IMHO in some specfic areas like web page host or source code in git, they are good enough. Hence SAAS/LAAS providers ensuring security and availability. \r\n\r\nOnce it comes to storage, self-host is still most cheap option.\r\n\r\nAnd some other things like docker image coded by yourself, there is still no SAAS/LAAS to run with, cost is same to VPS but you get less control (image get a k8s service for 10$ and ingress for another 5$).\r\n\r\nSAAS/LAAS is good but vendor are only tier their hard/OS more apart and try sale more money on. Personal use might cheap, when it comes to bigger scale, things will change."
+      "comment": "Yes, IMHO in some specfic areas like web page host or source code in git, they are good enough. Hence SAAS/LAAS providers ensuring security and availability.\n\nOnce it comes to storage, self-host is still most cheap option.\n\nAnd some other things like docker image coded by yourself, there is still no SAAS/LAAS to run with, cost is same to VPS but you get less control (image get a k8s service for 10$ and ingress for another 5$).\n\nSAAS/LAAS is good but vendor are only tier their hard/OS more apart and try sale more money on. Personal use might cheap, when it comes to bigger scale, things will change."
     }
   ]
 }
