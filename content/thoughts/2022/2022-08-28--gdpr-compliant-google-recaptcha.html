@@ -1,0 +1,99 @@
+---
+title: GDPR-compliant Google reCAPTCHA
+date: 2022-08-28
+teaser: |-
+  Per the EU's <a href="https://gdpr-info.eu/">GDPR</a> and <a href="https://www.cloudflare.com/en-gb/learning/privacy/what-is-eprivacy-directive/">ePrivacy Directive</a>, you must ask visitors to a website for their consent before setting any cookies, and/or before collecting any user tracking data. And because the GDPR applies to all EU citizens (who are residing within the EU), regardless of where in the world a website or its owner is based, in order to fully comply, in practice you should seek consent for all visitors to all websites globally.
+
+  In order to be GDPR-compliant, and in order to just be a good netizen, I made sure, when building <a href="/thoughts/2022/03/introducing-greenash-5/">GreenAsh v5</a> earlier this year, to not use services that set cookies at all, wherever possible. In previous iterations of GreenAsh, I used <a href="https://analytics.google.com/">Google Analytics</a>, which (like basically all Google services) is a notorious GDPR offender; this time around, I instead used <a href="https://www.cloudflare.com/web-analytics/">Cloudflare Web Analytics</a>, which is a good enough replacement for my modest needs, and which ticks all the privacy boxes.
+
+  However, on pages with forms at least, I still need <a href="https://www.google.com/recaptcha/">Google reCAPTCHA</a>. I'd like to instead use the privacy-conscious <a href="https://www.hcaptcha.com/">hCaptcha</a>, but <a href="https://answers.netlify.com/t/support-for-hcaptcha-in-netlify-forms/25416">Netlify Forms only supports reCAPTCHA</a>, so I'm stuck with it for now. Here's how I seek the user's consent before loading reCAPTCHA.
+tags:
+  - thoughtstopics/innovations
+  - thoughtstopics/javascript
+  - thoughtstopics/programming
+---
+Per the EU's <a href="https://gdpr-info.eu/">GDPR</a> and <a href="https://www.cloudflare.com/en-gb/learning/privacy/what-is-eprivacy-directive/">ePrivacy Directive</a>, you must ask visitors to a website for their consent before setting any cookies, and/or before collecting any user tracking data. And because the GDPR applies to all EU citizens (who are residing within the EU), regardless of where in the world a website or its owner is based, in order to fully comply, in practice you should seek consent for all visitors to all websites globally.
+
+In order to be GDPR-compliant, and in order to just be a good netizen, I made sure, when building <a href="/thoughts/2022/03/introducing-greenash-5/">GreenAsh v5</a> earlier this year, to not use services that set cookies at all, wherever possible. In previous iterations of GreenAsh, I used <a href="https://analytics.google.com/">Google Analytics</a>, which (like basically all Google services) is a notorious GDPR offender; this time around, I instead used <a href="https://www.cloudflare.com/web-analytics/">Cloudflare Web Analytics</a>, which is a good enough replacement for my modest needs, and which ticks all the privacy boxes.
+
+However, on pages with forms at least, I still need <a href="https://www.google.com/recaptcha/">Google reCAPTCHA</a>. I'd like to instead use the privacy-conscious <a href="https://www.hcaptcha.com/">hCaptcha</a>, but <a href="https://answers.netlify.com/t/support-for-hcaptcha-in-netlify-forms/25416">Netlify Forms only supports reCAPTCHA</a>, so I'm stuck with it for now. Here's how I seek the user's consent before loading reCAPTCHA.
+
+<pre class="javascript"><code>ready(() => {
+  const submitButton = document.getElementById('submit-after-recaptcha');
+
+  if (submitButton == null) {
+    return;
+  }
+
+  window.originalSubmitFormButtonText = submitButton.textContent;
+  submitButton.textContent = 'Prepare to ' + window.originalSubmitFormButtonText;
+
+  submitButton.addEventListener("click", e => {
+    if (submitButton.textContent === window.originalSubmitFormButtonText) {
+      return;
+    }
+
+    const agreeToCookiesMessage =
+      'This will load Google reCAPTCHA, which will set cookies. Sadly, you will ' +
+      'not be able to submit this form unless you agree. GDPR, not to mention ' +
+      'basic human decency, dictates that you have a choice and a right to protect ' +
+      'your privacy from the corporate overlords. Do you agree?';
+
+    if (window.confirm(agreeToCookiesMessage)) {
+      const recaptchaScript = document.createElement('script');
+      recaptchaScript.setAttribute(
+        'src',
+        'https://www.google.com/recaptcha/api.js?onload=recaptchaOnloadCallback' +
+        '&render=explicit');
+      recaptchaScript.setAttribute('async', '');
+      recaptchaScript.setAttribute('defer', '');
+      document.head.appendChild(recaptchaScript);
+    }
+
+    e.preventDefault();
+  });
+});</code></pre>
+
+(<a href="https://github.com/Jaza/greenash/blob/master/static/js/recaptchaloader.js">View on GitHub</a>)
+
+I load this JS on every page, thus putting it on the lookout for forms that require reCAPTCHA (in my case, that's comment forms and the contact form). It changes the form's submit button text from, for example, "Send", to instead be "Prepare to Send" (as a hint to the user that clicking the button won't actually submit the form, there will be further action required before that happens).
+
+It hijacks the button's click event, such that if the user hasn't yet provided consent, it shows a prompt. When consent is given, the Google reCAPTCHA JS is added to the DOM, and reCAPTCHA is told to call <code>recaptchaOnloadCallback</code> when it's done loading. If the user has already provided consent, then the button's default click behaviour of triggering form submission is allowed.
+
+<pre class="html"><code>LEFTCURLYBRACKET%- if params.recaptchaKey %RIGHTCURLYBRACKET
+<div id="recaptcha-wrapper"></div>
+<script type="text/javascript">
+window.recaptchaOnloadCallback = () => {
+  document.getElementById('submit-after-recaptcha').textContent =
+    window.originalSubmitFormButtonText;
+  window.grecaptcha.render(
+    'recaptcha-wrapper', {'sitekey': '{{ params.recaptchaKey }}'}
+  );
+};
+</script>
+LEFTCURLYBRACKET%- endif %RIGHTCURLYBRACKET</code></pre>
+
+(<a href="https://github.com/Jaza/greenash/blob/master/_includes/components/recaptcha_loader.njk">View on GitHub</a>)
+
+I embed this HTML inside every form that requires reCAPTCHA. It defines the wrapper element into which the reCAPTCHA is injected. And it defines <code>recaptchaOnloadCallback</code>, which changes the submit button text back to what it originally was (e.g. changes it from "Prepare to Send" back to "Send"), and which actually renders the reCAPTCHA widget.
+
+<pre class="html"><code><!-- ... -->
+
+  <form other-attributes-here data-netlify-recaptcha>
+    <!-- ... -->
+
+    LEFTCURLYBRACKET% include 'components/recaptcha_loader.njk' %RIGHTCURLYBRACKET
+    <p>
+      <button type="submit" id="submit-after-recaptcha">Send</button>
+    </p>
+  </form>
+
+<!-- ... --></code></pre>
+
+(<a href="https://github.com/Jaza/greenash/blob/master/_includes/layouts/contact.njk">View on GitHub</a>)
+
+This is what my GDPR-compliant, reCAPTCHA-enabled, Netlify-powered contact form looks like. The <code>data-netlify-recaptcha</code> attribute tells Netlify to require a successful reCAPTCHA challenge in order to accept a submission from this form.
+
+[thumbnail prompt-before-recaptcha.png The prompt before the reCAPTCHA in action]
+
+That's all there is to it! Not rocket science, but I just thought I'd share this with the world, because despite there being a gazillion posts on the interwebz advising that you "ask for consent before setting cookies", there seem to be surprisingly few step-by-step instructions explaining how to actually do that. And the standard advice appears to be to use a third-party script / plugin that implements an "accept cookies" popup for you, even though it's really easy to implement it yourself.
