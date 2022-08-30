@@ -67,7 +67,7 @@ window.recaptchaOnloadCallback = () => {
   document.getElementById('submit-after-recaptcha').textContent =
     window.originalSubmitFormButtonText;
   window.grecaptcha.render(
-    'recaptcha-wrapper', {'sitekey': '{{ params.recaptchaKey }}'}
+    'recaptcha-wrapper', {'sitekey': 'LEFTCURLYBRACKETLEFTCURLYBRACKET params.recaptchaKey RIGHTCURLYBRACKETRIGHTCURLYBRACKET'}
   );
 };
 </script>
