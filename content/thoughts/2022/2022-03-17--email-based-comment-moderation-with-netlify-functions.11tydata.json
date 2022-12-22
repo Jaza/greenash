@@ -9,6 +9,11 @@
       "date": "2022-04-02T21:15:07.655Z",
       "name": "Foo",
       "comment": "Pretty neat!"
+    },
+    {
+      "date": "2022-12-21T13:00:45.779Z",
+      "name": "BadInfluenceCoder",
+      "comment": "Excellent blog post, just what I needed to get started with comments on my own blog. Thanks"
     }
   ]
 }
