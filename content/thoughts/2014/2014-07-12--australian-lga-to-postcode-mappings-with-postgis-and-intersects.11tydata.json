@@ -70,6 +70,11 @@
       "date": "2022-08-24T06:06:31.470Z",
       "name": "Emma Linton",
       "comment": "What an absolute legend! Thank you SO much for this. I work for a non profit and we would have needed to have spent hours to collate this data. Much appreciated 🙏"
+    },
+    {
+      "date": "2023-02-13T04:46:14.006Z",
+      "name": "David Luckett",
+      "comment": "Hi Jeremy,\r\n\r\nThanks for all your work putting this data together.\r\n\r\n<a href=\"https://www.abs.gov.au/AUSSTATS/abs@.nsf/39433889d406eeb9ca2570610019e9a5/f5ffe838cbbf4dd3ca25730c0000a90a!OpenDocument\">This ABS dataset</a> is also noteworthy and relevant.\r\n\r\nIt gives &quot;concordances&quot; between LGAs and postcodes in CSV format.\r\n\r\nThe data is quite old (2006), so before any NSW LGA amalgamations, but it does provide an estimate of the population split across LGA boundaries."
     }
   ]
 }
