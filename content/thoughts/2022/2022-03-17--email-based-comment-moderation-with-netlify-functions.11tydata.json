@@ -19,6 +19,11 @@
       "date": "2023-03-01T10:39:30.771Z",
       "name": "Inigo",
       "comment": "Thank you very much. Do you still recommend this system for 2023?"
+    },
+    {
+      "date": "2023-03-01T16:38:22.654Z",
+      "name": "Rustie",
+      "comment": "This is exactly what I have been looking for. I don't know why more 11ty dev blogs don't use this method to add comments."
     }
   ]
 }
