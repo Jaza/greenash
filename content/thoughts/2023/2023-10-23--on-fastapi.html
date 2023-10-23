@@ -1,0 +1,17 @@
+---
+title: On FastAPI
+date: 2023-10-23
+teaser: |-
+  foo
+tags:
+  - thoughtstopics/fastapi
+  - thoughtstopics/programming
+  - thoughtstopics/python
+---
+Over the past year, I've been heavily using <a href="https://fastapi.tiangolo.com/">FastAPI</a> in my day job. I've been around the Python web framework block, and I gotta say, FastAPI really succeeds in its mission of building on the strengths of its predecessors (particularly <a href="https://www.djangoproject.com/">Django</a> and <a href="https://flask.palletsprojects.com/">Flask</a>), while feeling more modern and adhering to certain opinionated principles. In my opinion, it's pretty much exactly what the best-in-breed of the next logical generation of web frameworks should look like.
+
+Let me start by lauding FastAPI's <a href="https://fastapi.tiangolo.com/tutorial/">excellent documentation</a>. Having a track record of rock-solid documentation, was (and still is!) &ndash; in my opinion &ndash; Django's most <a href="https://docs.djangoproject.com/">impressive achievement</a>, and I'm pleased to see that it's also becoming Django's most enduring legacy. FastAPI, like Django, includes docs changes together with code changes in a single (these days called) pull request; it clearly documents that certain features are deprecated; and its docs often go beyond what is strictly required, by including end-to-end instructions for integrating with various third-party tools and services.
+
+FastAPI's docs raise the bar further still, with more than a dash of humour in many sections, and with a frequent sprinkling of emojis as standard fare. That latter convention I have some reservations about &ndash; call me old-fashioned, but you could say that emoji-filled docs is unprofessional and is a distraction. However, they seem to enhance rather than detract from overall quality; and, you know what, they put a non-emoji real-life smile on my face. So, they get my tick of approval.
+
+FastAPI more-or-less sits in the Flask camp of being a "microframework", in that it doesn't include an ORM, a template engine, or various other things that Django has always advertised as being part of its "batteries included" philosophy. But, on the other hand, FastAPI is more in the Django camp of being highly opinionated, and of consciously including things with which it wants a hassle-free experience. Most notably, it includes <a href="https://swagger.io/tools/swagger-ui/">Swagger UI</a> and <a href="https://github.com/Redocly/redoc">Redoc</a> out-of-the-box. I personally had quite a painful experience generating Swagger docs in Flask, back in the day; and I've been tremendously pleased with how API doc generation Just Works&trade; in FastAPI.
