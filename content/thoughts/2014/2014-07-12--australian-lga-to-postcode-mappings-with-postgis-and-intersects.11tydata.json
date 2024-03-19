@@ -85,6 +85,11 @@
       "date": "2024-03-17T00:06:00Z",
       "name": "Echo",
       "comment": "I recently came across your blog post detailing the comprehensive process you undertook to match Australian Local Government Areas (LGAs) with their respective postcodes, utilizing data from the ABS and PostGIS software. I am genuinely impressed by the dedication and creativity you demonstrated in tackling and sharing a solution to this complex task, especially considering the lack of a definitive Australia-wide list.\n\nYour work has provided an invaluable resource for individuals and organizations alike who require precise geographical data for various projects. The clarity with which you've described your methodology is incredibly helpful, and the fact that you've made your findings available for public use reflects a commendable commitment to supporting the broader community.\n\nGiven the significance of your contribution, I am curious to know if you have plans to update this dataset with the 2021 LGA boundaries. As you're likely aware, there have been some important changes since the 2016 update, which could impact projects that rely on the most current geographical information. An updated version would undoubtedly be a highly appreciated resource for those of us in need of the latest data.\n\nThank you once again for your outstanding work and for considering my inquiry. I look forward to any updates you might share and wish you continued success in your future endeavours."
+    },
+    {
+      "date": "2024-03-19T01:04:00Z",
+      "isAuthorReply": true,
+      "comment": "Hi Echo, Thanks for getting in touch. Yes, I have been meaning to generate a new LGA to postcode mapping based on the 2021 ABS datasets. Haven't gotten around to it yet. Thanks for reminding me! I'll try and do it soon. Great to hear that my mappings have been of use to you."
     }
   ]
 }
