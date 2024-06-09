@@ -1,0 +1,49 @@
+---
+title: "Introducing: Floyd-Warshall CSV Generator"
+date: 2024-06-09
+permalink: /thoughts/2024/06/introducing-floyd-warshall-csv-generator/
+teaser: |-
+  I built a little Python script called the <a href="https://github.com/Jaza/floyd-warshall-csv-generator">Floyd-Warshall CSV Generator</a>. It takes a CSV of graph edges as input, and generates a CSV of the edges that are the shortest paths between all pairs of vertices.
+
+  The script is a simple wrapper of the <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csgraph.floyd_warshall.html">SciPy <code>floyd_warshall</code> function</a>, which in turn implements the <a href="https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm">Floyd-Warshall Algorithm</a>. Hope you find it useful for all your directed (or undirected) weighted graph needs.
+tags:
+  - thoughtstopics/algorithms
+  - thoughtstopics/programming
+  - thoughtstopics/python
+---
+I built a little Python script called the <a href="https://github.com/Jaza/floyd-warshall-csv-generator">Floyd-Warshall CSV Generator</a>. It takes a CSV of graph edges as input, and generates a CSV of the edges that are the shortest paths between all pairs of vertices.
+
+The script is a simple wrapper of the <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csgraph.floyd_warshall.html">SciPy <code>floyd_warshall</code> function</a>, which in turn implements the <a href="https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm">Floyd-Warshall Algorithm</a>. Hope you find it useful for all your directed (or undirected) weighted graph needs.
+
+Given an input CSV of the following graph edges:
+
+<pre class="no-highlight"><code>point_a,point_b,cost
+a,b,5
+b,c,8
+c,d,23
+d,e,6</code></pre>
+
+When the script is called as follows:
+
+<pre class="no-highlight"><code>floyd-warshall-csv-generator \
+  /path/to/input_data.csv \
+  --vertex-i-column-name point_a \
+  --vertex-j-column-name point_b \
+  --weight-column-name cost \
+  --no-directed \
+  --max-weight 35</code></pre>
+
+It generates an output CSV that looks like this:
+
+<pre class="no-highlight"><code>point_a,point_b,cost
+a,b,5.0
+a,c,13.0
+b,c,8.0
+b,d,31.0
+c,d,23.0
+c,e,29.0
+d,e,6.0</code></pre>
+
+That is, it generates all the possible (indirect) paths from one point to all other points, based on the (direct) paths that are already known, with duplicate (undirected) paths filtered out, and with paths whose cost is more than <code>max-weight</code> filtered out.
+
+I wrote this script in order to generate the "all edges" data that's shown in the <a href="https://github.com/Jaza/world-locality-transit-graph">World Locality Transit Graph</a>, which I'll also be blogging about real soon. Let me know if you put this script to any other interesting uses!
