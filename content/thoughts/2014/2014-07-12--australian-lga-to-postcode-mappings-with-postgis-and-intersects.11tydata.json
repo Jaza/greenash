@@ -90,6 +90,11 @@
       "date": "2024-03-19T01:04:00Z",
       "isAuthorReply": true,
       "comment": "Hi Echo, Thanks for getting in touch. Yes, I have been meaning to generate a new LGA to postcode mapping based on the 2021 ABS datasets. Haven't gotten around to it yet. Thanks for reminding me! I'll try and do it soon. Great to hear that my mappings have been of use to you."
+    },
+    {
+      "date": "2024-07-16T06:57:13.468Z",
+      "name": "SF",
+      "comment": "Hi Jaza,\r\n\r\nThank you for sharing this data which is super helpful. My question is often 1 postcode have multiple LGA mapped to it, take 3121 for example, has 4 LGA against it. How should I or could I map this postcode to 1 LGA?\r\n\r\nThanks,\r\nSF"
     }
   ]
 }
