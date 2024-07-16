@@ -95,6 +95,11 @@
       "date": "2024-07-16T06:57:13.468Z",
       "name": "SF",
       "comment": "Hi Jaza,\n\nThank you for sharing this data which is super helpful. My question is often 1 postcode have multiple LGA mapped to it, take 3121 for example, has 4 LGA against it. How should I or could I map this postcode to 1 LGA?\n\nThanks,\nSF"
+    },
+    {
+      "date": "2024-07-16T23:10:00Z",
+      "isAuthorReply": true,
+      "comment": "Hi SF, glad you've found the data useful. As I've commented previously, I'm afraid there's no correct way to map a given postcode to just one LGA. Postcodes can (and many postcodes do) physically cover multiple LGAs, that's just the reality that we have to deal with. I suppose you could look for the one post office in that postcode, and determine which LGA it's in, and treat that as \"the one true LGA\" for that postcode (but no doubt there are numerous cases where a given postcode is served by multiple post offices, or zero post offices!). Or determine which LGA covers the greatest percentage of the geographical area of a given postcode (which should always yield just one LGA, a tie should be virtually impossible - although there would be no guarantee that each such LGA is actually the most important / most central / most populated LGA for a given postcode). Anyway, apart from being error-prone and yielding dubious results, solutions like that would be far more complex than what I've implemented here. Hope that helps."
     }
   ]
 }
