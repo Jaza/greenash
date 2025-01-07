@@ -1,0 +1,358 @@
+---
+title: Getting MapLibre working for both native and web in Expo
+date: 2025-01-07
+teaser: |-
+  I've been dabbling of late in building a mobile app with <a href="https://reactnative.dev/">React Native</a> + <a href="https://expo.dev/">Expo</a>. One of the things that attracted me most to Expo, is that &ndash; on top of the "write once, <a href="https://stackoverflow.com/questions/55113505/is-it-sufficient-to-learn-only-react-native-for-building-ios-and-android-apps">run on iOS and Android</a>" claim of React Native &ndash; Expo claims to also let an app run seamlessly <a href="https://www.reddit.com/r/reactnative/comments/1204gzr/is_expo_ready_to_support_web_platform_as_well/">on the web</a>. Anyway, as it turns out (surprise surprise &ndash; not!), neither of <a href="https://news.ycombinator.com/item?id=36871651">those claims</a> are particularly aligned with reality. I found this out &ndash; with the claim of "run on native and web" &ndash; as soon as I wanted to add a simple map to my app.
+
+  [thumbnail expo-maplibre-native-plus-web-demo-screenshot.jpg Behold, a MapLibre map, working both for native and for web, in Expo.]
+
+  Below is my humble lil' guide to getting <a href="https://maplibre.org/">MapLibre</a> working for both native and web in Expo. Note: if you want to skip the step-by-step shpiel, and you just want a working example with all the code, feel free to head straight to the <a href="https://github.com/Jaza/expo-maplibre-native-plus-web-demo">Expo MapLibre native + web demo</a> on GitHub.
+tags:
+  - thoughtstopics/expo
+  - thoughtstopics/javascript
+  - thoughtstopics/mapping
+---
+I've been dabbling of late in building a mobile app with <a href="https://reactnative.dev/">React Native</a> + <a href="https://expo.dev/">Expo</a>. One of the things that attracted me most to Expo, is that &ndash; on top of the "write once, <a href="https://stackoverflow.com/questions/55113505/is-it-sufficient-to-learn-only-react-native-for-building-ios-and-android-apps">run on iOS and Android</a>" claim of React Native &ndash; Expo claims to also let an app run seamlessly <a href="https://www.reddit.com/r/reactnative/comments/1204gzr/is_expo_ready_to_support_web_platform_as_well/">on the web</a>. Anyway, as it turns out (surprise surprise &ndash; not!), neither of <a href="https://news.ycombinator.com/item?id=36871651">those claims</a> are particularly aligned with reality. I found this out &ndash; with the claim of "run on native and web" &ndash; as soon as I wanted to add a simple map to my app.
+
+[thumbnail expo-maplibre-native-plus-web-demo-screenshot.jpg Behold, a MapLibre map, working both for native and for web, in Expo.]
+
+Below is my humble lil' guide to getting <a href="https://maplibre.org/">MapLibre</a> working for both native and web in Expo. Note: if you want to skip the step-by-step shpiel, and you just want a working example with all the code, feel free to head straight to the <a href="https://github.com/Jaza/expo-maplibre-native-plus-web-demo">Expo MapLibre native + web demo</a> on GitHub.
+
+<h2>Map library options</h2>
+
+First of all, a quick rundown of the options that one has at one's disposal, when wanting to add a map to an Expo app.
+
+The simplest and the most recommended option is to <a href="https://docs.expo.dev/versions/latest/sdk/map-view/">use <code>react-native-maps</code></a>. This is the only solution that works with <a href="https://expo.dev/go">Expo Go</a>, and it's the only one that's documented in the official Expo docs.
+
+However, it's explicitly stated that <code>react-native-maps</code> isn't web-compatible, so if you used it and you also wanted maps on web, your only choice would be to fall back to something like <a href="https://github.com/visgl/react-google-maps"><code>react-google-maps</code></a> for web. Also, you'd (potentially) have to deal with <a href="https://www.apple.com/maps/">Apple Maps</a> on iOS vs <a href="https://www.google.com/maps/">Google Maps</a> on Android. And &ndash; my main reason for steering clear of this option &ndash; you'd have to live with the <a href="https://joemorrison.substack.com/p/google-maps-moat-is-evaporating">these-days-horrific pricing</a> and draconian <abbr title="Terms of Service">ToS</abbr> of the Google Maps API.
+
+The next option is to <a href="https://github.com/rnmapbox/maps">use <code>rnmapbox</code></a>. This is the solution that I instinctively chose first up, and that I stuck with for quite a while, mainly because (for the past several years) I've become accustomed to using <a href="https://www.mapbox.com/">Mapbox</a> instead of Google Maps anyway, for maps on old-skool web sites. Plus, <code>rnmapbox</code> claims to (somewhat) support Expo Web.
+
+Unfortunately, "somewhat" is in my opinion an <a href="https://github.com/rnmapbox/maps/issues/3597">overly optimistic</a> assessment of <code>rnmapbox</code>'s web support &ndash; basically, instead of trying to go down that route, you should instead fall back to <a href="https://github.com/visgl/react-map-gl"><code>react-map-gl</code></a> with <a href="https://github.com/mapbox/mapbox-gl-js"><code>mapbox-gl-js</code></a> for web. Plus, I was surprised to learn that Mapbox is no longer the mapping provider of choice for hobbyists, since it decided to <a href="https://wptavern.com/mapbox-gl-js-is-no-longer-open-source">stop open-sourcing</a> its mapping library.
+
+Which led me to MapLibre, which is a fork of Mapbox (v1) before the folks at Mapbox decided to release v2 with a non-open-source license. So, with MapLibre (plus <a href="https://www.maptiler.com/">MapTiler</a>), I don't have to worry about disagreeable pricing / ToS. And I get basically the same map library on native and web. Although not exactly the same library &ndash; it inherits the limitations of the Mapbox libraries, so you need to use <a href="https://github.com/maplibre/maplibre-react-native"><code>maplibre-react-native</code></a> for native, and fall back to <code>react-map-gl</code> with <a href="https://github.com/maplibre/maplibre-gl-js"><code>maplibre-gl-js</code></a> for web.
+
+<h2>Map features</h2>
+
+What I needed, and what I'm demo'ing here, is a pretty simple map. It shows the user's location on load (if the user grants location permissions, otherwise it falls back to showing latitude / longitude <code>0,0</code> on load). And when the user presses the "Go" button, it grabs the current centre position of the map, and shows the latitude / longitude coordinates of that centre position. That's it!
+
+You're likely to need more functionality than that for a map in your own app. Hopefully this provides you with a humble base to start off from. Good luck getting other bells and whistles working (for native and web)!
+
+<h2>Walkthrough</h2>
+
+To start off, you'll need an Expo project. If you don't already have one, you can create one with:
+
+<pre class="bash"><code>npx create-expo-app@latest MyApp</code></pre>
+
+Then, you'll need to add both the native and the web mapping libraries as dependencies:
+
+<pre class="bash"><code>npm install --save @maplibre/maplibre-react-native
+npm install --save maplibre-gl
+npm install --save react-map-gl</code></pre>
+
+I like to put everything inside a <code>src/</code> directory, which is supported but which is not the default for Expo. And I like a structure with various other <a href="https://github.com/Jaza/expo-maplibre-native-plus-web-demo/tree/master/src">directories under <code>src/</code></a> (see link). My example code from here on assumes that structure. Feel free to suit to your tastes.
+
+You'll need to <a href="https://cloud.maptiler.com/">sign up to MapTiler</a> for an API key. Edit your <code>.env.local</code> file to include this:
+
+<pre class="bash"><code>EXPO_PUBLIC_MAPTILER_API_KEY=yourmaptilerkeygoeshere</code></pre>
+
+Define this variable in e.g. <code>src/core/config.ts</code>:
+
+<pre class="javascript"><code>export const MAPTILER_API_KEY = process.env.EXPO_PUBLIC_MAPTILER_API_KEY;</code></pre>
+
+And define this constant in e.g. <code>src/core/constants.ts</code>:
+
+<pre class="javascript"><code>export const MAPTILER_STYLE_URL =
+  "https://api.maptiler.com/maps/streets-v2/style.json?key=MAPTILER_API_KEY";</code></pre>
+
+The code from here on depends on various utility components, for styling of text and for positioning of elements. I won't go through all those components in this article, I leave it to you to refer to <a href="https://github.com/Jaza/expo-maplibre-native-plus-web-demo/tree/master/src/components">the <code>src/components/</code> directory</a>.
+
+Before we get into the map code, we need to request location permission, and to get the user's current location (if the user grants permission). I originally had all of this inside the map components, but I then refactored the meat of it out into a utility function, which is very similar to the code in <a href="https://docs.expo.dev/versions/latest/sdk/location/">the <code>expo-location</code> docs</a>, and which you can put at e.g. <code>src/core/locationUtils.ts</code>:
+
+<pre class="javascript"><code>import * as Location from "expo-location";
+import { Dispatch, SetStateAction } from "react";
+
+export const setCurrentLocationIfAvailable = async (
+  setLocation: Dispatch<SetStateAction<Location.LocationObjectCoords>>,
+  setIsLocationUnavailable: Dispatch<SetStateAction<boolean>>,
+) => {
+  let { status } = await Location.requestForegroundPermissionsAsync();
+  if (status !== "granted") {
+    setIsLocationUnavailable(true);
+    return;
+  }
+
+  try {
+    const currentLocation = await Location.getCurrentPositionAsync({});
+    setLocation(currentLocation.coords);
+  } catch (_e) {
+    setIsLocationUnavailable(true);
+  }
+};</code></pre>
+
+Now for the map itself. Let's start by putting the code to render the map for native into a component. This code goes at e.g. <code>src/components/NativeMapView.tsx</code>:
+
+<pre class="javascript"><code>import { StyleSheet } from "react-native";
+import * as Location from "expo-location";
+import MapLibreGL from "@maplibre/maplibre-react-native";
+import { Camera, MapView, MapViewRef } from "@maplibre/maplibre-react-native";
+import { Ref, useEffect, useState } from "react";
+
+import { MAPTILER_API_KEY } from "../core/config";
+import { MAPTILER_STYLE_URL } from "../core/constants";
+import { setCurrentLocationIfAvailable } from "../core/locationUtils";
+import { LoadingText } from "./LoadingText";
+
+interface NativeMapViewProps {
+  mapRef?: Ref<MapViewRef>;
+}
+
+export const NativeMapView = (props: NativeMapViewProps) => {
+  const [location, setLocation] =
+    useState<Location.LocationObjectCoords | null>(null);
+  const [isLocationUnavailable, setIsLocationUnavailable] = useState(false);
+
+  useEffect(() => {
+    MapLibreGL.setAccessToken(null);
+
+    setCurrentLocationIfAvailable(setLocation, setIsLocationUnavailable);
+  }, []);
+
+  if (!location && !isLocationUnavailable) {
+    return <LoadingText />;
+  }
+
+  return (
+    <MapView
+      ref={props.mapRef}
+      style={styles.map}
+      styleURL={MAPTILER_STYLE_URL.replace(
+        "MAPTILER_API_KEY",
+        MAPTILER_API_KEY,
+      )}
+    >
+      <Camera
+        centerCoordinate={
+          location ? [location.longitude, location.latitude] : [0, 0]
+        }
+        zoomLevel={location ? 12 : 2}
+        animationDuration={0}
+      />
+    </MapView>
+  );
+};
+
+const styles = StyleSheet.create({
+  map: {
+    flex: 1,
+  },
+});</code></pre>
+
+This just renders the map, centred and zoomed at the user's current location, without any additional behaviour defined. It's important that we only import from <code>@maplibre/maplibre-react-native</code> in this file, and not in any other files that get loaded for both native and web, because web will freak out if it sees that import.
+
+Next comes the code to render the map for web into a component. This code goes at e.g. <code>src/components/WebMapView.tsx</code>:
+
+<pre class="javascript"><code>import { Ref, useEffect, useState } from "react";
+import Map, { MapRef } from "react-map-gl/maplibre";
+import * as Location from "expo-location";
+
+import { MAPTILER_API_KEY } from "../core/config";
+import { MAPTILER_STYLE_URL } from "../core/constants";
+import { setCurrentLocationIfAvailable } from "../core/locationUtils";
+import { LoadingText } from "./LoadingText";
+
+interface WebMapViewProps {
+  mapRef?: Ref<MapRef>;
+}
+
+export const WebMapView = (props: WebMapViewProps) => {
+  const [location, setLocation] =
+    useState<Location.LocationObjectCoords | null>(null);
+  const [isLocationUnavailable, setIsLocationUnavailable] = useState(false);
+
+  useEffect(() => {
+    setCurrentLocationIfAvailable(setLocation, setIsLocationUnavailable);
+  }, []);
+
+  if (!location && !isLocationUnavailable) {
+    return <LoadingText />;
+  }
+
+  return (
+    <Map
+      ref={props.mapRef}
+      initialViewState=LEFTCURLYBRACKETLEFTCURLYBRACKET
+        latitude: location ? location.latitude : 0,
+        longitude: location ? location.longitude : 0,
+        zoom: location ? 12 : 2,
+      RIGHTCURLYBRACKETRIGHTCURLYBRACKET
+      style=LEFTCURLYBRACKETLEFTCURLYBRACKET width: "100%", height: "100%" RIGHTCURLYBRACKETRIGHTCURLYBRACKET
+      mapStyle={MAPTILER_STYLE_URL.replace(
+        "MAPTILER_API_KEY",
+        MAPTILER_API_KEY,
+      )}
+    />
+  );
+};</code></pre>
+
+Once again, this just renders the map, no additional behaviour. And it's important that we only import from <code>react-map-gl/maplibre</code> in this file, because native will freak out if it sees that import.
+
+Now we're going to render the map together with a "Go" button, and we're going to add some additional behaviour, such that when the button is pressed, we grab the current centre coordinates of the map, and then trigger an event using those coordinates. First, the native code for all that, at e.g. <code>src/components/LatLonMap.tsx</code>:
+
+<pre class="javascript"><code>import { useRef } from "react";
+import { Button } from "react-native";
+
+import { CenteredContainer } from "./CenteredContainer";
+import { FloatingContainer } from "./FloatingContainer";
+import { FullWidthContainer } from "./FullWidthContainer";
+import { FullWidthAndHeightContainer } from "./FullWidthAndHeightContainer";
+import { NativeMapView } from "./NativeMapView";
+import { MapViewRef } from "@maplibre/maplibre-react-native";
+
+interface LatLonMapProps {
+  onPress?: (latitude: number, longitude: number) => Promise<void>;
+}
+
+export const LatLonMap = (props: LatLonMapProps) => {
+  const mapRef = useRef<MapViewRef>(null);
+
+  return (
+    <FullWidthAndHeightContainer>
+      <NativeMapView mapRef={mapRef} />
+      <FloatingContainer>
+        <CenteredContainer>
+          <FullWidthContainer>
+            <Button
+              onPress={async () => {
+                if (!mapRef.current) {
+                  throw new Error("Missing mapRef");
+                }
+
+                const center = await mapRef.current.getCenter();
+
+                if (props.onPress) {
+                  await props.onPress(center[1], center[0]);
+                }
+              }}
+              title="Go"
+            />
+          </FullWidthContainer>
+        </CenteredContainer>
+      </FloatingContainer>
+    </FullWidthAndHeightContainer>
+  );
+};</code></pre>
+
+And the web code for all that, at e.g. <code>src/components/LatLonMap.web.tsx</code>:
+
+<pre class="javascript"><code>import { useRef } from "react";
+import { Button } from "react-native";
+
+import { CenteredContainer } from "./CenteredContainer";
+import { FloatingContainer } from "./FloatingContainer";
+import { FullWidthContainer } from "./FullWidthContainer";
+import { FullWidthAndHeightContainer } from "./FullWidthAndHeightContainer";
+import { WebMapView } from "./WebMapView";
+import { MapRef } from "react-map-gl/maplibre";
+
+interface LatLonMapProps {
+  onPress?: (latitude: number, longitude: number) => Promise<void>;
+}
+
+export const LatLonMap = (props: LatLonMapProps) => {
+  const mapRef = useRef<MapRef>(null);
+
+  return (
+    <FullWidthAndHeightContainer>
+      <WebMapView mapRef={mapRef} />
+      <FloatingContainer>
+        <CenteredContainer>
+          <FullWidthContainer>
+            <Button
+              onPress={async () => {
+                if (!mapRef.current) {
+                  throw new Error("Missing mapRef");
+                }
+
+                const center = mapRef.current.getCenter();
+
+                if (props.onPress) {
+                  await props.onPress(center.lat, center.lng);
+                }
+              }}
+              title="Go"
+            />
+          </FullWidthContainer>
+        </CenteredContainer>
+      </FloatingContainer>
+    </FullWidthAndHeightContainer>
+  );
+};</code></pre>
+
+A few key things to note with the above code samples. First of all, we're using Expo's built-in system of platform-specific filename prefixes, to write both a native version (the "default" version ending in <code>.tsx</code>) and a web version (ending in <code>.web.tsx</code>) of the same component. We're importing our <code>NativeMapView</code> component in one version, and our <code>WebMapView</code> component in the other version. The <code>mapRef</code> variable is of a different type, and has a slightly different interface, in each version.
+
+And, finally, we're defining <code>onPress</code> as a prop that gets passed in (and that gets given the coordinates as simple integer parameters when it's called), rather than defining what happens on button press directly in this component, so that we can implement the "on button press" behaviour just once in the calling code (and so that the calling code, rather than this component, gets to decide what happens on button press, thus making this component more reusable).
+
+We're now done writing components. Let's use our new native- and web-compatible map component on our home screen &ndash; code goes at e.g. <code>src/app/index.tsx</code>:
+
+<pre class="javascript"><code>import { router } from "expo-router";
+
+import { LatLonMap } from "../components/LatLonMap";
+
+export default function HomeScreen() {
+  return (
+    <LatLonMap
+      onPress={async (latitude: number, longitude: number) => {
+        router.replace(`/lat-lon?lat=${latitude}&lon=${longitude}`);
+      }}
+    />
+  );
+}</code></pre>
+
+The above code is where we implement the "on button press" behaviour. In this case, the behaviour is to redirect to the <code>/lat-lon</code> screen, and to pass the latitude and longitude values as URL parameters.
+
+Lucky last step is to then display the latitude and longitude to the user &ndash; code goes at e.g. <code>src/app/(app)/lat-lon.tsx</code>:
+
+<pre class="javascript"><code>import { Button, StyleSheet } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { Link } from "expo-router";
+
+import { ThemedText } from "../../components/ThemedText";
+import { ThemedView } from "../../components/ThemedView";
+
+export default function LatLonScreen() {
+  const { lat, lon } = useLocalSearchParams();
+
+  if (typeof lat !== "string") {
+    throw new Error("lat is not a string");
+  }
+  if (typeof lon !== "string") {
+    throw new Error("lon is not a string");
+  }
+
+  const latVal = parseFloat(lat);
+  const lonVal = parseFloat(lon);
+
+  return (
+    <ThemedView style={styles.container}>
+      <ThemedText>Latitude: {latVal}</ThemedText>
+      <ThemedText>Longitude: {lonVal}</ThemedText>
+      <Link href="/" asChild>
+        <Button onPress={() => {}} title="Back" />
+      </Link>
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+});</code></pre>
+
+<h2>Map done</h2>
+
+There you have it: a map that looks and behaves virtually the same, on both native and web, implemented in a single codebase, with minimal platform-specific code required. I haven't thoroughly looked into how performant, how buggy, or overall how effective this solution is on all platforms, but hey, it's a start. Hope this helps you in your own Expo mapping endeavours.
